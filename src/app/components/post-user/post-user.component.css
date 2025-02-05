@@ -1,0 +1,51 @@
+.container {
+    display: flex;
+
+    margin-top: 130px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .form-container {
+    width: 300px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: rpx;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 130px;
+
+  }
+
+  .form-group{
+    margin-bottom: 20px;
+  }
+
+  .form-title{
+    margin-left: 55px;
+  }
+
+  label{
+    display: block;
+    font-weight: bold;
+  }
+
+  input[type="text"], input[type="email"], input[type="parola"], input[type="nume"], input[type="tara"], input[type="data_nasterii"]
+  , input[type="numar_telefon"], input[type="sex"], input[type="prenume"]{
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  button{
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  button:hover{
+    background-color: #00b312;
+  }
