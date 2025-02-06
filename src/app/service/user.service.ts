@@ -17,4 +17,7 @@ export class UserService {
   getAllUsers():Observable<any>{
 return this.http.get(BASIC_URL+"/api/users"); // din java
   }
+  getUserById(id:number):Observable<any>{
+    return this.http.get(BASIC_URL+"/api/user/"+id); // din java
+      }
 }
