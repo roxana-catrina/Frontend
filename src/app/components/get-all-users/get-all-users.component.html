@@ -1,1 +1,32 @@
-<p>get-all-users works!</p>
+<button class="btn-new"  routerLink="/user">Post new user</button>
+<table>
+    <thead>
+        <tr>
+           <th>Id </th>
+           <th>Nume</th>
+           <th>Prenume</th>
+            <th>Email</th>
+            <th>Parola</th>
+            <th>Telefon</th>
+            <th>Tara</th>
+            <th>Sex</th>
+            <th>Data nasterii</th>
+
+        </tr>
+    </thead>
+    <tbody *ngIf="users && users.length > 0">
+        <tr *ngFor="let user of users">
+            <td>{{user.id}}</td>
+            <td>{{user.nume}}</td>
+            <td>{{user.prenume}}</td>
+            <td>{{user.email}}</td>
+            <td>{{user.parola}}</td>
+            <td>{{user.numar_telefon}}</td>
+            <td>{{user.tara}}</td>
+            <td>{{user.sex}}</td>
+            <td>{{user.data_nasterii}}</td>
+        </tr>
+    </tbody>
+    <p *ngIf="users && users.length === 0">Nu există date.</p>
+    
+</table>

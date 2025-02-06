@@ -13,4 +13,8 @@ export class UserService {
   postUser(user:any):Observable<any>{
     return this.http.post(BASIC_URL+"/api/user",user);
   }
+
+  getAllUsers():Observable<any>{
+return this.http.get(BASIC_URL+"/api/users"); // din java
+  }
 }

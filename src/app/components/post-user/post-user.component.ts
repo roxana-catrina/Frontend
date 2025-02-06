@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../../service/user.service';
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-post-user',
   standalone: false,
@@ -11,7 +12,9 @@ import { UserService } from '../../service/user.service';
 export class PostUserComponent {
 
   postUserForm!: FormGroup;
-  constructor( private userService :UserService,private fb:FormBuilder) { }
+  constructor( private userService :UserService,
+    private fb:FormBuilder,
+  private router:Router) { }
   ngOnInit(){
     this.postUserForm = this.fb.group({
       nume: [null, Validators.required],
@@ -25,15 +28,14 @@ export class PostUserComponent {
     });
   };
 
-  // postUser(){
-  //   this.userService.postUser(this.postUserForm.value).subscribe(data=>{
-  //     console.log(data);
-  //   });
-  // }
   postUser(){
-    
-      console.log(this.postUserForm.value);
-    }
+    console.log(this.postUserForm.value);
+    this.userService.postUser(this.postUserForm.value).subscribe(data=>{
+      console.log(data);
+      this.router.navigateByUrl("/");
+    });
+  }
+ 
   }
 
 

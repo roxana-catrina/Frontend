@@ -1,0 +1,33 @@
+table{
+    width: 80%;
+
+    margin:20px auto;
+}
+
+th,td{
+    border: 1px solid #b32c2c;
+    text-align: left;
+    padding: 8px;
+}
+
+th{
+    background-color: #b3a62c;
+    color: white;
+}
+tr:nth-child(even){
+    background-color: #f2f2f2;
+}
+
+.btn-new{
+    padding: 5px 10px;
+    background-color: #b32c2c;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 50px;
+}
+.btn-new:hover{
+    background-color: #b3a62c;
+}
+
