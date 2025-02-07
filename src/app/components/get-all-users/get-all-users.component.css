@@ -17,6 +17,8 @@ th{
 tr:nth-child(even){
     background-color: #f2f2f2;
 }
+
+.btn-delete,
 .btn-update,
 .btn-new{
     padding: 5px 10px;
@@ -27,7 +29,7 @@ tr:nth-child(even){
     cursor: pointer;
     margin-top: 50px;
 }
-
+.btn-delete,
 .btn-update{
     margin-right: 5px;
 }

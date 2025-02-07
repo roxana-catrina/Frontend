@@ -26,7 +26,10 @@
             <td>{{user.tara}}</td>
             <td>{{user.sex}}</td>
             <td>{{user.data_nasterii}}</td>
-            <td><button class="btn-update"  [routerLink]="'/user/' + user.id"></button></td>
+            <td><button class="btn-update"  [routerLink]="'/user/' + user.id">UPDATE</button>
+                <button class="btn-delete" (click)="deleteUser(user.id)">DELETE</button>
+            </td>
+          
         </tr>
     </tbody>
     <p *ngIf="users && users.length === 0">Nu există date.</p>

@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { UpdateUserComponent } from '../components/update-user/update-user.component';
 
 const BASIC_URL = 'http://localhost:8083';
 
@@ -20,4 +21,12 @@ return this.http.get(BASIC_URL+"/api/users"); // din java
   getUserById(id:number):Observable<any>{
     return this.http.get(BASIC_URL+"/api/user/"+id); // din java
       }
+
+   updateUser(id:number,user:any):Observable<any>{
+    return this.http.put(BASIC_URL+"/api/user/"+id,user); // din java
+      }
+
+      deleteUser(id:number):Observable<any>{
+        return this.http.delete(BASIC_URL+"/api/user/"+id); // din java
+          }   
 }

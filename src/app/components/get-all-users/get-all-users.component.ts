@@ -20,4 +20,10 @@ export class GetAllUsersComponent {
         this.users = data;
       })
     }
+    deleteUser(id:number){
+      this.userService.deleteUser(id).subscribe((data)=>{
+        console.log(data);
+      this.getAllUsers();
+      })
+    }
 }
