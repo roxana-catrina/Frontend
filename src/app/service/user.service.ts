@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { UpdateUserComponent } from '../components/update-user/update-user.component';
@@ -16,7 +16,8 @@ export class UserService {
   }
 
   getAllUsers():Observable<any>{
-return this.http.get(BASIC_URL+"/api/users"); // din java
+    return this.http.get(`${BASIC_URL}/api/users`)
+   
   }
   getUserById(id:number):Observable<any>{
     return this.http.get(BASIC_URL+"/api/user/"+id); // din java
@@ -28,5 +29,7 @@ return this.http.get(BASIC_URL+"/api/users"); // din java
 
       deleteUser(id:number):Observable<any>{
         return this.http.delete(BASIC_URL+"/api/user/"+id); // din java
-          }   
+          }  
+          
+          
 }
