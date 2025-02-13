@@ -1,0 +1,8 @@
+{
+  "/api/authenticate": {
+    "target": "http://localhost:8083/api",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

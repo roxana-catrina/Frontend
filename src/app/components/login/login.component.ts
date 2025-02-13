@@ -12,7 +12,7 @@ import { Router } from '@angular/router';
 export class LoginComponent {
   loginForm!:FormGroup;
 constructor(
-  private service: LoginService,
+  private service:LoginService,
   private fb: FormBuilder,
   private router:Router
 ){}

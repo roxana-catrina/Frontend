@@ -2,16 +2,18 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
   
-const BASIC_URL = 'http://localhost:8083';
+
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root' // Serviciul este disponibil în întreaga aplicație
 })
 export class LoginService {
+;
 
-  constructor(private hhtp:HttpClient) { }
+  constructor(private http: HttpClient) { }
 
-  login(loginRequest:any):Observable<any>{
-    return this.hhtp.post(BASIC_URL+"/api/authenticate",loginRequest);
+  // Metodă pentru autentificare
+  login(credentials: { email: string; parola: string }) {
+    return this.http.post('/authenticate', credentials, { withCredentials: true });
   }
 }
