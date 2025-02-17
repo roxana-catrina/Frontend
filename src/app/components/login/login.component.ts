@@ -26,12 +26,33 @@ constructor(
 ngOnInit(){
   
 }
-login(){
+/*login(){
   const credentials = { email: this.loginForm.value.email, parola: this.loginForm.value.parola };
   this.service.login(credentials).subscribe();
   this.router.navigateByUrl("");
   console.log("Autentificare reusita");
+}*/
+login() {
+  const credentials = { 
+    email: this.loginForm.value.email, 
+    parola: this.loginForm.value.parola 
+  };
+
+  this.service.login(credentials).subscribe({
+    next: (response) => {
+      console.log("Autentificare reușită", response);
+      this.router.navigateByUrl(""); // Schimbă ruta cu cea corectă
+    },
+    error: (error) => {
+      if (error.status === 401) {
+        alert("Parola sau emilul sunt incorecte"); // "User not found" sau "Invalid password"
+      } else {
+        alert("Eroare la server. Încercați din nou.");
+      }
+    }
+  });
 }
+
 /*login(){
   this.service.login(this.loginForm.value).subscribe(data=>{
     console.log(data);
