@@ -1,8 +1,11 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { LoginService } from '../../service/serviceLogin/login.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { User } from '../../models/user';
+import { AuthService } from '../../service/serviceAuth/auth.service';
+import { StorageService } from '../../service/storage/storage.service';
+
 @Component({
   selector: 'app-login',
   standalone: false,
@@ -10,69 +13,66 @@ import { User } from '../../models/user';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
+
 export class LoginComponent   {
   loginForm!:FormGroup;
+  isSpinning: boolean = false;
 constructor(
   private service: LoginService,
   private fb: FormBuilder,
-  private router: Router
-) {
+  private router: Router,
+  private authService: AuthService,
+
+ 
+) 
+ {
   this.loginForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     parola: ['', Validators.required]
   });
-}
+} 
 
-ngOnInit(){
+ngOnInit(){}
+
+login(){
+  interface LoginResponse {
+    id: string | null;
+    jwt: string;
+  }
+
+  interface User {
+    id: string;
+  }
+
+ 
+  this.authService.login(this.loginForm.value).subscribe({
+    next: (res: LoginResponse) => {
+      console.log(res);
+      if (res.id != null) {
+        const user: User = { id: res.id };
+        StorageService.saveUser(user);
+        StorageService.saveToken(res.jwt);
   
-}
-/*login(){
-  const credentials = { email: this.loginForm.value.email, parola: this.loginForm.value.parola };
-  this.service.login(credentials).subscribe();
-  this.router.navigateByUrl("");
-  console.log("Autentificare reusita");
-}*/
-login() {
-  const credentials = { 
-    email: this.loginForm.value.email, 
-    parola: this.loginForm.value.parola 
-  };
-
-  this.service.login(credentials).subscribe({
-    next: (response) => {
-      console.log("Autentificare reușită", response);
-      this.router.navigateByUrl(""); // Schimbă ruta cu cea corectă
+        if (StorageService.isUserLoggedIn()) {
+          this.router.navigate(['/dashboard']);
+        }
+      }
     },
-    error: (error) => {
-      if (error.status === 401) {
-        alert("Parola sau emilul sunt incorecte"); // "User not found" sau "Invalid password"
+    error: (err) => {
+      console.error('Eroare autentificare:', err);
+  
+      if (err.status === 401) {
+        alert('Parola introdusă este greșită. Verifică și încearcă din nou.');
+      } else if (err.status === 404) {
+        alert('Acest utilizator nu există. Verifică datele sau creează un cont.');
       } else {
-        alert("Eroare la server. Încercați din nou.");
+        alert('A apărut o eroare. Vă rugăm să încercați din nou.');
       }
     }
   });
-}
-
-/*login(){
-  this.service.login(this.loginForm.value).subscribe(data=>{
-    console.log(data);
-  });
-
-}*/
-
-/*login() {
-  const email = this.loginForm.value.email;
-  const parola= this.loginForm.value.parola;
-
-  this.service.login(email, parola).subscribe({
-    next: (user: User) => {
-      console.log('Autentificare reușită:', user);
-      // Poți să faci ceva cu datele utilizatorului (de exemplu, să le salvezi în aplicație)
-    },
-    error: (error: any) => {
-      console.error('Eroare la autentificare:', error);
-      // Poți să gestionezi erorile, cum ar fi afișarea unui mesaj de eroare
+  
+    
     }
-  });}*/
+
 
 }
