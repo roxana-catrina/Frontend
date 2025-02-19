@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 const TOKEN = "token";
 const USER = "user";
+const NUME= "nume";
 @Injectable({
   providedIn: 'root'
 })
@@ -18,6 +19,7 @@ export class StorageService {
   static saveUser(user: any): void {
     window.localStorage.removeItem(USER);
     window.localStorage.setItem(USER, JSON.stringify(user));
+    window.localStorage.setItem(NUME,user.nume)
   }
   static getToken() {
     return window.localStorage.getItem(TOKEN);

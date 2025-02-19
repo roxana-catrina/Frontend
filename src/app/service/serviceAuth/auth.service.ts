@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 export interface LoginResponse {
   id: string;
   jwt: string;
+  nume: string;
 }
 
 @Injectable({

@@ -37,10 +37,12 @@ export class LoginComponent {
     interface LoginResponse {
       id: string | null;
       jwt: string;
+      nume: string;
     }
 
     interface User {
       id: string;
+      nume: string;
     }
 
 
@@ -48,7 +50,7 @@ export class LoginComponent {
       next: (res: LoginResponse) => {
         console.log(res);
         if (res.id != null) {
-          const user: User = { id: res.id };
+          const user: User = { id: res.id , nume:res.nume};
           StorageService.saveUser(user);
           StorageService.saveToken(res.jwt);
 
@@ -58,14 +60,14 @@ export class LoginComponent {
         }
       },
       error: (err) => {
-        console.error('Eroare autentificare:', err);
+        console.error('Login error:', err);
 
         if (err.status === 401) {
-          alert('Parola introdusă este greșită. Verifică și încearcă din nou.');
+          alert('The password entered is incorrect. Please check and try again.');
         } else if (err.status === 404) {
-          alert('Acest utilizator nu există. Verifică datele sau creează un cont.');
+          alert('This user does not exist. Verify data or create an account.');
         } else {
-          alert('A apărut o eroare. Vă rugăm să încercați din nou.');
+          alert('An error occurred. Please try again.');
         }
       }
     });
