@@ -1,26 +1,29 @@
-table{
+table {
     width: 80%;
 
-    margin:20px auto;
+    margin: 20px auto;
 }
 
-th,td{
+th,
+td {
     border: 1px solid #b32c2c;
     text-align: left;
     padding: 8px;
 }
 
-th{
+th {
     background-color: #b3a62c;
     color: white;
 }
-tr:nth-child(even){
+
+tr:nth-child(even) {
     background-color: #f2f2f2;
 }
+
 .btn-login,
 .btn-delete,
 .btn-update,
-.btn-new{
+.btn-new {
     padding: 5px 10px;
     background-color: #b32c2c;
     color: #fff;
@@ -29,13 +32,13 @@ tr:nth-child(even){
     cursor: pointer;
     margin-top: 50px;
 }
+
 .btn-login,
 .btn-delete,
-.btn-update{
+.btn-update {
     margin-right: 5px;
 }
 
-.btn-new:hover{
+.btn-new:hover {
     background-color: #b3a62c;
 }
-

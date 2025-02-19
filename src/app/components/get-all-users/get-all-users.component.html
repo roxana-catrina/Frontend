@@ -1,11 +1,11 @@
-<button class="btn-new"  routerLink="/user">Post new user</button>
+<button class="btn-new" routerLink="/user">Post new user</button>
 <button class="btn-login" routerLink="/authenticate">Login</button>
 <table>
     <thead>
         <tr>
-           <th>Id </th>
-           <th>Nume</th>
-           <th>Prenume</th>
+            <th>Id </th>
+            <th>Nume</th>
+            <th>Prenume</th>
             <th>Email</th>
             <th>Parola</th>
             <th>Telefon</th>
@@ -27,14 +27,14 @@
             <td>{{user.tara}}</td>
             <td>{{user.sex}}</td>
             <td>{{user.data_nasterii}}</td>
-            <td><button class="btn-update"  [routerLink]="'/user/' + user.id">UPDATE</button>
+            <td><button class="btn-update" [routerLink]="'/user/' + user.id">UPDATE</button>
                 <button class="btn-delete" (click)="deleteUser(user.id)">DELETE</button>
             </td>
-          
+
         </tr>
-     
+
     </tbody>
-    
+
     <p *ngIf="users && users.length === 0">Nu există date.</p>
-    
+
 </table>

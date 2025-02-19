@@ -13,12 +13,12 @@ export interface LoginResponse {
 })
 
 
-  export class AuthService {
-    constructor(private http: HttpClient) { }
-  
-    login(credentials: any): Observable<LoginResponse> {
-      return this.http.post<LoginResponse>('/authenticate', credentials);
-    }
+export class AuthService {
+  constructor(private http: HttpClient) { }
+
+  login(credentials: any): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>('/authenticate', credentials);
   }
- 
+}
+
 

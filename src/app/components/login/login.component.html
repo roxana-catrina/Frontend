@@ -12,7 +12,7 @@
 
     <div>
       <label for="parola">Password:</label>
-      <input type="password" id="parola" name="parola" formControlName="parola"/>
+      <input type="password" id="parola" name="parola" formControlName="parola" />
       <div *ngIf="loginForm.controls['parola'].invalid && loginForm.controls['parola'].touched" class="error">
         <span *ngIf="loginForm.controls['parola'].errors?.['required']">Parola este obligatorie.</span>
       </div>

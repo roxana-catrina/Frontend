@@ -4,6 +4,8 @@ import { UserService } from '../../service/user.service';
 import { FormBuilder, Validators } from '@angular/forms';
 import { FormGroup } from '@angular/forms'; 
 import { Router } from '@angular/router';
+import { CountryService } from '../../service/country/country.service';
+
 @Component({
   selector: 'app-update-user',
   standalone: false,
@@ -12,12 +14,14 @@ import { Router } from '@angular/router';
   styleUrl: './update-user.component.css'
 })
 export class UpdateUserComponent {
+  countriesList: any[] = []; // Listă pentru țări
   id: number;
   updateUserForm!: FormGroup;
   constructor(private activatedRoute: ActivatedRoute,
               private serviceUser: UserService,
             private fb: FormBuilder,
-          private router:Router) {
+          private router:Router,
+        private countryService:CountryService) {
       this.id = this.activatedRoute.snapshot.params["id"];
   }
   
@@ -31,6 +35,10 @@ export class UpdateUserComponent {
           numar_telefon: [null, [Validators.required]],
           sex: [null, Validators.required],
           tara: [null, Validators.required]
+          
+        });
+        this.countryService.getCountries().subscribe(data => {
+          this.countriesList = data;
         });
      this.getUserById(this.id);
   }

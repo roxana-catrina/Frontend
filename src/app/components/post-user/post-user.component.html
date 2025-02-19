@@ -1,50 +1,71 @@
-
 <div class="container">
     <div class="form-container">
-    <h2 class="form-title">Post New User</h2>
-    <form [formGroup]="postUserForm">
-    
-    <div class="form-group" >
-    <label for="nume">Nume: </label>
-    <input type="text" id="nume" name="nume" required formControlName="nume">
-    </div>
-    
-    <div class="form-group" >
-        <label for="parola">Parola: </label>
-        <input type="password" id="parola" name="parola" required formControlName="parola">
-        </div>
-    
-        <div class="form-group" >
-            <label for="data_nasterii">Data nasterii: </label>
-            <input type="date" id="data_nasterii" name="data_nasterii" required formControlName="data_nasterii">
+        <h2 class="form-title">Post New User</h2>
+        <form [formGroup]="postUserForm">
+
+            <div class="form-group">
+                <label for="nume">Last name: </label>
+                <input type="text" id="nume" name="nume" required formControlName="nume">
             </div>
-    
-    <div class="form-group" >
-        <label for="prenume">Prenume: </label>
-        <input type="text" id="prenume" name="prenume" required formControlName="prenume">
-        </div>
-    
-    <div class="form-group" >
-    <label for="email" >Email:</label>
-    <input type="email" id="email" name="email" required formControlName="email" autocomplete="email">
+
+            <div class="form-group">
+                <label for="prenume"> First name: </label>
+                <input type="text" id="prenume" name="prenume" required formControlName="prenume">
+            </div>
+
+            <div class="form-group">
+                <label for="data_nasterii">Date of birth: </label>
+                <input type="date" id="data_nasterii" name="data_nasterii" required formControlName="data_nasterii">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required formControlName="email">
+                <div *ngIf="postUserForm.controls['email'].invalid && postUserForm.controls['email'].touched"
+                    class="error">
+                    <span *ngIf="postUserForm.controls['email'].errors?.['required']">Email is mandatory.</span>
+                    <span *ngIf="postUserForm.controls['email'].errors?.['email']">Invalid email!</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="parola">Password: </label>
+                <input type="password" id="parola" name="parola" required formControlName="parola">
+            </div>
+
+            <div class="form-group">
+                <label for="numar_telefon">Phone </label>
+                <input type="text" id="numar_telefon" name="numar_telefon" required formControlName="numar_telefon">
+            </div>
+
+            <div class="form-group">
+                <label for="sex">Gender </label>
+                <!-- <input type="text" id="sex" name="sex" required formControlName="sex">-->
+                <select id="sex" name="sex" required formControlName="sex">
+                    <option value="Masculin">Male</option>
+                    <option value="Feminin">Female </option>
+                    <option value="Altele">Others</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="tara">Country: </label>
+                <!--   <input type="text" id="tara" name="tara" required formControlName="tara"> -->
+                <select id="tara" name="tara" required formControlName="tara">
+                    <option *ngFor="let country of countriesList" [value]="country.nume">
+                        {{ country.nume }}
+                    </option>
+                </select>
+            </div>
+
+            <button type="submit" (click)="postUser()" [disabled]="postUserForm.invalid">Post</button>
+        </form>
     </div>
-    
-    <div class="form-group">
-    <label for="numar_telefon">Telefon: </label>
-    <input type="text" id="numar_telefon" name="numar_telefon" required formControlName="numar_telefon">
-    </div>
-    
-    <div class="form-group" >
-        <label for="sex">Sex: </label>
-        <input type="text" id="sex" name="sex" required formControlName="sex">
-        </div>
-    
-      <div class="form-group" >
-      <label for="tara">Tara: </label>
-     <input type="text" id="tara" name="tara" required formControlName="tara">
-      </div>
-    
-    <button type="submit" (click)="postUser()">Post</button>
-    </form>
-    </div>
-    </div>
+</div>
+
+<style>
+    .error {
+        color: red;
+        font-size: 0.8em;
+    }
+</style>
