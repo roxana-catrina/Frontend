@@ -5,8 +5,8 @@
       <label for="email">Email:</label>
       <input type="text" id="email" name="email" formControlName="email" />
       <div *ngIf="loginForm.controls['email'].invalid && loginForm.controls['email'].touched" class="error">
-        <span *ngIf="loginForm.controls['email'].errors?.['required']">Email-ul este obligatoriu.</span>
-        <span *ngIf="loginForm.controls['email'].errors?.['email']">Email-ul nu este valid.</span>
+        <span *ngIf="loginForm.controls['email'].errors?.['required']">Email is mandatory!</span>
+        <span *ngIf="loginForm.controls['email'].errors?.['email']">Invalid email!</span>
       </div>
     </div>
 
@@ -14,7 +14,7 @@
       <label for="parola">Password:</label>
       <input type="password" id="parola" name="parola" formControlName="parola" />
       <div *ngIf="loginForm.controls['parola'].invalid && loginForm.controls['parola'].touched" class="error">
-        <span *ngIf="loginForm.controls['parola'].errors?.['required']">Parola este obligatorie.</span>
+        <span *ngIf="loginForm.controls['parola'].errors?.['required']">Password is mandatory!</span>
       </div>
     </div>
 

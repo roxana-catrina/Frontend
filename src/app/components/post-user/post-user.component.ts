@@ -29,7 +29,7 @@ export class PostUserComponent {
       data_nasterii: [null, Validators.required],
       prenume: [null, Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      numar_telefon: [null, [Validators.required]],
+      numar_telefon: [null, [Validators.required,Validators.pattern("^[0-9]{10,15}$")]],
       sex: [null, Validators.required],
       tara: [null, Validators.required]
     });
