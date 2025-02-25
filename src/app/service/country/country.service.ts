@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 interface Country {
  nume: string;
   cod: string;
+  prefix: string;
 }
 
 @Injectable({

@@ -51,11 +51,17 @@
 
             <div class="form-group">
                 <label for="numar_telefon">Phone </label>
-                <input type="text" id="numar_telefon" name="numar_telefon" required formControlName="numar_telefon">
+                <input type="text" id="numar_telefon" name="numar_telefon" required formControlName="numar_telefon" (change)="schimbarePrefix($event)" >
                 <div *ngIf="postUserForm.controls['numar_telefon'].invalid && postUserForm.controls['numar_telefon'].touched"
                 class="error">
                 The phone number must contain only numbers and be between 10 and 15 characters long!
-</div>
+                </div>  
+                <input 
+                type="text" 
+                formControlName="prefix" 
+                placeholder="Prefix" 
+                readonly
+              >
             </div>
 
             <div class="form-group">
@@ -74,9 +80,10 @@
                     </span>
                 </div>
             </div>
+
             <div class="form-group">
                 <label for="tara">Country: </label>
-                <select id="tara" name="tara" formControlName="tara">
+                <select id="tara" name="tara" formControlName="tara" (change)="schimbarePrefix($event)">
                     <option [value]="null" disabled selected>Choose a country</option>  
                     <option *ngFor="let country of countriesList" [value]="country.nume">
                         {{ country.nume }}

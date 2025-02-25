@@ -14,6 +14,7 @@ export class PostUserComponent {
 
   postUserForm!: FormGroup;
   countriesList: any[] = []; // Listă pentru țări
+  numarTelefonComplet: string='';
 
   constructor(
     private userService: UserService,
@@ -29,23 +30,55 @@ export class PostUserComponent {
       data_nasterii: [null, Validators.required],
       prenume: [null, Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      numar_telefon: [null, [Validators.required,Validators.pattern("^[0-9]{10,15}$")]],
+      numar_telefon: ['', [Validators.required,Validators.pattern("^[0-9]{10,15}$")]],
       sex: [null, Validators.required],
-      tara: [null, Validators.required]
+      tara: [null, Validators.required],
+      prefix :[{value:'',disable:true}]
     });
 
     // Preluarea țărilor din CountryService
     this.countryService.getCountries().subscribe(data => {
       this.countriesList = data;
+     // console.log(data)
     });
   }
+     schimbarePrefix(event: Event)
+      {
+  
+      const country=this.postUserForm.value.tara;
+      const tara= this.countriesList.find(tara=> tara.nume==country)
+      console.log( "tara"+country,tara)
+if(tara){
+     const prefix=tara.prefix;
+     this.numarTelefonComplet=prefix+this.postUserForm.value.numar_telefon;
+     console.log("numar complet"+this.numarTelefonComplet)
+     this.postUserForm.patchValue({
+      prefix: tara.prefix
+     })
+     
+     
+}else {
+  console.error("Țara nu a fost găsită în lista countriesList!");
+}
+
+     }
+     
 
   postUser() {
-    console.log(this.postUserForm.value);
-    this.userService.postUser(this.postUserForm.value).subscribe(data => {
+    
+    // Creează un nou obiect de utilizator cu numărul complet
+    const userData = { ...this.postUserForm.value, numar_telefon: this.numarTelefonComplet };
+  
+    console.log("user data"+userData);
+    this.userService.postUser(userData).subscribe(data => {
       console.log(data);
       this.router.navigateByUrl("/");
     });
   }
 
 }
+ /* const taraSelectata=this.postUserForm.get('tara')?.value;
+    this.postUserForm.get('prefix')?.patchValue(taraSelectata.prefix)
+    const telefonCuPrefixTara=taraSelectata.prefix+ this.postUserForm.get('numar_telefon');
+    this.postUserForm.get('numar_telefon')?.patchValue(telefonCuPrefixTara)
+      console.log(taraSelectata, taraSelectata.prefix)*/
