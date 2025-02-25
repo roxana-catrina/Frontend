@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../../service/user.service';
 import { Router } from '@angular/router';
 import { CountryService } from '../../service/country/country.service';
+import { PhoneService } from '../../service/phone/phone.service';
 
 @Component({
   selector: 'app-post-user',
@@ -21,7 +22,8 @@ export class PostUserComponent {
     private userService: UserService,
     private fb: FormBuilder,
     private router: Router,
-    private countryService: CountryService
+    private countryService: CountryService,
+    private phoneService :PhoneService
   ) { }
 
   ngOnInit() {
@@ -43,7 +45,7 @@ export class PostUserComponent {
      // console.log(data)
     });
   }
-     schimbarePrefix(event: Event)
+     /*schimbarePrefix(event: Event)
       {
   
       const country=this.postUserForm.value.tara;
@@ -63,7 +65,14 @@ if(tara){
 }
 
      }
-     
+     */
+     onPrefixChange(event:Event) {
+      const result = this.phoneService.schimbarePrefix(this.postUserForm.value.tara, this.postUserForm.value.numar_telefon);
+      console.log("tara di n app"+this.postUserForm.value.tara);
+      if (result) {
+        this.prefix = result.prefix;
+        this.numarTelefonComplet = result.numarTelefonComplet;
+      }}
 
   postUser() {
     
