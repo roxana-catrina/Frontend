@@ -37,8 +37,9 @@ export class StorageService {
   }
 
   static logout(): void {
-    localStorage.removeItem(USER) // Ștergem datele de autentificare
-    localStorage.removeItem(TOKEN);
+    if(this.isUserLoggedIn()){
+    localStorage.removeItem(USER); // Ștergem datele de autentificare
+    localStorage.removeItem(TOKEN);}
 
   }
 

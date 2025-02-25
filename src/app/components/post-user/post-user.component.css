@@ -7,12 +7,12 @@
 }
 
 .form-container {
-  width: 300px;
+  width: 350px;
   padding: 20px;
   background-color: #ffffff;
   border-radius: rpx;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin-top: 130px;
+  margin-top: 150px;
 
 }
 
@@ -29,15 +29,9 @@ label {
   font-weight: bold;
 }
 
-input[type="text"],
+
 input[type="email"],
-input[type="parola"],
-input[type="nume"],
-input[type="tara"],
-input[type="data_nasterii"],
-input[type="numar_telefon"],
-input[type="sex"],
-input[type="prenume"] {
+input[type="password"] {
   width: 100%;
   padding: 10px;
   border: 1px solid #ccc;

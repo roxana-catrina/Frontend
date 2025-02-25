@@ -15,6 +15,7 @@ export class PostUserComponent {
   postUserForm!: FormGroup;
   countriesList: any[] = []; // Listă pentru țări
   numarTelefonComplet: string='';
+  prefix: string='prefix';
 
   constructor(
     private userService: UserService,
@@ -49,8 +50,8 @@ export class PostUserComponent {
       const tara= this.countriesList.find(tara=> tara.nume==country)
       console.log( "tara"+country,tara)
 if(tara){
-     const prefix=tara.prefix;
-     this.numarTelefonComplet=prefix+this.postUserForm.value.numar_telefon;
+    this.prefix=tara.prefix;
+     this.numarTelefonComplet=this.prefix+this.postUserForm.value.numar_telefon;
      console.log("numar complet"+this.numarTelefonComplet)
      this.postUserForm.patchValue({
       prefix: tara.prefix

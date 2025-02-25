@@ -48,21 +48,38 @@
                     <span *ngIf="postUserForm.controls['parola'].errors?.['required']">Password is mandatory.</span>
                 </div>
             </div>
+            
+            <div class="form-group">
+                <label for="tara">Country: </label>
+                <select id="tara" name="tara" formControlName="tara" (change)="schimbarePrefix($event)">
+                    <option [value]="null" disabled selected>Choose a country</option>  
+                    <option *ngFor="let country of countriesList" [value]="country.nume">
+                        {{ country.nume }}
+                    </option>
+                </select>
+                <div *ngIf="postUserForm.controls['tara'].invalid && postUserForm.controls['tara'].touched"
+                    class="error">
+                    <span *ngIf="postUserForm.controls['tara'].errors?.['required']">
+                        The country is mandatory.
+                    </span>
+                </div>
+            </div>
 
             <div class="form-group">
-                <label for="numar_telefon">Phone </label>
-                <input type="text" id="numar_telefon" name="numar_telefon" required formControlName="numar_telefon" (change)="schimbarePrefix($event)" >
+                <label for="numar_telefon">Phone</label>
+                 <table>
+                <div class="input-group">
+                 <td> <span class="form-control"  type="text">{{ prefix }}</span></td>
+                 <td> <input type="text" id="numar_telefon" name="numar_telefon" required formControlName="numar_telefon"
+                    (change)="schimbarePrefix($event)" class="form-control"> </td>
+                </div>
                 <div *ngIf="postUserForm.controls['numar_telefon'].invalid && postUserForm.controls['numar_telefon'].touched"
-                class="error">
-                The phone number must contain only numbers and be between 10 and 15 characters long!
-                </div>  
-                <input 
-                type="text" 
-                formControlName="prefix" 
-                placeholder="Prefix" 
-                readonly
-              >
-            </div>
+                  class="error">
+                  The phone number must contain only numbers and be between 10 and 15 characters long!
+                </div>
+            </table>
+              </div>
+              
 
             <div class="form-group">
                 <label for="sex">Gender </label>
@@ -81,21 +98,7 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="tara">Country: </label>
-                <select id="tara" name="tara" formControlName="tara" (change)="schimbarePrefix($event)">
-                    <option [value]="null" disabled selected>Choose a country</option>  
-                    <option *ngFor="let country of countriesList" [value]="country.nume">
-                        {{ country.nume }}
-                    </option>
-                </select>
-                <div *ngIf="postUserForm.controls['tara'].invalid && postUserForm.controls['tara'].touched"
-                    class="error">
-                    <span *ngIf="postUserForm.controls['tara'].errors?.['required']">
-                        The country is mandatory.
-                    </span>
-                </div>
-            </div>
+           
 
             <button type="submit" (click)="postUser()" [disabled]="postUserForm.invalid">Post</button>
         </form>
