@@ -18,9 +18,9 @@ export class PhoneService {
   }
   
   schimbarePrefix(countryName: string, phoneNumber: string): { prefix: string, numarTelefonComplet: string } | null {
-    console.log("tari"+this.countriesList);
+    //console.log("tari"+this.countriesList);
     const tara = this.countriesList.find(tara => tara.nume == countryName);
-    console.log("tara din servciu"+tara);
+    console.log("tara din servciu"+tara.nume);
     if (tara) {
       return {
         prefix: tara.prefix,
