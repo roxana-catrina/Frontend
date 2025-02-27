@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { UpdateUserComponent } from '../components/update-user/update-user.component';
+import { UpdateUserComponent } from '../../components/update-user/update-user.component';
 
 const BASIC_URL = 'http://localhost:8083';
 

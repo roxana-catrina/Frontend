@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { UserService } from '../../service/user.service';
+import { UserService } from '../../service/user/user.service';
 import { FormBuilder, Validators } from '@angular/forms';
 import { FormGroup } from '@angular/forms'; 
 import { Router } from '@angular/router';
@@ -39,7 +39,7 @@ export class UpdateUserComponent {
           data_nasterii: [null, Validators.required],
           prenume: [null, Validators.required],
           email: [null, [Validators.required, Validators.email]],
-          numar_telefon: [null ],
+          numar_telefon: [null,[Validators.pattern("^[0-9]{8,15}$")] ],
           sex: [null, Validators.required],
           tara: [null, Validators.required]
           

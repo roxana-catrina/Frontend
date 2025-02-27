@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { UserService } from '../../service/user.service';
+import { UserService } from '../../service/user/user.service';
 import { Router } from '@angular/router';
 import { CountryService } from '../../service/country/country.service';
 import { PhoneService } from '../../service/phone/phone.service';
+import { DataNastereInvalida } from '../../validari/data-nasterii.validor';
 
 @Component({
   selector: 'app-post-user',
@@ -17,7 +18,7 @@ export class PostUserComponent {
   countriesList: any[] = []; // Listă pentru țări
   numarTelefonComplet: string='';
   prefix: string='prefix';
-
+  errorMessage:string = '';
   constructor(
     private userService: UserService,
     private fb: FormBuilder,
@@ -30,10 +31,10 @@ export class PostUserComponent {
     this.postUserForm = this.fb.group({
       nume: [null, Validators.required],
       parola: [null, Validators.required],
-      data_nasterii: [null, Validators.required],
+      data_nasterii: [null, [Validators.required,DataNastereInvalida()]],
       prenume: [null, Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      numar_telefon: ['', [Validators.required,Validators.pattern("^[0-9]{10,15}$")]],
+      numar_telefon: ['', [Validators.required,Validators.pattern("^[0-9]{8,15}$")]],
       sex: [null, Validators.required],
       tara: [null, Validators.required],
       prefix :[{value:'',disable:true}]
@@ -84,7 +85,23 @@ if(tara){
       console.log(data);
       this.router.navigateByUrl("/");
     });
-  }
+   /* this.userService.postUser(userData).subscribe({
+      next: (data) => {
+        console.log("Răspuns backend:", data);
+        this.router.navigateByUrl("/");
+      },
+      error: (error) => {
+        console.error("Eroare la înregistrare:", error);
+    
+        if (error.status === 400 && error.error) {
+          this.errorMessage = error.error.message || "Date incorecte.";
+        } else if (error.status === 500) {
+          this.errorMessage = "Eroare internă a serverului.";
+        } else {
+          this.errorMessage = "A apărut o eroare necunoscută.";
+        }
+      }
+    }); */}
 
 }
  /* const taraSelectata=this.postUserForm.get('tara')?.value;

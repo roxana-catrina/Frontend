@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { UserService } from '../../service/user.service';
+import { UserService } from '../../service/user/user.service';
 @Component({
   selector: 'app-get-all-users',
   standalone: false,
