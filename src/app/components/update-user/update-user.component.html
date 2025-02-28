@@ -22,13 +22,35 @@
             </div>
 
             <div class="form-group">
-                <label for="data_nasterii">Date of birth </label>
-                <input type="date" id="data_nasterii" name="data_nasterii" required formControlName="data_nasterii">
-                <div *ngIf="updateUserForm.controls['data_nasterii'].invalid && updateUserForm.controls['data_nasterii'].touched"
+                <label for="prenume"> First name: </label>
+                <input type="text" id="prenume" name="prenume" required formControlName="prenume">
+                <div *ngIf="updateUserForm.controls['prenume'].invalid && updateUserForm.controls['prenume'].touched"
                     class="error">
-                    <span *ngIf="updateUserForm.controls['data_nasterii'].errors?.['required']">Birth date is mandatory.</span>
+                    <span *ngIf="updateUserForm.controls['prenume'].errors?.['required']">First name is mandatory.</span>
                 </div>
             </div>
+            <div class="form-group">
+                <label for="data_nasterii">Date of birth:</label>
+                <input 
+                  type="date" 
+                  id="data_nasterii" 
+                  name="data_nasterii" 
+                  required 
+                  formControlName="data_nasterii" 
+                  class="form-control"
+                >
+                <div 
+                  *ngIf="updateUserForm.controls['data_nasterii'].invalid && updateUserForm.controls['data_nasterii'].touched" 
+                  class="error"
+                >
+                  <span *ngIf="updateUserForm.controls['data_nasterii'].errors?.['required']">
+                    Birth date is mandatory.
+                  </span>
+                  <span *ngIf="updateUserForm.controls['data_nasterii'].errors?.['futureDate']">
+                    Birth date cannot be in the future.
+                  </span>
+                </div>
+              </div>
 
             <div class="form-group">
                 <label for="prenume">First name: </label>

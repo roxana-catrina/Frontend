@@ -69,7 +69,7 @@ if(tara){
      */
      onPrefixChange(event:Event) {
       const result = this.phoneService.schimbarePrefix(this.postUserForm.value.tara, this.postUserForm.value.numar_telefon);
-      console.log("tara di n app"+this.postUserForm.value.tara);
+      //console.log("tara di n app"+this.postUserForm.value.tara);
       if (result) {
         this.prefix = result.prefix;
         this.numarTelefonComplet = result.numarTelefonComplet;

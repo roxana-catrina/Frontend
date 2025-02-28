@@ -6,7 +6,7 @@ import { FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CountryService } from '../../service/country/country.service';
 import { PhoneService } from '../../service/phone/phone.service';
-
+import { DataNastereInvalida } from '../../validari/data-nasterii.validor';
 @Component({
   selector: 'app-update-user',
   standalone: false,
@@ -36,7 +36,7 @@ export class UpdateUserComponent {
      this.updateUserForm = this.fb.group({
           nume: [null, Validators.required],
           parola: [null, Validators.required],
-          data_nasterii: [null, Validators.required],
+          data_nasterii: [null, [Validators.required,DataNastereInvalida()]],
           prenume: [null, Validators.required],
           email: [null, [Validators.required, Validators.email]],
           numar_telefon: [null,[Validators.pattern("^[0-9]{8,15}$")] ],
