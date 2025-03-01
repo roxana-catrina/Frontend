@@ -13,9 +13,23 @@ export class DashboardComponent {
   nume: string | null = localStorage.getItem("nume");
 
   constructor(private router: Router) { }
+  ngOnInit() {
+    if (!localStorage.getItem('user')) {
+      this.router.navigateByUrl('/'); // Redirecționare la login dacă nu e logat
+    }
+
+    // Previne cache-ul pentru această pagină
+    window.history.pushState(null, '', window.location.href);
+    window.onpopstate = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+  }
 
   logout() {
     StorageService.logout();
-    this.router.navigateByUrl(""); // Redirecționăm la login
+    this.router.navigateByUrl('/').then(() => {
+      window.location.reload(); // Reîncărcăm pagina
+    });
   }
+  
 }

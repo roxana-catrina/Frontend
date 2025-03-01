@@ -10,7 +10,8 @@ const routes: Routes = [
   {path: '',component:GetAllUsersComponent},
   {path: 'user/:id',component:UpdateUserComponent},
   {path: 'authenticate', component: LoginComponent},
-  { path: 'dashboard', component: DashboardComponent}
+  { path: 'dashboard', component: DashboardComponent}//,
+ // {path: '', redirectTo : 'authenticate'}
 ];
 
 @NgModule({
