@@ -30,6 +30,18 @@ export class UserService {
       deleteUser(id:number):Observable<any>{
         return this.http.delete(BASIC_URL+"/api/user/"+id); // din java
           }  
-          
+
+          uploadImage(userId: number, file: File) {
+            const formData = new FormData();
+            formData.append('file', file);
+          //  formData.append('userId',userId.toString);
+            return this.http.post(BASIC_URL+"/api/user/"+userId+"/imagine", formData);
+          }
+        
+          getUserImages(userId: number) {
+            const token = localStorage.getItem('token');  // presupunând că token-ul este salvat în localStorage
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+            return this.http.get(BASIC_URL+"/api/user/"+userId+"/imagini", { responseType: 'json' });
+          } 
           
 }

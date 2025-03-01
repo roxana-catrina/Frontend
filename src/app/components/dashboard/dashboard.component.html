@@ -4,4 +4,13 @@
     style="margin-top: 20px; padding: 10px 20px; background-color: red; color: white; border: none; cursor: pointer;">
     Logout
   </button>
+
+
+  <input type="file" (change)="onFileSelected($event)" multiple />
+<button (click)="uploadImage()">Upload</button>
+
+<div *ngFor="let image of imagini">
+  <img [src]="image" alt="User Image" width="150" />
+</div>
+
 </div>
