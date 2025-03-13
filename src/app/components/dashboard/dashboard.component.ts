@@ -16,6 +16,10 @@ export class DashboardComponent {
   id :string | null=localStorage.getItem("id");
   selectedFiles: File[] = [];
   imagini: string[] = [];
+  message: string = '';
+  base64Data: any;
+  retrievedImage: any;
+  retrieveResonse: any;
   
  // userId = 1; // ID-ul utilizatorului
 
@@ -62,10 +66,10 @@ export class DashboardComponent {
     let id: string | null = localStorage.getItem("id");
     let userId: number = id ? Number(id) : 0;
     this.userService.getUserImages(userId).subscribe((imageDataArray: any) => {
-      this.imagini = imageDataArray.map((data: any) => {
-        let objectURL = URL.createObjectURL(new Blob([new Uint8Array(data)], { type: 'image/jpeg' }));
-        return objectURL;
+      this.imagini = imageDataArray.map((base64String: string) => {
+        return `data:image/jpeg;base64,${base64String}`;
       });
+      console.log("Imagini primite:", this.imagini);
     });
   }
 
