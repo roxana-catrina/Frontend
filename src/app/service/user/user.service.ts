@@ -38,6 +38,7 @@ export class UserService {
             return this.http.post(BASIC_URL+"/api/user/"+userId+"/imagine", formData);
           }
         
+        
           getUserImages(userId: number) {
             const token = localStorage.getItem('token');  // presupunând că token-ul este salvat în localStorage
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);

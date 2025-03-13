@@ -4,53 +4,44 @@
     style="margin-top: 20px; padding: 10px 20px; background-color: red; color: white; border: none; cursor: pointer;">
     Logout
   </button>
-
-
- <!-- <input type="file" (change)="onFileSelected($event)" multiple />
-<button (click)="uploadImage()">Upload</button>
-
-<div *ngFor="let image of imagini">
-  <img [src]="image" alt="User Image" width="150" />
-</div>-->
-
+</div>
 
 <div class="container row">
   <div class="col-md-12">
-      <h1>Upload Image</h1>
+    <h1>Upload Image</h1>
   </div>
 </div>
 
 <div class="container row">
   <div class="col-md-6">
-      <input type="file" (change)="onFileSelected($event)">
-
+    <input type="file" (change)="onFileSelected($event)">
   </div>
   <div class="col-md-6">
-      <input type="button" (click)="uploadImage()" value="upload">
+    <input type="button" (click)="uploadImage()" value="Upload">
   </div>
 </div>
+
 <hr />
+
 <div class="container row">
   <div class="col-md-12">
-      <div *ngIf=message>{{message}}</div>
+    <div *ngIf="message">{{ message }}</div>
   </div>
 </div>
 
 <div class="container row">
-  <div class="col-md-6">
-      <input type="text" class="form-control" id="name" placeholder="image name" 
-          name="name" />
-  
-
-<div class="container row">
   <div class="col-md-12">
-      <div *ngIf=retrievedImage>
-          <img [src]="retrievedImage">
-      </div>
+    <div *ngIf="retrievedImage">
+      <img [src]="retrievedImage">
+    </div>
   </div>
 </div>
 
-<div *ngFor="let image of imagini">
-  <img [src]="image" alt="User Image" width="150" />
-</div>
+<div class="container row">
+  <div class="col-md-12">
+    <h2>Imaginile tale</h2>
+    <div *ngFor="let image of imagini" class="image-container" (change)="onFileSelected($event)">
+      <img [src]="image" alt="User Image" width="150">
+    </div>
+  </div>
 </div>

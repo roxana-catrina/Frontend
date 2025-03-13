@@ -27,6 +27,7 @@ export class DashboardComponent {
     private userService:UserService
   ) { }
   ngOnInit() {
+    this.loadUserImages();
     if (!localStorage.getItem('user')) {
       this.router.navigateByUrl('/'); // Redirecționare la login dacă nu e logat
       
@@ -55,9 +56,19 @@ export class DashboardComponent {
   uploadImage() {
     this.selectedFiles.forEach(file => {
       let id: string | null = localStorage.getItem("id");
-    let userId: number = id ? Number(id) : 0;
-      this.userService.uploadImage(userId, file).subscribe(() => {
-        this.loadUserImages();
+      let userId: number = id ? Number(id) : 0;
+  
+      let objectURL = URL.createObjectURL(file);
+      this.imagini.push(objectURL); // Adăugăm direct în listă
+  
+      this.userService.uploadImage(userId, file).subscribe({
+        next: () => {
+          console.log("Imagine încărcată cu succes");
+          // Nu mai apelăm loadUserImages aici
+        },
+        error: (error) => {
+          console.error("Eroare la încărcarea imaginii:", error);
+        }
       });
     });
   }
