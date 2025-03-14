@@ -1,6 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { Imagine } from '../../models/imagine';
 import { UpdateUserComponent } from '../../components/update-user/update-user.component';
 
 const BASIC_URL = 'http://localhost:8083';
@@ -45,4 +46,23 @@ export class UserService {
             return this.http.get(BASIC_URL+"/api/user/"+userId+"/imagini", { responseType: 'json' });
           } 
           
+
+          deleteImage(imageData: string, selectedIndex: number, imagini: Imagine[], userId: string | null, callback: () => void) {
+            const token = localStorage.getItem('token');
+            const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+            
+            // Send the image data in the request body
+            return this.http.delete(`${BASIC_URL}/api/user/${userId}/imagini`, {
+              headers: headers,
+              body: { imageData: imageData }
+            }).subscribe({
+              next: () => {
+                imagini.splice(selectedIndex, 1);
+                callback();
+              },
+              error: (error) => {
+                console.error('Error deleting image:', error);
+              }
+            });
+          }
 }

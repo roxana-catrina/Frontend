@@ -1,0 +1,49 @@
+.flow-panel {
+    display: flex;
+    flex-wrap: wrap; /* Permite imaginilor să treacă pe rândul următor */
+    gap: 15px; /* Spațiu între dreptunghiuri */
+  }
+  
+  .image-container {
+    width: 180px; /* Lățimea fixă a dreptunghiului */
+    height: 200px; /* Înălțimea fixă a dreptunghiului */
+    border: 2px solid #000; /* Margine vizibilă pentru dreptunghi */
+    border-radius: 8px; /* Colțuri rotunjite, opțional */
+    display: flex;
+    justify-content: center; /* Centrează imaginea orizontal */
+    align-items: center; /* Centrează imaginea vertical */
+    overflow: hidden; /* Ascunde părțile imaginii care depășesc */
+    background-color: #f8f9fa; /* Culoare de fundal, opțional */
+  }
+  
+  .image-container img {
+    max-width: 100%; /* Imaginea nu depășește containerul */
+    max-height: 100%; /* Imaginea se scalează proporțional */
+    object-fit: cover; /* Ajustează imaginea să umple containerul fără distorsiuni */
+
+
+    .image-container {
+      display: inline-block;
+      margin: 10px;
+      position: relative;
+    }
+    
+    .context-menu {
+      position: absolute;
+      background: white;
+      border: 1px solid #ccc;
+      list-style: none;
+      padding: 5px 0;
+      z-index: 1000;
+    }
+    
+    .context-menu li {
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    
+    .context-menu li:hover {
+      background: #f2f2f2;
+    }
+    
+  }

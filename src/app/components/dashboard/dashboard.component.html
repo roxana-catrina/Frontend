@@ -37,11 +37,20 @@
   </div>
 </div>
 
-<div class="container row">
-  <div class="col-md-12">
-    <h2>Imaginile tale</h2>
-    <div *ngFor="let image of imagini" class="image-container" (change)="onFileSelected($event)">
-      <img [src]="image" alt="User Image" width="150">
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <h2>Imaginile tale</h2>
+      <div class="flow-panel">
+        <div *ngFor="let image of imagini; let i = index" class="image-container"  (change)="onFileSelected($event)">
+  <img [src]="image.imagine" [alt]="'Image ' + image.id" width="150">
+</div>
+
+      </div>
     </div>
   </div>
 </div>
+<!-- Meniul contextual -->
+<ul *ngIf="contextMenuVisible" [ngStyle]="{'top.px': menuY, 'left.px': menuX}" class="context-menu">
+  <li (click)="deleteImage()">Șterge</li>
+</ul>
