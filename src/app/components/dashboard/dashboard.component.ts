@@ -98,7 +98,7 @@ export class DashboardComponent {
       this.selectedImageData = image.imagine;
       this.selectedIndex = index;
     }
-
+/*
   deleteImage() {
     if (this.selectedIndex !== null && this.selectedImageData) {
       const userId = localStorage.getItem("id");
@@ -113,7 +113,7 @@ export class DashboardComponent {
         }
       );
     }
-  }
+  }*/
   uploadImage() {
     this.selectedFiles.forEach(file => {
       let id: string | null = localStorage.getItem("id");
@@ -143,5 +143,8 @@ export class DashboardComponent {
     this.contextMenuVisible = false;
   }
 
-
+  viewImage(image: Imagine) {
+    console.log("Navigating to image from viewImage:", image);
+    this.router.navigate(['dashboard/imagine', image.id]);
+  }
 }

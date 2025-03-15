@@ -47,7 +47,7 @@ export class UserService {
           } 
           
 
-          deleteImage(imageData: string, selectedIndex: number, imagini: Imagine[], userId: string | null, callback: () => void) {
+          /*deleteImage(imageData: string, selectedIndex: number, imagini: Imagine[], userId: string | null, callback: () => void) {
             const token = localStorage.getItem('token');
             const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
             
@@ -64,5 +64,9 @@ export class UserService {
                 console.error('Error deleting image:', error);
               }
             });
-          }
+          }*/
+
+            getImage(userId:number,id:number):Observable<any>{
+              return this.http.get(BASIC_URL+"/api/user/"+userId+"/imagine/"+id);
+            }
 }

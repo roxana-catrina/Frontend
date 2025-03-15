@@ -5,12 +5,14 @@ import { GetAllUsersComponent } from './components/get-all-users/get-all-users.c
 import { UpdateUserComponent } from './components/update-user/update-user.component';
 import { LoginComponent } from './components/login/login.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { ImagineComponent } from './components/imagine/imagine.component';
 const routes: Routes = [
   {path: 'user',component:PostUserComponent},
   {path: '',component:GetAllUsersComponent},
   {path: 'user/:id',component:UpdateUserComponent},
   {path: 'authenticate', component: LoginComponent},
-  { path: 'dashboard', component: DashboardComponent}//,
+  { path: 'dashboard', component: DashboardComponent},
+  {path: 'dashboard/imagine/:id', component: ImagineComponent}
  // {path: '', redirectTo : 'authenticate'}
 ];
 
