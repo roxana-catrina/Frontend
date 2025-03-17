@@ -47,24 +47,7 @@ export class UserService {
           } 
           
 
-          /*deleteImage(imageData: string, selectedIndex: number, imagini: Imagine[], userId: string | null, callback: () => void) {
-            const token = localStorage.getItem('token');
-            const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-            
-            // Send the image data in the request body
-            return this.http.delete(`${BASIC_URL}/api/user/${userId}/imagini`, {
-              headers: headers,
-              body: { imageData: imageData }
-            }).subscribe({
-              next: () => {
-                imagini.splice(selectedIndex, 1);
-                callback();
-              },
-              error: (error) => {
-                console.error('Error deleting image:', error);
-              }
-            });
-          }*/
+         
 
             getImage(userId:number,id:number):Observable<any>{
               return this.http.get(BASIC_URL+"/api/user/"+userId+"/imagine/"+id);

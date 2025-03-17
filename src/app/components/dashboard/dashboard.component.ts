@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { StorageService } from '../../service/storage/storage.service';
 import { User } from '../../models/user';
@@ -12,7 +12,7 @@ import { UserService } from '../../service/user/user.service';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit, OnDestroy {
   prenume: string | null = localStorage.getItem("prenume");
   nume: string | null = localStorage.getItem("nume");
   id :string | null=localStorage.getItem("id");
@@ -28,6 +28,8 @@ export class DashboardComponent {
   selectedImageId: string | null = null;
   selectedImageData: string | null = null;
   selectedIndex: number | null = null;
+
+  private imageDeletedListener: any;
 
  // userId = 1; // ID-ul utilizatorului
 
@@ -48,6 +50,23 @@ export class DashboardComponent {
     };
 
     this.loadUserImages();
+
+    // Add event listener for image deletion
+    this.imageDeletedListener = (event: CustomEvent) => {
+      console.log('Image deleted event received', event.detail);
+      const deletedImageId = event.detail.imageId;
+      // Update the local array
+      this.imagini = this.imagini.filter(img => img.id !== deletedImageId);
+      // Reload images from server
+      this.loadUserImages();
+    };
+    
+    window.addEventListener('imageDeleted', this.imageDeletedListener);
+  }
+
+  ngOnDestroy() {
+    // Remove event listener when component is destroyed
+    window.removeEventListener('imageDeleted', this.imageDeletedListener);
   }
 
   logout() {
@@ -77,9 +96,8 @@ export class DashboardComponent {
 
         this.imagini = imageDataArray.map((image: any) => ({
           id: image.id,
-          nume: image.nume,
-          tip: image.tip,
-          imagine: `data:${image.tip};base64,${image.imagine}`
+          imagine: `data:${image.tip};base64,${image.imagine}`,
+          tip: image.tip
         }));
 
         console.log("Imagini procesate:", this.imagini);
@@ -134,7 +152,41 @@ export class DashboardComponent {
             console.error("Eroare la încărcarea imaginii:", error);
           }
         });
+        setTimeout(() => {
+          this.router.navigate(['/dashboard']).then(() => {
+            this.loadDashboardData(); // Apelăm o metodă pentru a reîncărca datele
+          });
+        }, 100);
+        
      
+    });
+    
+  }
+  
+  loadDashboardData(): void {
+    let id: string | null = localStorage.getItem("id");
+    let userId: number = id ? Number(id) : 0;
+    this.userService.getUserImages(userId).subscribe({
+      next: (images: any) => {
+        console.log("Date primite de la API:", images);
+
+        if (!images || images.length === 0) {
+          console.warn("Nu s-au primit imagini.");
+          this.imagini = [];
+          return;
+        }
+
+        this.imagini = images.map((image: any) => ({
+          id: image.id,
+          imagine: `data:${image.tip};base64,${image.imagine}`,
+          tip: image.tip
+        }));
+
+        console.log("Imagini procesate:", this.imagini);
+      },
+      error: (error) => {
+        console.error("Eroare la încărcarea imaginilor:", error);
+      }
     });
   }
   
@@ -144,7 +196,15 @@ export class DashboardComponent {
   }
 
   viewImage(image: Imagine) {
-    console.log("Navigating to image from viewImage:", image);
-    this.router.navigate(['dashboard/imagine', image.id]);
+     // Check if image exists in the current list
+  const exists = this.imagini.some(img => img.id === image.id);
+  if (!exists) {
+    console.warn('Image not found in current list, reloading images...');
+    this.loadUserImages();
+    return;
+  }
+  
+  console.log("Navigating to image:", image);
+  this.router.navigate(['dashboard/imagine', image.id]);
   }
 }

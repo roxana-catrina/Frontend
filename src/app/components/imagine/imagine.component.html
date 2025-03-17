@@ -1,9 +1,8 @@
 <div class="image-viewer">
-  <div class="header">
-    <button (click)="goBack()" class="back-button">← Înapoi la Dashboard</button>
-  </div>
   
   <div class="image-container" *ngIf="image">
     <img [src]="image.imagine" [alt]="'Image ' + image.id">
   </div>
+
+  <button class="button-delete" (click)="deleteImage()">Stergere</button>
 </div>

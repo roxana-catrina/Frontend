@@ -20,7 +20,8 @@
     max-width: 100%; /* Imaginea nu depășește containerul */
     max-height: 100%; /* Imaginea se scalează proporțional */
     object-fit: cover; /* Ajustează imaginea să umple containerul fără distorsiuni */
-
+    cursor: pointer;
+  
 
     .image-container {
       display: inline-block;
