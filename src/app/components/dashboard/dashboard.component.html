@@ -1,57 +1,64 @@
-<div style="text-align: center; margin-top: 50px;">
+<div class="text-center mt-5">
   <h1>Bună, {{ prenume }} {{ nume }}!</h1>
-  <button (click)="logout()"
-    style="margin-top: 20px; padding: 10px 20px; background-color: red; color: white; border: none; cursor: pointer;">
+  <button (click)="logout()" class="btn btn-danger mt-3">
     Logout
   </button>
+
+<button class="btn btn-primary btn-lg rounded-pill px-4 shadow" [routerLink]="'/user/' + id">
+  UPDATE
+</button>
+
 </div>
 
-<div class="container row">
-  <div class="col-md-12">
-    <h1>Upload Image</h1>
-  </div>
-</div>
-
-<div class="container row">
-  <div class="col-md-6">
-    <input type="file" (change)="onFileSelected($event)">
-  </div>
-  <div class="col-md-6">
-    <input type="button" (click)="uploadImage()" value="Upload">
-  </div>
-</div>
-
-<hr />
-
-<div class="container row">
-  <div class="col-md-12">
-    <div *ngIf="message">{{ message }}</div>
-  </div>
-</div>
-
-<div class="container row">
-  <div class="col-md-12">
-    <div *ngIf="retrievedImage">
-      <img [src]="retrievedImage">
+<div class="container mt-4">
+  <div class="row mb-3">
+    <div class="col-12">
+      <h1>Upload Image</h1>
     </div>
   </div>
-</div>
 
-<div class="container">
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <input type="file" (change)="onFileSelected($event)" class="form-control" />
+    </div>
+    <div class="col-md-6 d-flex align-items-center">
+      <input type="button" (click)="uploadImage()" value="Upload" class="btn btn-primary" />
+    </div>
+  </div>
+
+  <hr />
+
+  <div class="row mb-3">
+    <div class="col-12">
+      <div *ngIf="message" class="alert alert-info">
+        {{ message }}
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-12 text-center" *ngIf="retrievedImage">
+      <img [src]="retrievedImage" class="img-fluid rounded" alt="Uploaded Image" />
+    </div>
+  </div>
+
   <div class="row">
-    <div class="col-md-12">
+    <div class="col-12">
       <h2>Imaginile tale</h2>
-      <div class="flow-panel">
+      <div class="d-flex flex-wrap gap-3">
         <div *ngFor="let image of imagini; let i = index" class="image-container" 
              (click)="viewImage(image)"
-             (contextmenu)="onRightClick($event, image, i)">
-          <img [src]="image.imagine" [alt]="'Image ' + image.id" width="150">
+             (contextmenu)="onRightClick($event, image, i)" style="cursor:pointer;">
+          <img [src]="image.imagine" [alt]="'Image ' + image.id" width="150" class="img-thumbnail" />
         </div>
       </div>
     </div>
   </div>
 </div>
+
 <!-- Meniul contextual -->
-<ul *ngIf="contextMenuVisible" [ngStyle]="{'top.px': menuY, 'left.px': menuX}" class="context-menu">
- <!-- <li (click)="deleteImage()">Șterge</li>-->
+<ul *ngIf="contextMenuVisible" 
+    [ngStyle]="{'top.px': menuY, 'left.px': menuX}" 
+    class="context-menu list-group position-fixed p-2 bg-white border rounded shadow">
+  <!-- <li (click)="deleteImage()" class="list-group-item list-group-item-action">Șterge</li> -->
 </ul>

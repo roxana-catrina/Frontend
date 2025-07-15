@@ -142,7 +142,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           imagine: URL.createObjectURL(file),
           tip: fileType
         };
-        this.imagini.push(newImage); // in next nu merge
+        //this.imagini.push(newImage); // in next nu merge
         this.userService.uploadImage(userId, file).subscribe({
           next: (response: any) => {
             console.log("Imagine încărcată cu succes", response);
@@ -150,6 +150,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           },
           error: (error) => {
             console.error("Eroare la încărcarea imaginii:", error);
+          this.loadDashboardData();
           }
         });
         setTimeout(() => {

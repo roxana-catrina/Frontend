@@ -1,129 +1,170 @@
-<div class="container">
-    <div class="form-container">
-        <h2 class="form-title">Post New User</h2>
-        <form [formGroup]="postUserForm">
+<div class="container mt-5">
+  <div class="card shadow p-4 mx-auto" style="max-width: 600px;">
+    <h2 class="mb-4 text-center">Post New User</h2>
+    <form [formGroup]="postUserForm" (ngSubmit)="postUser()">
 
-            <div class="form-group">
-                <label for="nume">Last name: </label>
-                <input type="text" id="nume" name="nume" required formControlName="nume">
-                <div *ngIf="postUserForm.controls['nume'].invalid && postUserForm.controls['nume'].touched"
-                class="error">
-                <span *ngIf="postUserForm.controls['nume'].errors?.['required']">Second name is mandatory.</span>
-            </div>
-            </div>
+      <!-- Last name -->
+      <div class="mb-3">
+        <label for="nume" class="form-label">Last name:</label>
+        <input
+          type="text"
+          id="nume"
+          name="nume"
+          class="form-control"
+          required
+          formControlName="nume"
+          [ngClass]="{'is-invalid': postUserForm.controls['nume'].invalid && postUserForm.controls['nume'].touched}"
+        />
+        <div class="invalid-feedback" *ngIf="postUserForm.controls['nume'].errors?.['required']">
+          Second name is mandatory.
+        </div>
+      </div>
 
-            <div class="form-group">
-                <label for="prenume"> First name: </label>
-                <input type="text" id="prenume" name="prenume" required formControlName="prenume">
-                <div *ngIf="postUserForm.controls['prenume'].invalid && postUserForm.controls['prenume'].touched"
-                    class="error">
-                    <span *ngIf="postUserForm.controls['prenume'].errors?.['required']">First name is mandatory.</span>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="data_nasterii">Date of birth:</label>
-                <input 
-                  type="date" 
-                  id="data_nasterii" 
-                  name="data_nasterii" 
-                  required 
-                  formControlName="data_nasterii" 
-                  class="form-control"
-                >
-                <div 
-                  *ngIf="postUserForm.controls['data_nasterii'].invalid && postUserForm.controls['data_nasterii'].touched" 
-                  class="error"
-                >
-                  <span *ngIf="postUserForm.controls['data_nasterii'].errors?.['required']">
-                    Birth date is mandatory.
-                  </span>
-                  <span *ngIf="postUserForm.controls['data_nasterii'].errors?.['futureDate']">
-                    Birth date cannot be in the future.
-                  </span>
-                </div>
-              </div>
+      <!-- First name -->
+      <div class="mb-3">
+        <label for="prenume" class="form-label">First name:</label>
+        <input
+          type="text"
+          id="prenume"
+          name="prenume"
+          class="form-control"
+          required
+          formControlName="prenume"
+          [ngClass]="{'is-invalid': postUserForm.controls['prenume'].invalid && postUserForm.controls['prenume'].touched}"
+        />
+        <div class="invalid-feedback" *ngIf="postUserForm.controls['prenume'].errors?.['required']">
+          First name is mandatory.
+        </div>
+      </div>
 
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required formControlName="email">
-                <div *ngIf="postUserForm.controls['email'].invalid && postUserForm.controls['email'].touched"
-                    class="error">
-                    <span *ngIf="postUserForm.controls['email'].errors?.['required']">Email is mandatory.</span>
-                    <span *ngIf="postUserForm.controls['email'].errors?.['email']">Invalid email!</span>
-                </div>
-            </div>
+      <!-- Date of birth -->
+      <div class="mb-3">
+        <label for="data_nasterii" class="form-label">Date of birth:</label>
+        <input
+          type="date"
+          id="data_nasterii"
+          name="data_nasterii"
+          class="form-control"
+          required
+          formControlName="data_nasterii"
+          [ngClass]="{'is-invalid': postUserForm.controls['data_nasterii'].invalid && postUserForm.controls['data_nasterii'].touched}"
+        />
+        <div class="invalid-feedback" *ngIf="postUserForm.controls['data_nasterii'].errors?.['required']">
+          Birth date is mandatory.
+        </div>
+        <div class="invalid-feedback" *ngIf="postUserForm.controls['data_nasterii'].errors?.['futureDate']">
+          Birth date cannot be in the future.
+        </div>
+      </div>
 
-            <div class="form-group">
-                <label for="parola">Password: </label>
-                <input type="password" id="parola" name="parola" required formControlName="parola">
-                <div *ngIf="postUserForm.controls['parola'].invalid && postUserForm.controls['parola'].touched"
-                    class="error">
-                    <span *ngIf="postUserForm.controls['parola'].errors?.['required']">Password is mandatory.</span>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="tara">Country: </label>
-                <select id="tara" name="tara" formControlName="tara" (change)=" onPrefixChange($event)">
-                    <option [value]="null" disabled selected>Choose a country</option>  
-                    <option *ngFor="let country of countriesList" [value]="country.nume">
-                        {{ country.nume }}
-                    </option>
-                </select>
-                <div *ngIf="postUserForm.controls['tara'].invalid && postUserForm.controls['tara'].touched"
-                    class="error">
-                    <span *ngIf="postUserForm.controls['tara'].errors?.['required']">
-                        The country is mandatory.
-                    </span>
-                </div>
-            </div>
+      <!-- Email -->
+      <div class="mb-3">
+        <label for="email" class="form-label">Email:</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          class="form-control"
+          required
+          formControlName="email"
+          [ngClass]="{'is-invalid': postUserForm.controls['email'].invalid && postUserForm.controls['email'].touched}"
+        />
+        <div class="invalid-feedback" *ngIf="postUserForm.controls['email'].errors?.['required']">
+          Email is mandatory.
+        </div>
+        <div class="invalid-feedback" *ngIf="postUserForm.controls['email'].errors?.['email']">
+          Invalid email!
+        </div>
+      </div>
 
-            <div class="form-group">
-                <label for="numar_telefon">Phone</label>
-                 <table>
-                <div class="input-group">
-                 <td> <span class="form-control"  type="text">{{ prefix }}</span></td>
-                 <td> <input type="text" id="numar_telefon" name="numar_telefon" required formControlName="numar_telefon"
-                    (change)=" onPrefixChange($event)" class="form-control"> </td>
-                </div>
-                <div *ngIf="postUserForm.controls['numar_telefon'].invalid && postUserForm.controls['numar_telefon'].touched"
-                  class="error">
-                  The phone number must contain only numbers and be between 10 and 15 characters long!
-                </div>
-            </table>
-              </div>
-              
+      <!-- Password -->
+      <div class="mb-3">
+        <label for="parola" class="form-label">Password:</label>
+        <input
+          type="password"
+          id="parola"
+          name="parola"
+          class="form-control"
+          required
+          formControlName="parola"
+          [ngClass]="{'is-invalid': postUserForm.controls['parola'].invalid && postUserForm.controls['parola'].touched}"
+        />
+        <div class="invalid-feedback" *ngIf="postUserForm.controls['parola'].errors?.['required']">
+          Password is mandatory.
+        </div>
+      </div>
 
-            <div class="form-group">
-                <label for="sex">Gender </label>
-                <!-- <input type="text" id="sex" name="sex" required formControlName="sex">-->
-                <select id="sex" name="sex" required formControlName="sex">
-                    <option [value]="null" disabled selected>Choose a gender</option>  
-                    <option value="Masculin">Male</option>
-                    <option value="Feminin">Female </option>
-                    <option value="Altele">Others</option>
-                </select>
-                <div *ngIf="postUserForm.controls['sex'].invalid && postUserForm.controls['sex'].touched"
-                    class="error">
-                    <span *ngIf="postUserForm.controls['sex'].errors?.['required']">
-                        The gender is mandatory.
-                    </span>
-                </div>
-            </div>
+      <!-- Country -->
+      <div class="mb-3">
+        <label for="tara" class="form-label">Country:</label>
+        <select
+          id="tara"
+          name="tara"
+          class="form-select"
+          formControlName="tara"
+          (change)="onPrefixChange($event)"
+          [ngClass]="{'is-invalid': postUserForm.controls['tara'].invalid && postUserForm.controls['tara'].touched}"
+        >
+          <option [value]="null" disabled selected>Choose a country</option>
+          <option *ngFor="let country of countriesList" [value]="country.nume">
+            {{ country.nume }}
+          </option>
+        </select>
+        <div class="invalid-feedback" *ngIf="postUserForm.controls['tara'].errors?.['required']">
+          The country is mandatory.
+        </div>
+      </div>
 
-           
+      <!-- Phone -->
+      <div class="mb-3">
+        <label for="numar_telefon" class="form-label">Phone:</label>
+        <div class="input-group">
+          <span class="input-group-text">{{ prefix }}</span>
+          <input
+            type="text"
+            id="numar_telefon"
+            name="numar_telefon"
+            class="form-control"
+            required
+            formControlName="numar_telefon"
+            (change)="onPrefixChange($event)"
+            [ngClass]="{'is-invalid': postUserForm.controls['numar_telefon'].invalid && postUserForm.controls['numar_telefon'].touched}"
+          />
+        </div>
+        <div class="invalid-feedback" *ngIf="postUserForm.controls['numar_telefon'].invalid && postUserForm.controls['numar_telefon'].touched">
+          The phone number must contain only numbers and be between 10 and 15 characters long!
+        </div>
+      </div>
 
-            <button type="submit" (click)="postUser()" [disabled]="postUserForm.invalid">Post</button>
-            <div *ngIf="errorMessage" class="error-message">
-                {{ errorMessage }}
-              </div>
-        </form>
-    </div>
+      <!-- Gender -->
+      <div class="mb-3">
+        <label for="sex" class="form-label">Gender:</label>
+        <select
+          id="sex"
+          name="sex"
+          class="form-select"
+          required
+          formControlName="sex"
+          [ngClass]="{'is-invalid': postUserForm.controls['sex'].invalid && postUserForm.controls['sex'].touched}"
+        >
+          <option [value]="null" disabled selected>Choose a gender</option>
+          <option value="Masculin">Male</option>
+          <option value="Feminin">Female</option>
+          <option value="Altele">Others</option>
+        </select>
+        <div class="invalid-feedback" *ngIf="postUserForm.controls['sex'].errors?.['required']">
+          The gender is mandatory.
+        </div>
+      </div>
+
+      <!-- Submit button -->
+      <button type="submit" class="btn btn-success w-100" [disabled]="postUserForm.invalid">Post</button>
+
+      <!-- Error message -->
+      <div *ngIf="errorMessage" class="mt-3 text-danger text-center">
+        {{ errorMessage }}
+      </div>
+
+    </form>
+  </div>
 </div>
-
-<style>
-    .error {
-        color: red;
-        font-size: 0.8em;
-    }
-</style>
