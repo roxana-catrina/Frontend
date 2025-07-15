@@ -12,6 +12,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import {} from '@angular/common/http';
 import { LoginComponent } from './components/login/login.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { HomeComponent } from './home/home.component';
 
 @NgModule({
   declarations: [
@@ -20,7 +21,8 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
     GetAllUsersComponent,
     UpdateUserComponent,
     LoginComponent,
-    DashboardComponent
+    DashboardComponent,
+    HomeComponent
   ],
   imports: [
     BrowserModule,

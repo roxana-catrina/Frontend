@@ -6,9 +6,10 @@ import { UpdateUserComponent } from './components/update-user/update-user.compon
 import { LoginComponent } from './components/login/login.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ImagineComponent } from './components/imagine/imagine.component';
+import { HomeComponent } from './home/home.component';
 const routes: Routes = [
   {path: 'user',component:PostUserComponent},
-  {path: '',component:GetAllUsersComponent},
+  {path: '',component:HomeComponent},
   {path: 'user/:id',component:UpdateUserComponent},
   {path: 'authenticate', component: LoginComponent},
   { path: 'dashboard', component: DashboardComponent},

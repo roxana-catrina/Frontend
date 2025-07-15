@@ -1,129 +1,83 @@
-<div class="container">
-    <div class="form-container">
-        <h2 class="form-title">Update User</h2>
-        <form [formGroup]="updateUserForm" >
+<div class="container mt-5">
+  <div class="card p-4 shadow">
+    <h2 class="card-title mb-4 text-center">Update User</h2>
 
-            <div class="form-group">
-                <label for="nume">Last name: </label>
-                <input type="text" id="nume" name="nume" required formControlName="nume">
-                <div *ngIf="updateUserForm.controls['nume'].invalid && updateUserForm.controls['nume'].touched"
-                    class="error">
-                    <span *ngIf="updateUserForm.controls['nume'].errors?.['required']">Second name is mandatory.</span>
-                </div>
-            </div>
+    <form [formGroup]="updateUserForm">
 
-            <div class="form-group">
-                <label for="parola">Password: </label>
-                <input type="password" id="parola" name="parola" required formControlName="parola">
-                <div *ngIf="updateUserForm.controls['parola'].invalid && updateUserForm.controls['parola'].touched"
-                    class="error">
-                    <span *ngIf="updateUserForm.controls['parola'].errors?.['required']">Password is mandatory.</span>
-                </div>
-            </div>
+      <div class="mb-3">
+        <label for="nume" class="form-label">Last name:</label>
+        <input type="text" id="nume" class="form-control" formControlName="nume" required>
+        <div *ngIf="updateUserForm.controls['nume'].invalid && updateUserForm.controls['nume'].touched" class="alert alert-danger mt-2 p-1">
+          <small *ngIf="updateUserForm.controls['nume'].errors?.['required']">Second name is mandatory.</small>
+        </div>
+      </div>
 
-            <div class="form-group">
-                <label for="prenume"> First name: </label>
-                <input type="text" id="prenume" name="prenume" required formControlName="prenume">
-                <div *ngIf="updateUserForm.controls['prenume'].invalid && updateUserForm.controls['prenume'].touched"
-                    class="error">
-                    <span *ngIf="updateUserForm.controls['prenume'].errors?.['required']">First name is mandatory.</span>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="data_nasterii">Date of birth:</label>
-                <input 
-                  type="date" 
-                  id="data_nasterii" 
-                  name="data_nasterii" 
-                  required 
-                  formControlName="data_nasterii" 
-                  class="form-control"
-                >
-                <div 
-                  *ngIf="updateUserForm.controls['data_nasterii'].invalid && updateUserForm.controls['data_nasterii'].touched" 
-                  class="error"
-                >
-                  <span *ngIf="updateUserForm.controls['data_nasterii'].errors?.['required']">
-                    Birth date is mandatory.
-                  </span>
-                  <span *ngIf="updateUserForm.controls['data_nasterii'].errors?.['futureDate']">
-                    Birth date cannot be in the future.
-                  </span>
-                </div>
-              </div>
+      <div class="mb-3">
+        <label for="prenume" class="form-label">First name:</label>
+        <input type="text" id="prenume" class="form-control" formControlName="prenume" required>
+        <div *ngIf="updateUserForm.controls['prenume'].invalid && updateUserForm.controls['prenume'].touched" class="alert alert-danger mt-2 p-1">
+          <small *ngIf="updateUserForm.controls['prenume'].errors?.['required']">First name is mandatory.</small>
+        </div>
+      </div>
 
-            <div class="form-group">
-                <label for="prenume">First name: </label>
-                <input type="text" id="prenume" name="prenume" required formControlName="prenume">
-                <div *ngIf="updateUserForm.controls['prenume'].invalid && updateUserForm.controls['prenume'].touched"
-                    class="error">
-                    <span *ngIf="updateUserForm.controls['prenume'].errors?.['required']">Firts name is mandatory.</span>
-                </div>
-            </div>
+      <div class="mb-3">
+        <label for="data_nasterii" class="form-label">Date of birth:</label>
+        <input type="date" id="data_nasterii" class="form-control" formControlName="data_nasterii" required>
+        <div *ngIf="updateUserForm.controls['data_nasterii'].invalid && updateUserForm.controls['data_nasterii'].touched" class="alert alert-danger mt-2 p-1">
+          <small *ngIf="updateUserForm.controls['data_nasterii'].errors?.['required']">Birth date is mandatory.</small>
+          <small *ngIf="updateUserForm.controls['data_nasterii'].errors?.['futureDate']">Birth date cannot be in the future.</small>
+        </div>
+      </div>
 
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required formControlName="email">
-                <div *ngIf="updateUserForm.controls['email'].invalid && updateUserForm.controls['email'].touched"
-                    class="error">
-                    <span *ngIf="updateUserForm.controls['email'].errors?.['required']">Email is mandatory.</span>
-                    <span *ngIf="updateUserForm.controls['email'].errors?.['email']">Invalid email</span>
-                </div>
-            </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">Email:</label>
+        <input type="email" id="email" class="form-control" formControlName="email" required>
+        <div *ngIf="updateUserForm.controls['email'].invalid && updateUserForm.controls['email'].touched" class="alert alert-danger mt-2 p-1">
+          <small *ngIf="updateUserForm.controls['email'].errors?.['required']">Email is mandatory.</small>
+          <small *ngIf="updateUserForm.controls['email'].errors?.['email']">Invalid email.</small>
+        </div>
+      </div>
 
-            <div class="form-group">
-                <label for="numar_telefon">Phone</label>
-                 <table>
-                <div class="input-group">
-                 <td> <span class="form-control"  type="text">{{ prefix }}</span></td>
-                 <td> <input type="text" id="numar_telefon" name="numar_telefon" required formControlName="numar_telefon"
-                    (change)=" onPrefixChange($event)" class="form-control"> </td>
-                </div>
-                <div *ngIf="updateUserForm.controls['numar_telefon'].invalid && updateUserForm.controls['numar_telefon'].touched"
-                  class="error">
-                  The phone number must contain only numbers and be between 10 and 15 characters long!
-                </div>
-            </table>
-              </div>
+      <div class="mb-3">
+        <label for="numar_telefon" class="form-label">Phone:</label>
+        <div class="input-group">
+          <span class="input-group-text">{{ prefix }}</span>
+          <input type="text" id="numar_telefon" class="form-control" formControlName="numar_telefon" required (change)="onPrefixChange($event)">
+        </div>
+        <div *ngIf="updateUserForm.controls['numar_telefon'].invalid && updateUserForm.controls['numar_telefon'].touched" class="alert alert-danger mt-2 p-1">
+          <small>The phone number must contain only numbers and be between 10 and 15 characters long!</small>
+        </div>
+      </div>
 
-            <div class="form-group">
-                <label for="sex">Gender: </label>
-                <select id="sex" name="sex" required formControlName="sex">
-                    <option [value]="null" disabled selected>Choose a gender</option> 
-                    <option value="Masculin">Male</option>
-                    <option value="Feminin">Female </option>
-                    <option value="Altele">Others</option>
-                </select>
-                <div *ngIf="updateUserForm.controls['sex'].invalid && updateUserForm.controls['sex'].touched"
-                    class="error">
-                    <span *ngIf="updateUserForm.controls['sex'].errors?.['required']"> The gender is mandatory.</span>
-                </div>
-            </div>
+      <div class="mb-3">
+        <label for="sex" class="form-label">Gender:</label>
+        <select id="sex" class="form-select" formControlName="sex" required>
+          <option [value]="null" disabled selected>Choose a gender</option>
+          <option value="Masculin">Male</option>
+          <option value="Feminin">Female</option>
+          <option value="Altele">Others</option>
+        </select>
+        <div *ngIf="updateUserForm.controls['sex'].invalid && updateUserForm.controls['sex'].touched" class="alert alert-danger mt-2 p-1">
+          <small>The gender is mandatory.</small>
+        </div>
+      </div>
 
-            <div class="form-group">
-                <label for="tara">Country: </label>
-                <select id="tara" name="tara" formControlName="tara" (change)=" onPrefixChange($event)">
-                    <option [value]="null" disabled selected>Choose a country</option>  
-                    <option *ngFor="let country of countriesList" [value]="country.nume">
-                        {{ country.nume }}
-                    </option>
-                </select>
-                <div *ngIf="updateUserForm.controls['tara'].invalid && updateUserForm.controls['tara'].touched"
-                    class="error">
-                    <span *ngIf="updateUserForm.controls['tara'].errors?.['required']">
-                        The country is mandatory.
-                    </span>
-                </div>
-            </div>
-            
-            <button type="submit" (click)="updateUser()" [disabled]="updateUserForm.invalid">Update</button>
-        </form>
-    </div>
+      <div class="mb-4">
+        <label for="tara" class="form-label">Country:</label>
+        <select id="tara" class="form-select" formControlName="tara" (change)="onPrefixChange($event)">
+          <option [value]="null" disabled selected>Choose a country</option>
+          <option *ngFor="let country of countriesList" [value]="country.nume">
+            {{ country.nume }}
+          </option>
+        </select>
+        <div *ngIf="updateUserForm.controls['tara'].invalid && updateUserForm.controls['tara'].touched" class="alert alert-danger mt-2 p-1">
+          <small>The country is mandatory.</small>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100" (click)="updateUser()" [disabled]="updateUserForm.invalid">
+        Update
+      </button>
+    </form>
+  </div>
 </div>
-
-<style>
-    .error {
-        color: red;
-        font-size: 0.8em;
-    }
-</style>
