@@ -169,7 +169,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     let userId: number = id ? Number(id) : 0;
     this.userService.getUserImages(userId).subscribe({
       next: (images: any) => {
-        console.log("Date primite de la API:", images);
+        console.log("Date primite de la API 1:", images);
 
         if (!images || images.length === 0) {
           console.warn("Nu s-au primit imagini.");
@@ -183,7 +183,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           tip: image.tip
         }));
 
-        console.log("Imagini procesate:", this.imagini);
+        console.log("Imagini procesate: 1", this.imagini);
       },
       error: (error) => {
         console.error("Eroare la încărcarea imaginilor:", error);

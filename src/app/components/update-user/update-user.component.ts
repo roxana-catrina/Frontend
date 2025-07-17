@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { CountryService } from '../../service/country/country.service';
 import { PhoneService } from '../../service/phone/phone.service';
 import { DataNastereInvalida } from '../../validari/data-nasterii.validor';
+import{Location} from '@angular/common';
 @Component({
   selector: 'app-update-user',
   standalone: false,
@@ -28,8 +29,10 @@ export class UpdateUserComponent {
             private fb: FormBuilder,
           private router:Router,
           private phoneService:PhoneService,
-        private countryService:CountryService) {
+        private countryService:CountryService,
+       private location : Location) {
       this.id = this.activatedRoute.snapshot.params["id"];
+      
   }
   
   ngOnInit(){
@@ -86,19 +89,22 @@ export class UpdateUserComponent {
     }}
 
  
- updateUser(){
-  const formValue=this.updateUserForm.value;
-  const result=this.phoneService.schimbarePrefix(formValue.tara,formValue.numar_telefon);
-  if(result){
-  const userData = { ...formValue, numar_telefon: result.numarTelefonComplet };
+ updateUser() {
+  const formValue = this.updateUserForm.value;
+  const result = this.phoneService.schimbarePrefix(formValue.tara, formValue.numar_telefon);
 
-    this.serviceUser.updateUser(this.id, userData).subscribe((data)=>{
+  if (result) {
+    const userData = { ...formValue, numar_telefon: result.numarTelefonComplet };
+
+    this.serviceUser.updateUser(this.id, userData).subscribe((data) => {
       console.log(data);
-      if(data.id!=null)
-        this.router.navigateByUrl("");
-    
+      if (data.id != null) {
+        this.location.back(); // navighează înapoi la pagina anterioară
+      }
     });
-  }}
+  }
+}
+
 }
 
 
