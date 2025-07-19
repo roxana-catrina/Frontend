@@ -37,7 +37,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private userService:UserService
   ) { }
   ngOnInit() {
-    this.loadUserImages();
+    this.loadDashboardData();
+   
     if (!localStorage.getItem('user')) {
       this.router.navigateByUrl('/'); // Redirecționare la login dacă nu e logat
       
@@ -49,7 +50,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       window.history.pushState(null, '', window.location.href);
     };
 
-    this.loadUserImages();
+   
 
     // Add event listener for image deletion
     this.imageDeletedListener = (event: CustomEvent) => {
@@ -58,10 +59,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       // Update the local array
       this.imagini = this.imagini.filter(img => img.id !== deletedImageId);
       // Reload images from server
-      this.loadUserImages();
+      
     };
     
-    window.addEventListener('imageDeleted', this.imageDeletedListener);
+     this.loadDashboardData();
+
+  window.addEventListener('imageDeleted', (event: any) => {
+    const deletedId = event.detail.imageId;
+    this.imagini = this.imagini.filter(img => img.id !== deletedId);
+  });
   }
 
   ngOnDestroy() {
@@ -96,7 +102,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
         this.imagini = imageDataArray.map((image: any) => ({
           id: image.id,
-          imagine: `data:${image.tip};base64,${image.imagine}`,
+          imagine: image.imageUrl , // Asigură-te că imageUrl este corect
           tip: image.tip
         }));
 
@@ -114,24 +120,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.menuX = event.clientX;
       this.menuY = event.clientY;
       this.selectedImageData = image.imagine;
+      console.log("Selected image data:", this.selectedImageData);
+      console.log(image.imagine);
       this.selectedIndex = index;
     }
-/*
-  deleteImage() {
-    if (this.selectedIndex !== null && this.selectedImageData) {
-      const userId = localStorage.getItem("id");
-      this.userService.deleteImage(
-        this.selectedImageData,
-        this.selectedIndex,
-        this.imagini,
-        userId,
-        () => {
-          this.contextMenuVisible = false;
-          this.loadUserImages(); // Reload images after deletion
-        }
-      );
-    }
-  }*/
+
   uploadImage() {
     this.selectedFiles.forEach(file => {
       let id: string | null = localStorage.getItem("id");
@@ -142,21 +135,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
           imagine: URL.createObjectURL(file),
           tip: fileType
         };
+     
         //this.imagini.push(newImage); // in next nu merge
         this.userService.uploadImage(userId, file).subscribe({
           next: (response: any) => {
             console.log("Imagine încărcată cu succes", response);
             this.selectedFiles = [];
+            this.loadDashboardData();
+          this.loadUserImages()
           },
           error: (error) => {
             console.error("Eroare la încărcarea imaginii:", error);
-          this.loadDashboardData();
+               
           }
         });
         setTimeout(() => {
           this.router.navigate(['/dashboard']).then(() => {
-            this.loadDashboardData(); // Apelăm o metodă pentru a reîncărca datele
-          });
+               this.loadDashboardData();
+this.loadUserImages          });
         }, 100);
         
      
@@ -164,33 +160,37 @@ export class DashboardComponent implements OnInit, OnDestroy {
     
   }
   
-  loadDashboardData(): void {
-    let id: string | null = localStorage.getItem("id");
-    let userId: number = id ? Number(id) : 0;
-    this.userService.getUserImages(userId).subscribe({
-      next: (images: any) => {
-        console.log("Date primite de la API 1:", images);
+ 
 
-        if (!images || images.length === 0) {
-          console.warn("Nu s-au primit imagini.");
-          this.imagini = [];
-          return;
-        }
+loadDashboardData(): void {
+  let id: string | null = localStorage.getItem("id");
+  let userId: number = id ? Number(id) : 0;
 
-        this.imagini = images.map((image: any) => ({
-          id: image.id,
-          imagine: `data:${image.tip};base64,${image.imagine}`,
-          tip: image.tip
-        }));
+  this.userService.getUserImages(userId).subscribe({
+    next: (images: any) => {
+      console.log("Date primite de la API:", images);
 
-        console.log("Imagini procesate: 1", this.imagini);
-      },
-      error: (error) => {
-        console.error("Eroare la încărcarea imaginilor:", error);
+      if (!images || images.length === 0) {
+        console.warn("Nu s-au primit imagini.");
+        this.imagini = [];
+        return;
       }
-    });
-  }
-  
+
+      this.imagini = images.map((image: any) => ({
+        id: image.id,
+        imagine: image.imageUrl, // doar URL-ul, nu base64
+        tip: image.tip
+      }));
+
+      console.log("Imagini procesate:", this.imagini);
+    },
+    error: (error) => {
+      console.error("Eroare la încărcarea imaginilor:", error);
+    }
+  });
+}
+
+
 
   onClickOutside() {
     this.contextMenuVisible = false;
@@ -199,13 +199,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   viewImage(image: Imagine) {
      // Check if image exists in the current list
   const exists = this.imagini.some(img => img.id === image.id);
+  console.log("Image exists in current list:", exists);
+  console.log("Selected image:", image);
+  
   if (!exists) {
     console.warn('Image not found in current list, reloading images...');
-    this.loadUserImages();
+   // this.loadUserImages();
     return;
   }
   
   console.log("Navigating to image:", image);
+
   this.router.navigate(['dashboard/imagine', image.id]);
   }
 }

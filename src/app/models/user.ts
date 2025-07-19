@@ -7,5 +7,6 @@ export interface User {
     numar_telefon: string;
     tara: string;
     parola: string;
+   
   }
   
