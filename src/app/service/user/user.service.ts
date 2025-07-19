@@ -32,12 +32,19 @@ export class UserService {
         return this.http.delete(BASIC_URL+"/api/user/"+id); // din java
           }  
 
-          uploadImage(userId: number, file: File) {
+         /* uploadImage(userId: number, file: File) {
             const formData = new FormData();
             formData.append('file', file);
           //  formData.append('userId',userId.toString);
             return this.http.post(BASIC_URL+"/api/user/"+userId+"/imagine", formData);
-          }
+          }*/
+
+         uploadImage(userId: number,file: File): Observable<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return this.http.post(BASIC_URL+"/api/user/"+userId+"/imagine", formData, { responseType: 'text' });
+}
+
         
         
           getUserImages(userId: number) {
@@ -49,7 +56,10 @@ export class UserService {
 
          
 
-            getImage(userId:number,id:number):Observable<any>{
-              return this.http.get(BASIC_URL+"/api/user/"+userId+"/imagine/"+id);
-            }
+           getImage(userId: number, id: number): Observable<string> {
+  return this.http.get(BASIC_URL + "/api/user/" + userId + "/imagine/" + id, {
+    responseType: 'text'
+  });
+}
+
 }
