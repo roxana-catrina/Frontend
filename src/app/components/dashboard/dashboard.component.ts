@@ -28,7 +28,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   selectedImageId: string | null = null;
   selectedImageData: string | null = null;
   selectedIndex: number | null = null;
-
+  
+    selectedFile: File | null = null;
+numePacient: string = '';
+prenumePacient: string = '';
+detalii: string = '';
+dataNasterii: string ='';
+istoricMedical: string = '';
+sex: string = '';
+cnp: string = '';
+numarTelefon: string = '';
   private imageDeletedListener: any;
 
  // userId = 1; // ID-ul utilizatorului
@@ -125,6 +134,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.selectedIndex = index;
     }
 
+
   uploadImage() {
     this.selectedFiles.forEach(file => {
       let id: string | null = localStorage.getItem("id");
@@ -135,17 +145,40 @@ export class DashboardComponent implements OnInit, OnDestroy {
           imagine: URL.createObjectURL(file),
           tip: fileType
         };
-     
+         const formData = new FormData();
+  formData.append('file', file);
+  formData.append('nume_pacient', this.numePacient);
+  formData.append('prenume_pacient', this.prenumePacient);
+  formData.append('sex', this.sex);
+  formData.append('istoric_medical', this.istoricMedical);
+formData.append("data_nasterii", this.dataNasterii ? this.dataNasterii.substring(0, 10) : "");
+ 
+formData.append('detalii', this.detalii);
+  formData.append('cnp', this.cnp);
+  formData.append('numar_telefon', this.numarTelefon);
+   ;
+   for (const pair of formData.entries()) {
+  console.log(`${pair[0]}:`, pair[1]);
+}
         //this.imagini.push(newImage); // in next nu merge
-        this.userService.uploadImage(userId, file).subscribe({
+        this.userService.uploadImage(userId, formData).subscribe({
           next: (response: any) => {
+        
             console.log("Imagine încărcată cu succes", response);
             this.selectedFiles = [];
             this.loadDashboardData();
           this.loadUserImages()
+  
+
           },
           error: (error) => {
             console.error("Eroare la încărcarea imaginii:", error);
+             this.loadDashboardData();
+          this.loadUserImages()
+          console.log("UserId:", userId);
+  
+
+
                
           }
         });

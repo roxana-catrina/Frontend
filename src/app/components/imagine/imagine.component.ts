@@ -35,7 +35,8 @@ export class ImagineComponent implements OnInit {
         this.image = {
           id: Number(imageId),
           imagine: imageUrl,      // ← aici salvezi URL-ul direct
-          tip: 'image/png'        // sau 'image/jpeg', dacă știi formatul
+          tip: 'image/png', 
+             // sau 'image/jpeg', dacă știi formatul
         };
         console.log('Image loaded:', this.image);
       },

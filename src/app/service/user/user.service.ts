@@ -39,11 +39,26 @@ export class UserService {
             return this.http.post(BASIC_URL+"/api/user/"+userId+"/imagine", formData);
           }*/
 
-         uploadImage(userId: number,file: File): Observable<string> {
-  const formData = new FormData();
-  formData.append('file', file);
-  return this.http.post(BASIC_URL+"/api/user/"+userId+"/imagine", formData, { responseType: 'text' });
+        uploadImage(userId: number, formData: FormData): Observable<any> {
+  const url = BASIC_URL + "/api/user/" + userId + "/imagine";
+  console.log("Upload URL:", url);
+  return this.http.post(url, formData);
 }
+
+
+/*uploadImage(userId: number, formData: FormData): Observable<any> {
+  const token = localStorage.getItem('token'); // sau din alt storage, dacă salvezi altfel
+
+  const headers = new HttpHeaders({
+    'Authorization': `Bearer ${token}`
+  });
+
+  return this.http.post(
+    `${BASIC_URL}/api/user/${userId}/imagine`,
+    formData,
+    { headers }
+  );
+}*/
 
         
         
