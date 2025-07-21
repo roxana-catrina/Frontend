@@ -2,8 +2,15 @@
   
   <div class="image-viewer">
   <div class="image-container" *ngIf="image?.imagine">
-    <img [src]="image?.imagine" [alt]="'Imagine ' + image?.id" width="200" class="img-thumbnail" width="200">
+    <img [src]="image?.imagine" [alt]="'Imagine ' + image?.id" width="200" class="img-thumbnail" width="1000" height="1000">
   </div>
+
+  <div class="image-details">
+    <h3>Detalii Imagine</h3>
+    <p><strong>Nume pacient:</strong> </p>
+    <p><strong>Prnume pacient:</strong></p>
+    <p><strong>Descriere:</strong> </p>
+    <p><strong>Data :</strong> </p>
 </div>
 
 

@@ -25,6 +25,40 @@
       <input type="button" (click)="uploadImage()" value="Upload" class="btn btn-primary" />
     </div>
   </div>
+  <div class="row mb-3">
+  <div class="col-md-6">
+    <input type="text" [(ngModel)]="numePacient" placeholder="Nume" class="form-control"    />
+  </div>
+  <div class="col-md-6">
+    <input type="text" [(ngModel)]="prenumePacient" placeholder="Preume" class="form-control"    />
+  </div>
+  <div class="col-md-6">
+    <input type="date" [(ngModel)]="dataNasterii" placeholder="Data nasterii" class="form-control"    />
+  </div>
+  <div class="col-md-6">
+    <textarea [(ngModel)]="detalii" placeholder="Detalii" class="form-control"   ></textarea>
+  </div>
+  <div class="col-md-6">
+    <textarea [(ngModel)]="istoricMedical" placeholder="Istoric medical" class="form-control"   ></textarea>
+  </div>
+  <div class="col-md-6">
+    <input type="text" [(ngModel)]="cnp" placeholder="CNP" class="form-control"    />
+  </div>
+  <div class="col-md-6">
+    <input type="text" [(ngModel)]="numarTelefon" placeholder="Numar telefon" class="form-control"   />
+  </div>
+</div>
+
+<div class="row mb-3">
+  <div class="col-md-6">
+    <select [(ngModel)]="sex" class="form-control">
+      <option value="" disabled selected>Selectează categoria</option>
+      <option value="FEMININ">Feminin</option>
+      <option value="MASCULIN">Maculin</option>
+      
+    </select>
+  </div>
+</div>
 
   <hr />
 
