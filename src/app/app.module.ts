@@ -13,6 +13,9 @@ import {} from '@angular/common/http';
 import { LoginComponent } from './components/login/login.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { HomeComponent } from './home/home.component';
+import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
   declarations: [
@@ -30,7 +33,8 @@ import { HomeComponent } from './home/home.component';
     FormsModule,
     HttpClientModule,
     ReactiveFormsModule,
-    BrowserModule
+    MatDialogModule,
+    MatButtonModule,ConfirmDialogComponent
   ],
 
   providers: [
