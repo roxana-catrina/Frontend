@@ -1,18 +1,23 @@
 <div class="image-viewer">
   
   <div class="image-viewer">
-  <div class="image-container" *ngIf="image?.imagine">
-    <img [src]="image?.imagine" [alt]="'Imagine ' + image?.id" width="200" class="img-thumbnail" width="1000" height="1000">
+  <div class="image-container" *ngIf="image?.imageUrl">
+    <img [src]="image?.imageUrl" [alt]="'Imagine ' + image?.id"  class="img-thumbnail" >
   </div>
 
   <div class="image-details">
-    <h3>Detalii Imagine</h3>
-    <p><strong>Nume pacient:</strong> </p>
-    <p><strong>Prnume pacient:</strong></p>
-    <p><strong>Descriere:</strong> </p>
-    <p><strong>Data :</strong> </p>
+    <h3>Detalii pacient</h3>
+    <p><strong>Nume pacient:</strong>{{image?.numePacient}} </p>
+    <p><strong>Prenume pacient:</strong>{{image?.prenumePacient}}</p>
+    <p><strong>Data :</strong>{{image?.dataNasterii}} </p>
+      <p><strong>Numar telefon:</strong>{{image?.numarTelefon}} </p>
+        <p><strong>Detalii</strong>{{image?.detalii}} </p>
+          <p><strong>Istoric medical:</strong>{{image?.istoricMedical}} </p>
+            <p><strong>CNP:</strong>{{image?.cnp}} </p>
+             <p><strong>sex:</strong>{{image?.sex}} </p>
 </div>
 
 
-  <button class="button-delete" (click)="deleteImage()">Stergere</button>
-</div>
+<button type="button" class="btn btn-danger" (click)="deleteImage()">
+  <i class="bi bi-trash"></i> Ștergere
+</button></div>

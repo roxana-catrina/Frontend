@@ -1,0 +1,6 @@
+.fixed-size {
+  width: 100%;
+  height: auto;
+  max-height: 90vh; /* opțional: să nu depășească înălțimea ecranului */
+  object-fit: cover; 
+}

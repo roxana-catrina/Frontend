@@ -23,10 +23,17 @@
 }
 
 .image-container {
-  display: flex;
+   width: 100%;
+  height: auto;
+  max-height: 90vh; /* opțional: să nu depășească înălțimea ecranului */
+ /* display: flex;
   justify-content: left;
   align-items: center;
   min-height: 80vh;
+ /* overflow: hidden;         /* ascunde marginile imaginii când se mărește */
+ /* width: 100%;              /* se va adapta containerul */
+ /* max-width: 600px;         /* sau ce dimensiune vrei */
+  /*cursor: zoom-in;*/
 }
 
 .image-container img {
@@ -35,4 +42,11 @@
   object-fit: contain;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   border-radius: 4px;
+
+  /* width: 100%;
+  transition: transform 0.3s ease;
+*/}
+
+.image-container:hover img {
+ /* transform: scale(2);    /* măriți cu 20% când mouse-ul e pe imagine */
 }

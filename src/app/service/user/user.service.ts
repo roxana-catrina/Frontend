@@ -32,12 +32,7 @@ export class UserService {
         return this.http.delete(BASIC_URL+"/api/user/"+id); // din java
           }  
 
-         /* uploadImage(userId: number, file: File) {
-            const formData = new FormData();
-            formData.append('file', file);
-          //  formData.append('userId',userId.toString);
-            return this.http.post(BASIC_URL+"/api/user/"+userId+"/imagine", formData);
-          }*/
+         
 
         uploadImage(userId: number, formData: FormData): Observable<any> {
   const url = BASIC_URL + "/api/user/" + userId + "/imagine";
@@ -46,19 +41,7 @@ export class UserService {
 }
 
 
-/*uploadImage(userId: number, formData: FormData): Observable<any> {
-  const token = localStorage.getItem('token'); // sau din alt storage, dacă salvezi altfel
 
-  const headers = new HttpHeaders({
-    'Authorization': `Bearer ${token}`
-  });
-
-  return this.http.post(
-    `${BASIC_URL}/api/user/${userId}/imagine`,
-    formData,
-    { headers }
-  );
-}*/
 
         
         
@@ -70,11 +53,9 @@ export class UserService {
           
 
          
-
-           getImage(userId: number, id: number): Observable<string> {
-  return this.http.get(BASIC_URL + "/api/user/" + userId + "/imagine/" + id, {
-    responseType: 'text'
-  });
+getImage(userId: number, id: number): Observable<Imagine> {
+  return this.http.get<Imagine>(`${BASIC_URL}/api/user/${userId}/imagine/${id}`);
 }
+
 
 }
