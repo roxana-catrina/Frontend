@@ -47,6 +47,3 @@
   transition: transform 0.3s ease;
 */}
 
-.image-container:hover img {
- /* transform: scale(2);    /* măriți cu 20% când mouse-ul e pe imagine */
-}

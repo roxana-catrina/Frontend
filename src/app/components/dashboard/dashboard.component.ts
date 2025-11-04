@@ -4,6 +4,7 @@ import { StorageService } from '../../service/storage/storage.service';
 import { User } from '../../models/user';
 import { Imagine } from '../../models/imagine';
 import { UserService } from '../../service/user/user.service';
+import { BrainTumorService, PredictionResult } from '../../service/brain-tumor/brain-tumor.service';
 
 
 @Component({
@@ -40,10 +41,17 @@ cnp: string = '';
 numarTelefon: string = '';
   private imageDeletedListener: any;
 
+  // Adăugați proprietăți pentru predicție
+  predictionResult: string = '';
+  predictionConfidence: number = 0;
+  isAnalyzing: boolean = false;
+
  // userId = 1; // ID-ul utilizatorului
 
-  constructor(private router: Router,
-    private userService:UserService
+  constructor(
+    private router: Router,
+    private userService: UserService,
+    private brainTumorService: BrainTumorService
   ) { }
   ngOnInit() {
     this.loadDashboardData();
@@ -93,6 +101,12 @@ numarTelefon: string = '';
   
   onFileSelected(event: any) {
     this.selectedFiles = Array.from(event.target.files);
+    if (this.selectedFiles.length > 0) {
+      this.selectedFile = this.selectedFiles[0];
+      // Reset prediction results when new file is selected
+      this.predictionResult = '';
+      this.predictionConfidence = 0;
+    }
   }
 
   loadUserImages() {
@@ -135,65 +149,90 @@ numarTelefon: string = '';
     }
 
 
+  analyzeTumor() {
+    if (!this.selectedFile) {
+      this.message = 'Te rog selectează o imagine mai întâi!';
+      return;
+    }
+
+    this.isAnalyzing = true;
+    this.predictionResult = 'Se analizează imaginea pentru tumori cerebrale...';
+    
+    this.brainTumorService.predictTumor(this.selectedFile).subscribe({
+      next: (prediction: PredictionResult) => {
+        this.isAnalyzing = false;
+        if (prediction.success) {
+          this.predictionResult = prediction.hasTumor 
+            ? `ATENȚIE: Tumoare detectată (${prediction.prediction})` 
+            : 'Nu s-a detectat tumoare';
+          this.predictionConfidence = prediction.confidence;
+          this.message = 'Analiza completă!';
+        } else {
+          this.predictionResult = prediction.error || 'Serviciul ML nu este disponibil momentan';
+          this.message = 'Serviciul de analiză nu este disponibil';
+          console.warn('ML service unavailable:', prediction.error);
+        }
+      },
+      error: (error) => {
+        this.isAnalyzing = false;
+        this.predictionResult = 'Eroare la analizarea imaginii. Serviciul ML nu este disponibil.';
+        this.message = 'Eroare la analiza imaginii';
+        console.error('ML prediction error:', error);
+      }
+    });
+  }
+
   uploadImage() {
     this.selectedFiles.forEach(file => {
       let id: string | null = localStorage.getItem("id");
       let userId: number = id ? Number(id) : 0;
-        const fileType = file.type;
-        const newImage: Imagine = {
-          id: 0,
-          imagine: URL.createObjectURL(file),
-          tip: fileType
-        };
-         const formData = new FormData();
-  formData.append('file', file);
-  formData.append('nume_pacient', this.numePacient);
-  formData.append('prenume_pacient', this.prenumePacient);
-  formData.append('sex', this.sex);
-  formData.append('istoric_medical', this.istoricMedical);
-formData.append("data_nasterii", this.dataNasterii ? this.dataNasterii.substring(0, 10) : "");
- 
-formData.append('detalii', this.detalii);
-  formData.append('cnp', this.cnp);
-  formData.append('numar_telefon', this.numarTelefon);
-   ;
-   for (const pair of formData.entries()) {
-  console.log(`${pair[0]}:`, pair[1]);
-}
-        //this.imagini.push(newImage); // in next nu merge
-        this.userService.uploadImage(userId, formData).subscribe({
-          next: (response: any) => {
-        
-            console.log("Imagine încărcată cu succes", response);
-            this.selectedFiles = [];
-            this.loadDashboardData();
-          this.loadUserImages()
-  
+      const fileType = file.type;
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('nume_pacient', this.numePacient);
+      formData.append('prenume_pacient', this.prenumePacient);
+      formData.append('sex', this.sex);
+      formData.append('istoric_medical', this.istoricMedical);
+      formData.append("data_nasterii", this.dataNasterii ? this.dataNasterii.substring(0, 10) : "");
+      formData.append('detalii', this.detalii);
+      formData.append('cnp', this.cnp);
+      formData.append('numar_telefon', this.numarTelefon);
 
-          },
-          error: (error) => {
-            console.error("Eroare la încărcarea imaginii:", error);
-             this.loadDashboardData();
-          this.loadUserImages()
-          console.log("UserId:", userId);
-  
-
-
-               
-          }
-        });
-        setTimeout(() => {
-          this.router.navigate(['/dashboard']).then(() => {
-               this.loadDashboardData();
-this.loadUserImages          });
-        }, 100);
-        
-     
+      // Încărcați imaginea în baza de date (fără analiză automată)
+      this.userService.uploadImage(userId, formData).subscribe({
+        next: (response: any) => {
+          console.log("Imagine încărcată cu succes", response);
+          this.message = 'Imagine încărcată cu succes!';
+          this.selectedFiles = [];
+          this.selectedFile = null;
+          
+          // Resetați formularul
+          this.resetForm();
+          
+          this.loadDashboardData();
+          this.loadUserImages();
+        },
+        error: (error) => {
+          console.error("Eroare la încărcarea imaginii:", error);
+          this.message = 'Eroare la încărcarea imaginii';
+          this.loadDashboardData();
+          this.loadUserImages();
+        }
+      });
     });
-    
   }
-  
- 
+
+  resetForm() {
+    this.numePacient = '';
+    this.prenumePacient = '';
+    this.sex = '';
+    this.dataNasterii = '';
+    this.detalii = '';
+    this.istoricMedical = '';
+    this.cnp = '';
+    this.numarTelefon = '';
+  }
 
 loadDashboardData(): void {
   let id: string | null = localStorage.getItem("id");
