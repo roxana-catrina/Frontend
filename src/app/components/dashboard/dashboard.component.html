@@ -21,8 +21,9 @@
     <div class="col-md-6">
       <input type="file" (change)="onFileSelected($event)" class="form-control" />
     </div>
-    <div class="col-md-6 d-flex align-items-center">
-      <input type="button" (click)="uploadImage()" value="Upload" class="btn btn-primary" />
+    <div class="col-md-6 d-flex align-items-center gap-2">
+      <input type="button" (click)="analyzeTumor()" value="Analizează Tumoare" class="btn btn-warning" [disabled]="!selectedFile || isAnalyzing" />
+      <input type="button" (click)="uploadImage()" value="Upload" class="btn btn-primary" [disabled]="!selectedFile" />
     </div>
   </div>
   <div class="row mb-3">
@@ -46,6 +47,35 @@
   </div>
   <div class="col-md-6">
     <input type="text" [(ngModel)]="numarTelefon" placeholder="Numar telefon" class="form-control"   />
+  </div>
+</div>
+
+<div class="row mb-3">
+  <div class="col-md-6">
+    <input type="text" [(ngModel)]="numarTelefon" placeholder="Numar telefon" class="form-control"   />
+  </div>
+</div>
+
+<!-- Rezultat predicție tumoare -->
+<div class="row mb-3" *ngIf="predictionResult">
+  <div class="col-12">
+    <label class="form-label fw-bold">Rezultat analiză tumoare cerebrală:</label>
+    <div class="alert" 
+         [ngClass]="{'alert-danger': predictionResult.includes('detectată'), 
+                     'alert-success': predictionResult.includes('Nu s-a detectat'),
+                     'alert-info': isAnalyzing,
+                     'alert-warning': predictionResult.includes('disponibil') || predictionResult.includes('Eroare')}">
+      <strong>{{ predictionResult }}</strong>
+      <span *ngIf="predictionConfidence > 0"> 
+        - Încredere: {{ (predictionConfidence * 100).toFixed(2) }}%
+      </span>
+      <div *ngIf="isAnalyzing" class="spinner-border spinner-border-sm ms-2" role="status">
+        <span class="visually-hidden">Se analizează...</span>
+      </div>
+      <small *ngIf="predictionResult.includes('disponibil')" class="d-block mt-2">
+        <em>Notă: Imaginea a fost încărcată cu succes. Serviciul ML poate fi activat ulterior.</em>
+      </small>
+    </div>
   </div>
 </div>
 
