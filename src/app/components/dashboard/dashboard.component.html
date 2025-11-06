@@ -109,12 +109,58 @@
   <div class="row">
     <div class="col-12">
       <h2>Imaginile tale</h2>
-      <div class="d-flex flex-wrap gap-3">
-        <div *ngFor="let image of imagini; let i = index" class="image-container" 
-             (click)="viewImage(image)"
-             (contextmenu)="onRightClick($event, image, i)" style="cursor:pointer;">
-          <img [src]="image.imagine" [alt]="'Image ' + image.id" width="150" class="img-thumbnail" />
+      
+      <!-- Bară de căutare -->
+      <div class="row mb-3">
+        <div class="col-md-8">
+          <div class="input-group">
+            <input type="text" 
+                   [(ngModel)]="searchTerm" 
+                   (input)="searchImages()" 
+                   class="form-control" 
+                   placeholder="Caută după numele pacientului...">
+            <button class="btn btn-outline-secondary" 
+                    type="button" 
+                    (click)="clearSearch()" 
+                    *ngIf="searchTerm">
+              <i class="bi bi-x-lg"></i> Șterge
+            </button>
+          </div>
         </div>
+        <div class="col-md-4">
+          <small class="text-muted">
+            Afișate: {{ filteredImagini.length }} din {{ imagini.length }} imagini
+          </small>
+        </div>
+      </div>
+
+      <!-- Lista de imagini filtrate -->
+      <div class="d-flex flex-wrap gap-3">
+        <div *ngFor="let image of filteredImagini; let i = index" class="patient-card" 
+             (click)="viewImage(image)"
+             (contextmenu)="onRightClick($event, image, i)">
+          <div class="image-wrapper">
+            <img [src]="image.imagine" [alt]="'Image ' + image.id" class="patient-image" />
+          </div>
+          <div class="patient-info">
+            <div class="patient-name">
+              <strong>{{ image.numePacient }} {{ image.prenumePacient }}</strong>
+            </div>
+            <div class="patient-details" *ngIf="image.cnp">
+              <small class="text-muted">CNP: {{ image.cnp }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mesaj când nu sunt rezultate -->
+      <div *ngIf="filteredImagini.length === 0 && imagini.length > 0" class="alert alert-info mt-3">
+        <i class="bi bi-info-circle"></i> Nu s-au găsit imagini pentru căutarea "{{ searchTerm }}"
+      </div>
+
+      <!-- Mesaj când nu sunt imagini deloc -->
+      <div *ngIf="imagini.length === 0" class="alert alert-warning mt-3">
+        <i class="bi bi-exclamation-triangle"></i> Nu aveți imagini încărcate încă.
       </div>
     </div>
   </div>
