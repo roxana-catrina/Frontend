@@ -1,50 +1,79 @@
-.flow-panel {
-    display: flex;
-    flex-wrap: wrap; /* Permite imaginilor să treacă pe rândul următor */
-    gap: 15px; /* Spațiu între dreptunghiuri */
-  }
-  
-  .image-container {
-    width: 180px; /* Lățimea fixă a dreptunghiului */
-    height: 200px; /* Înălțimea fixă a dreptunghiului */
-    border: 2px solid #000; /* Margine vizibilă pentru dreptunghi */
-    border-radius: 8px; /* Colțuri rotunjite, opțional */
-    display: flex;
-    justify-content: center; /* Centrează imaginea orizontal */
-    align-items: center; /* Centrează imaginea vertical */
-    overflow: hidden; /* Ascunde părțile imaginii care depășesc */
-    background-color: #f8f9fa; /* Culoare de fundal, opțional */
-  }
-  
-  .image-container img {
-    max-width: 100%; /* Imaginea nu depășește containerul */
-    max-height: 100%; /* Imaginea se scalează proporțional */
-    object-fit: cover; /* Ajustează imaginea să umple containerul fără distorsiuni */
-    cursor: pointer;
-  
+/* Card pentru fiecare pacient cu imaginea */
+.patient-card {
+  width: 250px;
+  border: 2px solid #dee2e6;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
 
-    .image-container {
-      display: inline-block;
-      margin: 10px;
-      position: relative;
-    }
-    
-    .context-menu {
-      position: absolute;
-      background: white;
-      border: 1px solid #ccc;
-      list-style: none;
-      padding: 5px 0;
-      z-index: 1000;
-    }
-    
-    .context-menu li {
-      padding: 5px 10px;
-      cursor: pointer;
-    }
-    
-    .context-menu li:hover {
-      background: #f2f2f2;
-    }
-    
-  }
+.patient-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border-color: #007bff;
+}
+
+/* Wrapper pentru imagine */
+.image-wrapper {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.patient-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Informații pacient */
+.patient-info {
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}
+
+.patient-name {
+  font-size: 1rem;
+  color: #212529;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.patient-details {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+/* Context menu */
+.context-menu {
+  position: fixed;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  list-style: none;
+  padding: 5px 0;
+  z-index: 1000;
+}
+
+.context-menu li {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.context-menu li:hover {
+  background: #f2f2f2;
+}

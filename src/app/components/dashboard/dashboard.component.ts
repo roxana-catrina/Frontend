@@ -41,6 +41,10 @@ cnp: string = '';
 numarTelefon: string = '';
   private imageDeletedListener: any;
 
+  // Proprietăți pentru căutare
+  searchTerm: string = '';
+  filteredImagini: Imagine[] = [];
+
   // Adăugați proprietăți pentru predicție
   predictionResult: string = '';
   predictionConfidence: number = 0;
@@ -248,13 +252,55 @@ loadDashboardData(): void {
         return;
       }
 
-      this.imagini = images.map((image: any) => ({
-        id: image.id,
-        imagine: image.imageUrl, // doar URL-ul, nu base64
-        tip: image.tip
-      }));
+      // Backend-ul returnează doar: id, imageUrl, nume (filename), tip, cloudinaryPublicId
+      // Trebuie să facem apeluri individuale pentru a obține datele pacientului
+      this.imagini = images.map((image: any) => {
+        console.log("Procesare imagine:", image);
+        return {
+          id: image.id,
+          imagine: image.imageUrl,
+          tip: image.tip,
+          nume: image.nume, // numele fișierului
+          numePacient: '',  // Va fi încărcat separat
+          prenumePacient: '', // Va fi încărcat separat
+          cnp: '',
+          dataNasterii: '',
+          sex: '',
+          detalii: '',
+          istoricMedical: '',
+          numarTelefon: ''
+        };
+      });
 
+      // Încarcă detaliile complete pentru fiecare imagine
+      this.imagini.forEach((img, index) => {
+        this.userService.getImage(userId, img.id).subscribe({
+          next: (fullImage: any) => {
+            console.log("Date complete pentru imagine", img.id, ":", fullImage);
+            // Actualizează imaginea cu datele complete
+            this.imagini[index] = {
+              ...this.imagini[index],
+              numePacient: fullImage.numePacient || fullImage.nume_pacient || '',
+              prenumePacient: fullImage.prenumePacient || fullImage.prenume_pacient || '',
+              cnp: fullImage.cnp || '',
+              dataNasterii: fullImage.dataNasterii || fullImage.data_nasterii || '',
+              sex: fullImage.sex || '',
+              detalii: fullImage.detalii || '',
+              istoricMedical: fullImage.istoricMedical || fullImage.istoric_medical || '',
+              numarTelefon: fullImage.numarTelefon || fullImage.numar_telefon || ''
+            };
+            // Actualizează și imaginile filtrate
+            this.filteredImagini = [...this.imagini];
+          },
+          error: (err) => {
+            console.error("Eroare la încărcarea detaliilor imaginii", img.id, err);
+          }
+        });
+      });
+
+      this.filteredImagini = [...this.imagini];
       console.log("Imagini procesate:", this.imagini);
+      console.log("Imagini filtrate initial:", this.filteredImagini);
     },
     error: (error) => {
       console.error("Eroare la încărcarea imaginilor:", error);
@@ -283,5 +329,47 @@ loadDashboardData(): void {
   console.log("Navigating to image:", image);
 
   this.router.navigate(['dashboard/imagine', image.id]);
+  }
+
+  // Metodă pentru filtrarea imaginilor după numele pacientului
+  searchImages() {
+    const term = this.searchTerm.toLowerCase().trim();
+    
+    console.log("Căutare pentru:", term);
+    console.log("Total imagini disponibile:", this.imagini.length);
+    
+    if (!term) {
+      this.filteredImagini = [...this.imagini];
+      console.log("Căutare goală - afișez toate imaginile:", this.filteredImagini.length);
+      return;
+    }
+
+    this.filteredImagini = this.imagini.filter(image => {
+      const numePacient = (image.numePacient || '').toLowerCase();
+      const prenumePacient = (image.prenumePacient || '').toLowerCase();
+      const cnp = (image.cnp || '').toLowerCase();
+      const numeComplet = `${numePacient} ${prenumePacient}`.trim();
+      
+      console.log(`Verificare imagine ${image.id}:`, {
+        numePacient,
+        prenumePacient,
+        cnp,
+        numeComplet,
+        matches: numePacient.includes(term) || prenumePacient.includes(term) || numeComplet.includes(term) || cnp.includes(term)
+      });
+      
+      return numePacient.includes(term) || 
+             prenumePacient.includes(term) || 
+             numeComplet.includes(term) ||
+             cnp.includes(term);
+    });
+    
+    console.log("Rezultate găsite:", this.filteredImagini.length);
+  }
+
+  // Metodă pentru resetarea căutării
+  clearSearch() {
+    this.searchTerm = '';
+    this.filteredImagini = [...this.imagini];
   }
 }
