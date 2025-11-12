@@ -8,6 +8,7 @@ export interface PredictionResult {
   confidence: number;
   hasTumor: boolean;
   error?: string;
+  type?: string;
 }
 
 @Injectable({
@@ -30,6 +31,7 @@ export class BrainTumorService {
           prediction: '',
           confidence: 0,
           hasTumor: false,
+          type: '',
           error: 'Serviciul de analiză ML nu este disponibil. Vă rugăm verificați dacă backend-ul rulează.'
         });
       })

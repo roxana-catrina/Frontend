@@ -165,9 +165,10 @@ numarTelefon: string = '';
     this.brainTumorService.predictTumor(this.selectedFile).subscribe({
       next: (prediction: PredictionResult) => {
         this.isAnalyzing = false;
+          console.log("Predicție primită de la serviciul ML:", prediction);
         if (prediction.success) {
           this.predictionResult = prediction.hasTumor 
-            ? `ATENȚIE: Tumoare detectată (${prediction.prediction})` 
+            ? `ATENȚIE: Tumoare detectată - Tip: ${prediction.type || prediction.prediction}` 
             : 'Nu s-a detectat tumoare';
           this.predictionConfidence = prediction.confidence;
           this.message = 'Analiza completă!';
@@ -183,7 +184,9 @@ numarTelefon: string = '';
         this.message = 'Eroare la analiza imaginii';
         console.error('ML prediction error:', error);
       }
+      
     });
+    
   }
 
   uploadImage() {
