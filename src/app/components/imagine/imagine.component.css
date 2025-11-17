@@ -1,49 +1,496 @@
-.image-viewer {
-  padding: 20px;
+/* Container principal */
+.image-viewer-container {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+  padding: 2rem;
 }
 
-.header {
-  margin-bottom: 20px;
+/* Header */
+.viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.button-delete {
-  padding: 10px 20px;
-  background-color: #ba3011cd;
-  color: white;
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s;
+}
+
+.back-btn:hover {
+  transform: translateX(-5px);
+}
+
+.page-title {
+  margin: 0;
+  color: #495057;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Layout principal */
+.viewer-content {
+  display: grid;
+  grid-template-columns: 1fr 450px;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Secțiunea imaginii */
+.image-section {
+  width: 100%;
+}
+
+.card {
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s;
 }
 
-.back-button:hover {
-  background-color: #0056b3;
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.card-header {
+  border-bottom: none;
+  padding: 1rem 1.5rem;
+  font-weight: 600;
 }
 
 .image-container {
-   width: 100%;
-  height: auto;
-  max-height: 90vh; /* opțional: să nu depășească înălțimea ecranului */
- /* display: flex;
-  justify-content: left;
+  width: 100%;
+  min-height: 500px;
+  display: flex;
+  justify-content: center;
   align-items: center;
-  min-height: 80vh;
- /* overflow: hidden;         /* ascunde marginile imaginii când se mărește */
- /* width: 100%;              /* se va adapta containerul */
- /* max-width: 600px;         /* sau ce dimensiune vrei */
-  /*cursor: zoom-in;*/
+  background: #f8f9fa;
+  padding: 2rem;
+  position: relative;
 }
 
-.image-container img {
-  max-width: 90%;
-  max-height: 80vh;
-  object-fit: contain;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  border-radius: 4px;
+.image-container:hover .zoom-hint {
+  opacity: 1;
+}
 
-  /* width: 100%;
-  transition: transform 0.3s ease;
-*/}
+.zoom-hint {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.medical-image {
+  max-width: 100%;
+  max-height: 700px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: zoom-in;
+}
+
+.medical-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.no-image-placeholder {
+  text-align: center;
+  padding: 4rem;
+  color: #adb5bd;
+}
+
+.no-image-placeholder i {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+/* Secțiunea detalii */
+.details-section {
+  position: sticky;
+  top: 2rem;
+}
+
+.patient-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.info-group {
+  background: #f8f9fa;
+  padding: 1.25rem;
+  border-radius: 8px;
+  border-left: 4px solid #28a745;
+}
+
+.info-group.full-width {
+  border-left-color: #17a2b8;
+}
+
+.section-title {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-item.vertical {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #6c757d;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info-value {
+  color: #212529;
+  font-weight: 500;
+  text-align: right;
+}
+
+.info-value-box {
+  width: 100%;
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  line-height: 1.6;
+  min-height: 80px;
+}
+
+/* Acțiuni rapide */
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+}
+
+.quick-actions .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.quick-actions .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Card footer */
+.card-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .viewer-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .details-section {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .image-viewer-container {
+    padding: 1rem;
+  }
+  
+  .viewer-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .page-title {
+    font-size: 1.25rem;
+  }
+  
+  .image-container {
+    min-height: 300px;
+    padding: 1rem;
+  }
+  
+  .medical-image {
+    max-height: 400px;
+  }
+  
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .info-value {
+    text-align: left;
+  }
+}
+
+/* Animații */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Print styles */
+@media print {
+  .viewer-header,
+  .quick-actions,
+  .btn {
+    display: none !important;
+  }
+  
+  .viewer-content {
+    display: block;
+  }
+  
+  .medical-image {
+    max-height: none;
+    page-break-inside: avoid;
+  }
+}
+
+/* Zoom Modal */
+.zoom-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeInModal 0.3s ease-out;
+}
+
+.zoom-modal-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  cursor: default;
+}
+
+.zoomed-image {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 0 50px rgba(255, 255, 255, 0.1);
+  transition: transform 0.1s ease-out;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.zoom-close-btn {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: #333;
+  transition: all 0.3s;
+  z-index: 10000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.zoom-close-btn:hover {
+  background: white;
+  transform: rotate(90deg) scale(1.1);
+}
+
+.zoom-controls {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.zoom-buttons {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.5rem;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.zoom-btn {
+  background: transparent;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #333;
+  transition: all 0.2s;
+}
+
+.zoom-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.1);
+  transform: scale(1.1);
+}
+
+.zoom-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.zoom-level {
+  font-weight: 600;
+  color: #333;
+  min-width: 60px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.zoom-hint-text {
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Animations */
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive pentru zoom modal */
+@media (max-width: 768px) {
+  .zoom-close-btn {
+    top: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+  
+  .zoom-hint-text {
+    font-size: 0.75rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  .zoom-controls {
+    bottom: 1rem;
+  }
+
+  .zoom-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+
+  .zoom-level {
+    font-size: 0.85rem;
+    min-width: 50px;
+  }
+
+  .zoomed-image {
+    max-width: 95vw;
+    max-height: 85vh;
+  }
+}
 

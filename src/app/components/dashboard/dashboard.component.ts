@@ -50,6 +50,14 @@ numarTelefon: string = '';
   predictionConfidence: number = 0;
   isAnalyzing: boolean = false;
 
+  // Proprietăți pentru calendar
+  currentDate: Date = new Date();
+  currentYear: number = new Date().getFullYear();
+  currentMonth: number = new Date().getMonth();
+  currentMonthName: string = '';
+  calendarDays: any[] = [];
+  selectedDate: Date | null = null;
+
  // userId = 1; // ID-ul utilizatorului
 
   constructor(
@@ -89,6 +97,9 @@ numarTelefon: string = '';
     const deletedId = event.detail.imageId;
     this.imagini = this.imagini.filter(img => img.id !== deletedId);
   });
+
+  // Inițializare calendar
+  this.generateCalendar();
   }
 
   ngOnDestroy() {
@@ -374,5 +385,98 @@ loadDashboardData(): void {
   clearSearch() {
     this.searchTerm = '';
     this.filteredImagini = [...this.imagini];
+  }
+
+  // Metode pentru calendar
+  generateCalendar() {
+    const year = this.currentYear;
+    const month = this.currentMonth;
+    
+    // Nume lună
+    const monthNames = ['Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie',
+                        'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'];
+    this.currentMonthName = monthNames[month];
+
+    // Prima zi a lunii
+    const firstDay = new Date(year, month, 1);
+    // Ultima zi a lunii
+    const lastDay = new Date(year, month + 1, 0);
+    
+    // Ziua săptămânii pentru prima zi (0 = Duminică, 1 = Luni, etc.)
+    let startingDayOfWeek = firstDay.getDay();
+    // Ajustare pentru ca Luni să fie prima zi (0)
+    startingDayOfWeek = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
+
+    // Numărul de zile în lună
+    const daysInMonth = lastDay.getDate();
+
+    // Ziua curentă
+    const today = new Date();
+    const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
+
+    this.calendarDays = [];
+
+    // Adaugă zilele din luna anterioară
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+      this.calendarDays.push({
+        day: prevMonthLastDay - i,
+        otherMonth: true,
+        isToday: false,
+        selected: false
+      });
+    }
+
+    // Adaugă zilele din luna curentă
+    for (let day = 1; day <= daysInMonth; day++) {
+      this.calendarDays.push({
+        day: day,
+        otherMonth: false,
+        isToday: isCurrentMonth && day === today.getDate(),
+        selected: false
+      });
+    }
+
+    // Completează restul până la 42 de zile (6 săptămâni)
+    const remainingDays = 42 - this.calendarDays.length;
+    for (let day = 1; day <= remainingDays; day++) {
+      this.calendarDays.push({
+        day: day,
+        otherMonth: true,
+        isToday: false,
+        selected: false
+      });
+    }
+  }
+
+  previousMonth() {
+    if (this.currentMonth === 0) {
+      this.currentMonth = 11;
+      this.currentYear--;
+    } else {
+      this.currentMonth--;
+    }
+    this.generateCalendar();
+  }
+
+  nextMonth() {
+    if (this.currentMonth === 11) {
+      this.currentMonth = 0;
+      this.currentYear++;
+    } else {
+      this.currentMonth++;
+    }
+    this.generateCalendar();
+  }
+
+  selectDay(day: any) {
+    if (day.otherMonth) return;
+    
+    // Resetează selecția anterioară
+    this.calendarDays.forEach(d => d.selected = false);
+    day.selected = true;
+    
+    this.selectedDate = new Date(this.currentYear, this.currentMonth, day.day);
+    console.log('Zi selectată:', this.selectedDate);
   }
 }

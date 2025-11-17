@@ -18,6 +18,13 @@ import { ConfirmDialogComponent } from '../../confirm-dialog/confirm-dialog.comp
 })
 export class ImagineComponent implements OnInit {
   image: Imagine | null = null;
+  isZoomed: boolean = false;
+  zoomLevel: number = 1;
+  isDragging: boolean = false;
+  startX: number = 0;
+  startY: number = 0;
+  translateX: number = 0;
+  translateY: number = 0;
 
   constructor(
     private dialog: MatDialog,
@@ -55,6 +62,72 @@ export class ImagineComponent implements OnInit {
 
   goBack() {
     this.router.navigate(['/dashboard']);
+  }
+
+  toggleZoom() {
+    this.isZoomed = !this.isZoomed;
+    if (this.isZoomed) {
+      this.zoomLevel = 1.5; // Start cu zoom moderat
+    } else {
+      this.resetZoom();
+    }
+  }
+
+  closeZoom() {
+    this.isZoomed = false;
+    this.resetZoom();
+  }
+
+  resetZoom() {
+    this.zoomLevel = 1;
+    this.translateX = 0;
+    this.translateY = 0;
+    this.isDragging = false;
+  }
+
+  zoomIn() {
+    if (this.zoomLevel < 5) {
+      this.zoomLevel += 0.5;
+    }
+  }
+
+  zoomOut() {
+    if (this.zoomLevel > 0.5) {
+      this.zoomLevel -= 0.5;
+    }
+  }
+
+  onWheel(event: WheelEvent) {
+    event.preventDefault();
+    if (event.deltaY < 0) {
+      this.zoomIn();
+    } else {
+      this.zoomOut();
+    }
+  }
+
+  onMouseDown(event: MouseEvent) {
+    if (this.zoomLevel > 1) {
+      this.isDragging = true;
+      this.startX = event.clientX - this.translateX;
+      this.startY = event.clientY - this.translateY;
+      event.preventDefault();
+    }
+  }
+
+  onMouseMove(event: MouseEvent) {
+    if (this.isDragging) {
+      this.translateX = event.clientX - this.startX;
+      this.translateY = event.clientY - this.startY;
+    }
+  }
+
+  onMouseUp() {
+    this.isDragging = false;
+  }
+
+  getImageTransform(): string {
+    return `scale(${this.zoomLevel}) translate(${this.translateX / this.zoomLevel}px, ${this.translateY / this.zoomLevel}px)`;
   }
 
 
