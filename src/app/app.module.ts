@@ -1,7 +1,12 @@
-import { NgModule } from '@angular/core';
+import { NgModule, LOCALE_ID } from '@angular/core';
 import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { registerLocaleData } from '@angular/common';
+import localeRo from '@angular/common/locales/ro';
 
 import { AppRoutingModule } from './app-routing.module';
+
+// Înregistrează locale-ul românesc
+registerLocaleData(localeRo);
 import { AppComponent } from './app.component';
 import { PostUserComponent } from './components/post-user/post-user.component';
 import { GetAllUsersComponent } from './components/get-all-users/get-all-users.component';
@@ -38,7 +43,8 @@ import { MatButtonModule } from '@angular/material/button';
   ],
 
   providers: [
-    provideClientHydration(withEventReplay())
+    provideClientHydration(withEventReplay()),
+    { provide: LOCALE_ID, useValue: 'ro' }
   ],
   bootstrap: [AppComponent]
 })

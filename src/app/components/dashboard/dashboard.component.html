@@ -214,8 +214,10 @@
                      [class.other-month]="day.otherMonth"
                      [class.today]="day.isToday"
                      [class.selected]="day.selected"
+                     [class.has-appointment]="day.hasAppointment"
                      (click)="selectDay(day)">
                   {{ day.day }}
+                  <span *ngIf="day.hasAppointment" class="appointment-dot"></span>
                 </div>
               </div>
             </div>
@@ -225,22 +227,23 @@
           <div class="mt-4">
             <h6 class="text-muted mb-3"><i class="bi bi-clock-history"></i> Programări Viitoare</h6>
             <div class="upcoming-appointments">
-              <div class="alert alert-info text-center">
-                <small><i class="bi bi-info-circle"></i> Funcționalitate în dezvoltare</small>
+              <div *ngIf="programariViitoare.length === 0" class="alert alert-info text-center">
+                <small><i class="bi bi-info-circle"></i> Nu există programări viitoare</small>
               </div>
-              <!-- Exemplu de programare - va fi completat în viitor -->
-              <!--
-              <div class="appointment-item">
+              
+              <div *ngFor="let programare of programariViitoare" class="appointment-item">
                 <div class="appointment-date">
-                  <strong>20 Nov</strong>
-                  <small>14:00</small>
+                  <strong>{{ formatProgramareDate(programare.dataProgramare) }}</strong>
+                  <small>{{ formatProgramareTime(programare.dataProgramare) }}</small>
                 </div>
                 <div class="appointment-details">
-                  <strong>Ion Popescu</strong>
-                  <small>Consultație operație</small>
+                  <strong>{{ programare.pacientNume }} {{ programare.pacientPrenume }}</strong>
+                  <small>{{ programare.tipConsultatie || 'Consultație' }}</small>
                 </div>
+                <button class="btn btn-sm btn-outline-danger" (click)="deleteProgramare(programare.id!)" title="Șterge programarea">
+                  <i class="bi bi-trash"></i>
+                </button>
               </div>
-              -->
             </div>
           </div>
 
@@ -253,7 +256,7 @@
                 <div class="stat-label">Total Imagini</div>
               </div>
               <div class="stat-card">
-                <div class="stat-number">0</div>
+                <div class="stat-number">{{ programariViitoare.length }}</div>
                 <div class="stat-label">Programări</div>
               </div>
             </div>
@@ -270,3 +273,101 @@
     class="context-menu list-group position-fixed p-2 bg-white border rounded shadow">
   <!-- <li (click)="deleteImage()" class="list-group-item list-group-item-action">Șterge</li> -->
 </ul>
+
+<!-- Modal pentru creare programare -->
+<div *ngIf="showProgramareModal" class="modal-overlay" (click)="closeProgramareModal()">
+  <div class="modal-content-programare" (click)="$event.stopPropagation()">
+    <div class="modal-header-programare">
+      <h5><i class="bi bi-calendar-plus"></i> Adaugă Programare</h5>
+      <button class="btn-close" (click)="closeProgramareModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body-programare">
+      <div class="alert alert-info mb-3">
+        <i class="bi bi-calendar-check"></i> 
+        Data selectată: <strong>{{ formatSelectedDate() }}</strong>
+      </div>
+
+      <form>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Nume Pacient *</label>
+            <div class="autocomplete-wrapper">
+              <input type="text" 
+                     [(ngModel)]="programareNume" 
+                     name="programareNume" 
+                     (input)="onProgramareNumeChange()"
+                     (focus)="onProgramareNumeChange()"
+                     (blur)="hideSuggestions()"
+                     class="form-control" 
+                     placeholder="Introduceți numele" 
+                     required 
+                     autocomplete="off" />
+              
+              <div *ngIf="showPacientiSuggestions" class="autocomplete-suggestions">
+                <div *ngFor="let pacient of pacientiFiltrati" 
+                     class="suggestion-item"
+                     (click)="selectPacient(pacient)">
+                  <div class="suggestion-name">
+                    <strong>{{ pacient.numePacient }} {{ pacient.prenumePacient }}</strong>
+                  </div>
+                  <div class="suggestion-details" *ngIf="pacient.cnp">
+                    <small>CNP: {{ pacient.cnp }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Prenume Pacient *</label>
+            <input type="text" [(ngModel)]="programarePrenume" name="programarePrenume" 
+                   class="form-control" placeholder="Introduceți prenumele" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">CNP</label>
+            <input type="text" [(ngModel)]="programareCnp" name="programareCnp" 
+                   class="form-control" placeholder="CNP pacient" maxlength="13" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Ora *</label>
+            <input type="time" [(ngModel)]="programareOra" name="programareOra" 
+                   class="form-control" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Tip Consultație</label>
+            <select [(ngModel)]="programareTip" name="programareTip" class="form-control">
+              <option value="">Selectează tipul</option>
+              <option value="Consultație generală">Consultație generală</option>
+              <option value="Control">Control</option>
+              <option value="Investigație">Investigație</option>
+              <option value="Intervenție">Intervenție</option>
+              <option value="Altele">Altele</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Durată (minute)</label>
+            <input type="number" [(ngModel)]="programareDurata" name="programareDurata" 
+                   class="form-control" min="15" step="15" />
+          </div>
+          <div class="col-12">
+            <label class="form-label">Detalii</label>
+            <textarea [(ngModel)]="programareDetalii" name="programareDetalii" 
+                      class="form-control" rows="3" 
+                      placeholder="Detalii despre programare..."></textarea>
+          </div>
+        </div>
+      </form>
+    </div>
+    
+    <div class="modal-footer-programare">
+      <button class="btn btn-secondary" (click)="closeProgramareModal()">
+        <i class="bi bi-x-circle"></i> Anulează
+      </button>
+      <button class="btn btn-primary" (click)="createProgramare()">
+        <i class="bi bi-check-circle"></i> Salvează Programarea
+      </button>
+    </div>
+  </div>
+</div>
