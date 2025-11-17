@@ -3,8 +3,10 @@ import { Router } from '@angular/router';
 import { StorageService } from '../../service/storage/storage.service';
 import { User } from '../../models/user';
 import { Imagine } from '../../models/imagine';
+import { Programare, ProgramareDTO, StatusProgramare } from '../../models/programare';
 import { UserService } from '../../service/user/user.service';
 import { BrainTumorService, PredictionResult } from '../../service/brain-tumor/brain-tumor.service';
+import { ProgramareService } from '../../service/programare/programare.service';
 
 
 @Component({
@@ -58,12 +60,32 @@ numarTelefon: string = '';
   calendarDays: any[] = [];
   selectedDate: Date | null = null;
 
+  // Proprietăți pentru programări
+  programari: Programare[] = [];
+  programariViitoare: Programare[] = [];
+  showProgramareModal: boolean = false;
+  
+  // Date formular programare
+  programareNume: string = '';
+  programarePrenume: string = '';
+  programareCnp: string = '';
+  programareOra: string = '';
+  programareTip: string = '';
+  programareDetalii: string = '';
+  programareDurata: number = 30;
+  
+  // Autocomplete pentru pacienți
+  pacientiSuggestions: Imagine[] = [];
+  showPacientiSuggestions: boolean = false;
+  pacientiFiltrati: Imagine[] = [];
+
  // userId = 1; // ID-ul utilizatorului
 
   constructor(
     private router: Router,
     private userService: UserService,
-    private brainTumorService: BrainTumorService
+    private brainTumorService: BrainTumorService,
+    private programareService: ProgramareService
   ) { }
   ngOnInit() {
     this.loadDashboardData();
@@ -100,6 +122,7 @@ numarTelefon: string = '';
 
   // Inițializare calendar
   this.generateCalendar();
+  this.loadProgramari();
   }
 
   ngOnDestroy() {
@@ -457,6 +480,7 @@ loadDashboardData(): void {
       this.currentMonth--;
     }
     this.generateCalendar();
+    this.loadProgramari();
   }
 
   nextMonth() {
@@ -467,6 +491,7 @@ loadDashboardData(): void {
       this.currentMonth++;
     }
     this.generateCalendar();
+    this.loadProgramari();
   }
 
   selectDay(day: any) {
@@ -478,5 +503,229 @@ loadDashboardData(): void {
     
     this.selectedDate = new Date(this.currentYear, this.currentMonth, day.day);
     console.log('Zi selectată:', this.selectedDate);
+    
+    // Deschide modalul pentru creare programare
+    this.showProgramareModal = true;
+  }
+
+  // Metode pentru programări
+  loadProgramari() {
+    let id: string | null = localStorage.getItem("id");
+    let userId: number = id ? Number(id) : 0;
+
+    console.log('=== ÎNCĂRCARE PROGRAMĂRI ===');
+    console.log('User ID:', userId);
+    console.log('An curent:', this.currentYear);
+    console.log('Luna curentă (0-11):', this.currentMonth);
+    console.log('Luna pentru API (1-12):', this.currentMonth + 1);
+
+    // Încarcă programările pentru luna curentă
+    this.programareService.getProgramariByMonth(userId, this.currentYear, this.currentMonth + 1).subscribe({
+      next: (programari) => {
+        console.log('✅ Răspuns GET programări luna:', programari);
+        console.log('Număr programări:', programari.length);
+        this.programari = programari;
+        this.markCalendarDaysWithAppointments();
+      },
+      error: (error) => {
+        console.error('❌ Eroare la încărcarea programărilor lunii:', error);
+        console.error('Status:', error.status);
+        console.error('Message:', error.message);
+      }
+    });
+
+    // Încarcă programările viitoare
+    console.log('📞 Apelăm /upcoming pentru userId:', userId);
+    this.programareService.getProgramariViitoare(userId).subscribe({
+      next: (programari) => {
+        console.log('✅ Răspuns GET programări viitoare:', programari);
+        console.log('Număr programări viitoare:', programari.length);
+        this.programariViitoare = programari.slice(0, 5); // Primele 5
+      },
+      error: (error) => {
+        console.error('❌ Eroare la încărcarea programărilor viitoare:', error);
+        console.error('Status:', error.status);
+        console.error('Message:', error.message);
+      }
+    });
+
+    // DEBUG: Încearcă să obții TOATE programările
+    console.log('📞 DEBUG - Apelăm /user/{userId} pentru TOATE programările');
+    this.programareService.getAllProgramari(userId).subscribe({
+      next: (toateProgramarile) => {
+        console.log('🔍 DEBUG - TOATE programările:', toateProgramarile);
+        console.log('Număr TOTAL programări:', toateProgramarile.length);
+      },
+      error: (error) => {
+        console.error('❌ DEBUG - Eroare la încărcarea TUTUROR programărilor:', error);
+      }
+    });
+  }
+
+  markCalendarDaysWithAppointments() {
+    console.log('📅 Marcare zile cu programări...');
+    console.log('Total programări:', this.programari.length);
+    
+    let markedDays = 0;
+    this.calendarDays.forEach(day => {
+      if (!day.otherMonth) {
+        const dayDate = new Date(this.currentYear, this.currentMonth, day.day);
+        day.hasAppointment = this.programari.some(prog => {
+          const progDate = new Date(prog.dataProgramare);
+          const match = progDate.getDate() === day.day &&
+                 progDate.getMonth() === this.currentMonth &&
+                 progDate.getFullYear() === this.currentYear;
+          
+          if (match) {
+            console.log(`Zi ${day.day} - Programare găsită:`, prog);
+            markedDays++;
+          }
+          return match;
+        });
+      }
+    });
+    console.log(`✅ ${markedDays} zile marcate cu programări`);
+  }
+
+  createProgramare() {
+    if (!this.selectedDate || !this.programareNume || !this.programarePrenume || !this.programareOra) {
+      alert('Te rog completează toate câmpurile obligatorii!');
+      return;
+    }
+
+    let id: string | null = localStorage.getItem("id");
+    let userId: number = id ? Number(id) : 0;
+
+    // Combină data selectată cu ora
+    const [hours, minutes] = this.programareOra.split(':');
+    const dataProgramare = new Date(this.selectedDate);
+    dataProgramare.setHours(parseInt(hours), parseInt(minutes), 0);
+
+    const programareDTO: ProgramareDTO = {
+      userId: userId,
+      pacientNume: this.programareNume,
+      pacientPrenume: this.programarePrenume,
+      pacientCnp: this.programareCnp,
+      dataProgramare: dataProgramare.toISOString(),
+      durataMinute: this.programareDurata,
+      tipConsultatie: this.programareTip,
+      detalii: this.programareDetalii
+    };
+
+    console.log('=== DATE TRIMISE CĂTRE BACKEND ===');
+    console.log('URL:', 'http://localhost:8083/api/programari');
+    console.log('ProgramareDTO:', JSON.stringify(programareDTO, null, 2));
+    console.log('User ID:', userId);
+    console.log('Data și ora programării:', dataProgramare);
+    console.log('===================================');
+
+    this.programareService.createProgramare(programareDTO).subscribe({
+      next: (response) => {
+        console.log('Programare creată cu succes:', response);
+        this.closeProgramareModal();
+        this.loadProgramari();
+        alert('Programare adăugată cu succes!');
+      },
+      error: (error) => {
+        console.error('Eroare la crearea programării:', error);
+        alert('Eroare la adăugarea programării!');
+      }
+    });
+  }
+
+  closeProgramareModal() {
+    this.showProgramareModal = false;
+    this.resetProgramareForm();
+  }
+
+  resetProgramareForm() {
+    this.programareNume = '';
+    this.programarePrenume = '';
+    this.programareCnp = '';
+    this.programareOra = '';
+    this.programareTip = '';
+    this.programareDetalii = '';
+    this.programareDurata = 30;
+    this.showPacientiSuggestions = false;
+    this.pacientiFiltrati = [];
+  }
+
+  onProgramareNumeChange() {
+    const searchTerm = this.programareNume.toLowerCase().trim();
+    
+    if (searchTerm.length < 2) {
+      this.showPacientiSuggestions = false;
+      this.pacientiFiltrati = [];
+      return;
+    }
+
+    // Filtrează pacienții unici după nume
+    const pacientiUnici = new Map<string, Imagine>();
+    
+    this.imagini.forEach(img => {
+      if (img.numePacient && img.prenumePacient) {
+        const key = `${img.numePacient}_${img.prenumePacient}_${img.cnp || ''}`;
+        const numeComplet = `${img.numePacient} ${img.prenumePacient}`.toLowerCase();
+        const numeLower = img.numePacient.toLowerCase();
+        
+        if (numeLower.includes(searchTerm) || numeComplet.includes(searchTerm)) {
+          if (!pacientiUnici.has(key)) {
+            pacientiUnici.set(key, img);
+          }
+        }
+      }
+    });
+
+    this.pacientiFiltrati = Array.from(pacientiUnici.values());
+    this.showPacientiSuggestions = this.pacientiFiltrati.length > 0;
+  }
+
+  selectPacient(pacient: Imagine) {
+    this.programareNume = pacient.numePacient || '';
+    this.programarePrenume = pacient.prenumePacient || '';
+    this.programareCnp = pacient.cnp || '';
+    this.showPacientiSuggestions = false;
+    this.pacientiFiltrati = [];
+  }
+
+  hideSuggestions() {
+    // Delay pentru a permite click pe sugestie
+    setTimeout(() => {
+      this.showPacientiSuggestions = false;
+    }, 200);
+  }
+
+  deleteProgramare(id: number) {
+    if (confirm('Sigur dorești să ștergi această programare?')) {
+      this.programareService.deleteProgramare(id).subscribe({
+        next: () => {
+          console.log('Programare ștearsă cu succes');
+          this.loadProgramari();
+        },
+        error: (error) => {
+          console.error('Eroare la ștergerea programării:', error);
+        }
+      });
+    }
+  }
+
+  formatProgramareDate(date: Date | string): string {
+    const d = new Date(date);
+    return d.toLocaleDateString('ro-RO', { day: '2-digit', month: 'short' });
+  }
+
+  formatProgramareTime(date: Date | string): string {
+    const d = new Date(date);
+    return d.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  formatSelectedDate(): string {
+    if (!this.selectedDate) return '';
+    const options: Intl.DateTimeFormatOptions = { 
+      day: '2-digit', 
+      month: 'long', 
+      year: 'numeric' 
+    };
+    return this.selectedDate.toLocaleDateString('ro-RO', options);
   }
 }
