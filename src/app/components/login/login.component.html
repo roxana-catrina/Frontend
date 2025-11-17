@@ -1,44 +1,110 @@
-<div class="container mt-5 d-flex justify-content-center">
-  <div class="card shadow p-4" style="width: 100%; max-width: 400px;">
-    <h2 class="text-center mb-4">Login</h2>
-    <form [formGroup]="loginForm" (ngSubmit)="login()">
-      
-      <!-- Email -->
-      <div class="mb-3">
-        <label for="email" class="form-label">Email:</label>
-        <input
-          type="text"
-          id="email"
-          name="email"
-          class="form-control"
-          formControlName="email"
-          [ngClass]="{ 'is-invalid': loginForm.controls['email'].invalid && loginForm.controls['email'].touched }"
-        />
-        <div class="invalid-feedback" *ngIf="loginForm.controls['email'].errors?.['required']">
-          Email is mandatory!
+<div class="login-container">
+  <div class="login-wrapper">
+    <!-- Left Side - Branding -->
+    <div class="branding-section">
+      <div class="branding-content">
+        <div class="logo-container">
+          <i class="bi bi-hospital"></i>
         </div>
-        <div class="invalid-feedback" *ngIf="loginForm.controls['email'].errors?.['email']">
-          Invalid email!
-        </div>
-      </div>
-
-      <!-- Password -->
-      <div class="mb-3">
-        <label for="parola" class="form-label">Password:</label>
-        <input
-          type="password"
-          id="parola"
-          name="parola"
-          class="form-control"
-          formControlName="parola"
-          [ngClass]="{ 'is-invalid': loginForm.controls['parola'].invalid && loginForm.controls['parola'].touched }"
-        />
-        <div class="invalid-feedback" *ngIf="loginForm.controls['parola'].errors?.['required']">
-          Password is mandatory!
+        <h1 class="brand-title">PhotoSolve</h1>
+        <p class="brand-subtitle">Sistem Medical de Analiză Imagini</p>
+        <div class="features-list">
+          <div class="feature-item">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Analiză automată imagini medicale</span>
+          </div>
+          <div class="feature-item">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Gestionare pacienți</span>
+          </div>
+          <div class="feature-item">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Programări operații</span>
+          </div>
         </div>
       </div>
+    </div>
 
-      <button type="submit" class="btn btn-primary w-100" [disabled]="loginForm.invalid">Login</button>
-    </form>
+    <!-- Right Side - Login Form -->
+    <div class="form-section">
+      <div class="form-container">
+        <div class="form-header">
+          <h2>Bun venit!</h2>
+          <p>Conectați-vă pentru a continua</p>
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="login()">
+          <!-- Email -->
+          <div class="form-group">
+            <label for="email" class="form-label">
+              <i class="bi bi-envelope"></i> Adresă Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              class="form-control"
+              formControlName="email"
+              placeholder="exemplu@email.com"
+              [ngClass]="{ 'is-invalid': loginForm.controls['email'].invalid && loginForm.controls['email'].touched }"
+            />
+            <div class="error-message" *ngIf="loginForm.controls['email'].invalid && loginForm.controls['email'].touched">
+              <i class="bi bi-exclamation-circle"></i>
+              <span *ngIf="loginForm.controls['email'].errors?.['required']">
+                Email-ul este obligatoriu!
+              </span>
+              <span *ngIf="loginForm.controls['email'].errors?.['email']">
+                Format email invalid!
+              </span>
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label for="parola" class="form-label">
+              <i class="bi bi-lock"></i> Parolă
+            </label>
+            <input
+              type="password"
+              id="parola"
+              class="form-control"
+              formControlName="parola"
+              placeholder="Introduceți parola"
+              [ngClass]="{ 'is-invalid': loginForm.controls['parola'].invalid && loginForm.controls['parola'].touched }"
+            />
+            <div class="error-message" *ngIf="loginForm.controls['parola'].invalid && loginForm.controls['parola'].touched">
+              <i class="bi bi-exclamation-circle"></i>
+              <span *ngIf="loginForm.controls['parola'].errors?.['required']">
+                Parola este obligatorie!
+              </span>
+            </div>
+          </div>
+
+          <!-- Forgot Password Link -->
+          <div class="forgot-password">
+            <a href="#" class="link">Ai uitat parola?</a>
+          </div>
+
+          <!-- Login Button -->
+          <button type="submit" class="btn-login" [disabled]="loginForm.invalid">
+            <i class="bi bi-box-arrow-in-right"></i>
+            Conectare
+          </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="divider">
+          <span>SAU</span>
+        </div>
+
+        <!-- Register Link -->
+        <div class="register-section">
+          <p>Nu ai cont?</p>
+          <a routerLink="/user" class="btn-register">
+            <i class="bi bi-person-plus"></i>
+            Creează cont nou
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

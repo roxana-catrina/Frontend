@@ -1,170 +1,228 @@
-<div class="container mt-5">
-  <div class="card shadow p-4 mx-auto" style="max-width: 600px;">
-    <h2 class="mb-4 text-center">Post New User</h2>
-    <form [formGroup]="postUserForm" (ngSubmit)="postUser()">
+<div class="post-user-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h2 class="page-title">
+      <i class="bi bi-person-plus-fill"></i> Creare Cont Nou
+    </h2>
+    <p class="page-subtitle">Completați formularul pentru a crea un cont</p>
+  </div>
 
-      <!-- Last name -->
-      <div class="mb-3">
-        <label for="nume" class="form-label">Last name:</label>
-        <input
-          type="text"
-          id="nume"
-          name="nume"
-          class="form-control"
-          required
-          formControlName="nume"
-          [ngClass]="{'is-invalid': postUserForm.controls['nume'].invalid && postUserForm.controls['nume'].touched}"
-        />
-        <div class="invalid-feedback" *ngIf="postUserForm.controls['nume'].errors?.['required']">
-          Second name is mandatory.
-        </div>
-      </div>
+  <!-- Form Card -->
+  <div class="form-card shadow-lg">
+    <div class="card-header">
+      <h4 class="mb-0">
+        <i class="bi bi-clipboard-check"></i> Formular Înregistrare
+      </h4>
+    </div>
 
-      <!-- First name -->
-      <div class="mb-3">
-        <label for="prenume" class="form-label">First name:</label>
-        <input
-          type="text"
-          id="prenume"
-          name="prenume"
-          class="form-control"
-          required
-          formControlName="prenume"
-          [ngClass]="{'is-invalid': postUserForm.controls['prenume'].invalid && postUserForm.controls['prenume'].touched}"
-        />
-        <div class="invalid-feedback" *ngIf="postUserForm.controls['prenume'].errors?.['required']">
-          First name is mandatory.
-        </div>
-      </div>
+    <div class="card-body">
+      <form [formGroup]="postUserForm" (ngSubmit)="postUser()">
+        <div class="row">
+          <!-- Informații Personale -->
+          <div class="col-12">
+            <h6 class="section-title">
+              <i class="bi bi-person-badge"></i> Informații Personale
+            </h6>
+          </div>
 
-      <!-- Date of birth -->
-      <div class="mb-3">
-        <label for="data_nasterii" class="form-label">Date of birth:</label>
-        <input
-          type="date"
-          id="data_nasterii"
-          name="data_nasterii"
-          class="form-control"
-          required
-          formControlName="data_nasterii"
-          [ngClass]="{'is-invalid': postUserForm.controls['data_nasterii'].invalid && postUserForm.controls['data_nasterii'].touched}"
-        />
-        <div class="invalid-feedback" *ngIf="postUserForm.controls['data_nasterii'].errors?.['required']">
-          Birth date is mandatory.
-        </div>
-        <div class="invalid-feedback" *ngIf="postUserForm.controls['data_nasterii'].errors?.['futureDate']">
-          Birth date cannot be in the future.
-        </div>
-      </div>
+          <div class="col-md-6 mb-3">
+            <label for="nume" class="form-label">
+              <i class="bi bi-person"></i> Nume <span class="text-danger">*</span>
+            </label>
+            <input
+              type="text"
+              id="nume"
+              class="form-control"
+              formControlName="nume"
+              placeholder="Introduceți numele"
+              [ngClass]="{'is-invalid': postUserForm.controls['nume'].invalid && postUserForm.controls['nume'].touched}"
+            />
+            <div class="invalid-feedback" *ngIf="postUserForm.controls['nume'].errors?.['required']">
+              Numele este obligatoriu.
+            </div>
+          </div>
 
-      <!-- Email -->
-      <div class="mb-3">
-        <label for="email" class="form-label">Email:</label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          class="form-control"
-          required
-          formControlName="email"
-          [ngClass]="{'is-invalid': postUserForm.controls['email'].invalid && postUserForm.controls['email'].touched}"
-        />
-        <div class="invalid-feedback" *ngIf="postUserForm.controls['email'].errors?.['required']">
-          Email is mandatory.
-        </div>
-        <div class="invalid-feedback" *ngIf="postUserForm.controls['email'].errors?.['email']">
-          Invalid email!
-        </div>
-      </div>
+          <div class="col-md-6 mb-3">
+            <label for="prenume" class="form-label">
+              <i class="bi bi-person"></i> Prenume <span class="text-danger">*</span>
+            </label>
+            <input
+              type="text"
+              id="prenume"
+              class="form-control"
+              formControlName="prenume"
+              placeholder="Introduceți prenumele"
+              [ngClass]="{'is-invalid': postUserForm.controls['prenume'].invalid && postUserForm.controls['prenume'].touched}"
+            />
+            <div class="invalid-feedback" *ngIf="postUserForm.controls['prenume'].errors?.['required']">
+              Prenumele este obligatoriu.
+            </div>
+          </div>
 
-      <!-- Password -->
-      <div class="mb-3">
-        <label for="parola" class="form-label">Password:</label>
-        <input
-          type="password"
-          id="parola"
-          name="parola"
-          class="form-control"
-          required
-          formControlName="parola"
-          [ngClass]="{'is-invalid': postUserForm.controls['parola'].invalid && postUserForm.controls['parola'].touched}"
-        />
-        <div class="invalid-feedback" *ngIf="postUserForm.controls['parola'].errors?.['required']">
-          Password is mandatory.
+          <div class="col-md-6 mb-3">
+            <label for="data_nasterii" class="form-label">
+              <i class="bi bi-calendar-event"></i> Data Nașterii <span class="text-danger">*</span>
+            </label>
+            <input
+              type="date"
+              id="data_nasterii"
+              class="form-control"
+              formControlName="data_nasterii"
+              [ngClass]="{'is-invalid': postUserForm.controls['data_nasterii'].invalid && postUserForm.controls['data_nasterii'].touched}"
+            />
+            <div class="invalid-feedback" *ngIf="postUserForm.controls['data_nasterii'].errors?.['required']">
+              Data nașterii este obligatorie.
+            </div>
+            <div class="invalid-feedback" *ngIf="postUserForm.controls['data_nasterii'].errors?.['futureDate']">
+              Data nașterii nu poate fi în viitor.
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="sex" class="form-label">
+              <i class="bi bi-gender-ambiguous"></i> Sex <span class="text-danger">*</span>
+            </label>
+            <select
+              id="sex"
+              class="form-select"
+              formControlName="sex"
+              [ngClass]="{'is-invalid': postUserForm.controls['sex'].invalid && postUserForm.controls['sex'].touched}"
+            >
+              <option [value]="null" disabled selected>Selectați sexul</option>
+              <option value="Masculin">Masculin</option>
+              <option value="Feminin">Feminin</option>
+              <option value="Altele">Altele</option>
+            </select>
+            <div class="invalid-feedback" *ngIf="postUserForm.controls['sex'].errors?.['required']">
+              Sexul este obligatoriu.
+            </div>
+          </div>
+
+          <!-- Separator -->
+          <div class="col-12 my-3">
+            <hr class="divider">
+          </div>
+
+          <!-- Informații Cont -->
+          <div class="col-12">
+            <h6 class="section-title">
+              <i class="bi bi-shield-lock"></i> Informații Cont
+            </h6>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="email" class="form-label">
+              <i class="bi bi-envelope"></i> Email <span class="text-danger">*</span>
+            </label>
+            <input
+              type="email"
+              id="email"
+              class="form-control"
+              formControlName="email"
+              placeholder="exemplu@email.com"
+              [ngClass]="{'is-invalid': postUserForm.controls['email'].invalid && postUserForm.controls['email'].touched}"
+            />
+            <div class="invalid-feedback" *ngIf="postUserForm.controls['email'].errors?.['required']">
+              Email-ul este obligatoriu.
+            </div>
+            <div class="invalid-feedback" *ngIf="postUserForm.controls['email'].errors?.['email']">
+              Format email invalid!
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="parola" class="form-label">
+              <i class="bi bi-key"></i> Parolă <span class="text-danger">*</span>
+            </label>
+            <input
+              type="password"
+              id="parola"
+              class="form-control"
+              formControlName="parola"
+              placeholder="Introduceți parola"
+              [ngClass]="{'is-invalid': postUserForm.controls['parola'].invalid && postUserForm.controls['parola'].touched}"
+            />
+            <div class="invalid-feedback" *ngIf="postUserForm.controls['parola'].errors?.['required']">
+              Parola este obligatorie.
+            </div>
+          </div>
+
+          <!-- Separator -->
+          <div class="col-12 my-3">
+            <hr class="divider">
+          </div>
+
+          <!-- Informații Contact -->
+          <div class="col-12">
+            <h6 class="section-title">
+              <i class="bi bi-telephone"></i> Informații Contact
+            </h6>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="tara" class="form-label">
+              <i class="bi bi-globe"></i> Țară <span class="text-danger">*</span>
+            </label>
+            <select
+              id="tara"
+              class="form-select"
+              formControlName="tara"
+              (change)="onPrefixChange($event)"
+              [ngClass]="{'is-invalid': postUserForm.controls['tara'].invalid && postUserForm.controls['tara'].touched}"
+            >
+              <option [value]="null" disabled selected>Selectați țara</option>
+              <option *ngFor="let country of countriesList" [value]="country.nume">
+                {{ country.nume }}
+              </option>
+            </select>
+            <div class="invalid-feedback" *ngIf="postUserForm.controls['tara'].errors?.['required']">
+              Țara este obligatorie.
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="numar_telefon" class="form-label">
+              <i class="bi bi-phone"></i> Telefon <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text prefix-badge">{{ prefix }}</span>
+              <input
+                type="text"
+                id="numar_telefon"
+                class="form-control"
+                formControlName="numar_telefon"
+                placeholder="700000000"
+                (change)="onPrefixChange($event)"
+                [ngClass]="{'is-invalid': postUserForm.controls['numar_telefon'].invalid && postUserForm.controls['numar_telefon'].touched}"
+              />
+            </div>
+            <div class="invalid-feedback" *ngIf="postUserForm.controls['numar_telefon'].invalid && postUserForm.controls['numar_telefon'].touched">
+              Numărul trebuie să conțină doar cifre și să aibă între 8-15 caractere!
+            </div>
+          </div>
         </div>
-      </div>
 
-      <!-- Country -->
-      <div class="mb-3">
-        <label for="tara" class="form-label">Country:</label>
-        <select
-          id="tara"
-          name="tara"
-          class="form-select"
-          formControlName="tara"
-          (change)="onPrefixChange($event)"
-          [ngClass]="{'is-invalid': postUserForm.controls['tara'].invalid && postUserForm.controls['tara'].touched}"
-        >
-          <option [value]="null" disabled selected>Choose a country</option>
-          <option *ngFor="let country of countriesList" [value]="country.nume">
-            {{ country.nume }}
-          </option>
-        </select>
-        <div class="invalid-feedback" *ngIf="postUserForm.controls['tara'].errors?.['required']">
-          The country is mandatory.
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="alert alert-danger d-flex align-items-center">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          {{ errorMessage }}
         </div>
-      </div>
 
-      <!-- Phone -->
-      <div class="mb-3">
-        <label for="numar_telefon" class="form-label">Phone:</label>
-        <div class="input-group">
-          <span class="input-group-text">{{ prefix }}</span>
-          <input
-            type="text"
-            id="numar_telefon"
-            name="numar_telefon"
-            class="form-control"
-            required
-            formControlName="numar_telefon"
-            (change)="onPrefixChange($event)"
-            [ngClass]="{'is-invalid': postUserForm.controls['numar_telefon'].invalid && postUserForm.controls['numar_telefon'].touched}"
-          />
+        <!-- Submit Button -->
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary btn-lg" [disabled]="postUserForm.invalid">
+            <i class="bi bi-check-circle"></i> Creează Cont
+          </button>
         </div>
-        <div class="invalid-feedback" *ngIf="postUserForm.controls['numar_telefon'].invalid && postUserForm.controls['numar_telefon'].touched">
-          The phone number must contain only numbers and be between 10 and 15 characters long!
+
+        <!-- Login Link -->
+        <div class="text-center mt-3">
+          <p class="text-muted">
+            Ai deja cont? 
+            <a routerLink="/" class="login-link">Conectează-te aici</a>
+          </p>
         </div>
-      </div>
-
-      <!-- Gender -->
-      <div class="mb-3">
-        <label for="sex" class="form-label">Gender:</label>
-        <select
-          id="sex"
-          name="sex"
-          class="form-select"
-          required
-          formControlName="sex"
-          [ngClass]="{'is-invalid': postUserForm.controls['sex'].invalid && postUserForm.controls['sex'].touched}"
-        >
-          <option [value]="null" disabled selected>Choose a gender</option>
-          <option value="Masculin">Male</option>
-          <option value="Feminin">Female</option>
-          <option value="Altele">Others</option>
-        </select>
-        <div class="invalid-feedback" *ngIf="postUserForm.controls['sex'].errors?.['required']">
-          The gender is mandatory.
-        </div>
-      </div>
-
-      <!-- Submit button -->
-      <button type="submit" class="btn btn-success w-100" [disabled]="postUserForm.invalid">Post</button>
-
-      <!-- Error message -->
-      <div *ngIf="errorMessage" class="mt-3 text-danger text-center">
-        {{ errorMessage }}
-      </div>
-
-    </form>
+      </form>
+    </div>
   </div>
 </div>
