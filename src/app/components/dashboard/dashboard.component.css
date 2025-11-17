@@ -1,6 +1,57 @@
+/* Dashboard Header */
+.dashboard-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-header h2 {
+  font-weight: 600;
+}
+
+/* Card Styling */
+.card {
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.card-header {
+  border-bottom: none;
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+}
+
+/* Patient Form */
+.patient-form {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.patient-form label {
+  font-weight: 500;
+  color: #495057;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+/* Images Gallery */
+.images-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
 /* Card pentru fiecare pacient cu imaginea */
 .patient-card {
-  width: 250px;
   border: 2px solid #dee2e6;
   border-radius: 12px;
   overflow: hidden;
@@ -14,14 +65,14 @@
 
 .patient-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  border-color: #007bff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  border-color: #667eea;
 }
 
 /* Wrapper pentru imagine */
 .image-wrapper {
   width: 100%;
-  height: 200px;
+  height: 180px;
   overflow: hidden;
   background-color: #f8f9fa;
   display: flex;
@@ -43,7 +94,7 @@
 }
 
 .patient-name {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: #212529;
   margin-bottom: 4px;
   white-space: nowrap;
@@ -52,8 +103,146 @@
 }
 
 .patient-details {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+/* Calendar Styling */
+.calendar-container {
+  padding: 1rem 0;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
+}
+
+.calendar-header h6 {
+  font-weight: 600;
+  color: #495057;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.weekday {
+  text-align: center;
+  font-weight: 600;
   font-size: 0.85rem;
   color: #6c757d;
+  padding: 0.5rem 0;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: #fff;
+  border: 1px solid #e9ecef;
+}
+
+.calendar-day:hover:not(.other-month) {
+  background-color: #e7f3ff;
+  border-color: #667eea;
+  transform: scale(1.05);
+}
+
+.calendar-day.other-month {
+  color: #adb5bd;
+  cursor: default;
+  background-color: #f8f9fa;
+}
+
+.calendar-day.today {
+  background-color: #667eea;
+  color: white;
+  font-weight: 600;
+  border-color: #667eea;
+}
+
+.calendar-day.selected {
+  background-color: #28a745;
+  color: white;
+  font-weight: 600;
+  border-color: #28a745;
+}
+
+/* Upcoming Appointments */
+.upcoming-appointments {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.appointment-item {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  border-left: 3px solid #667eea;
+}
+
+.appointment-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+  color: #667eea;
+}
+
+.appointment-date strong {
+  font-size: 1.1rem;
+}
+
+.appointment-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Statistics Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  opacity: 0.9;
 }
 
 /* Context menu */
@@ -61,19 +250,81 @@
   position: fixed;
   background: white;
   border: 1px solid #ccc;
-  border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   list-style: none;
-  padding: 5px 0;
+  padding: 0.5rem 0;
   z-index: 1000;
+  min-width: 150px;
 }
 
 .context-menu li {
-  padding: 8px 16px;
+  padding: 0.5rem 1rem;
   cursor: pointer;
   transition: background-color 0.2s;
+  font-size: 0.9rem;
 }
 
 .context-menu li:hover {
   background: #f2f2f2;
+}
+
+/* Responsive Design */
+@media (max-width: 991px) {
+  .images-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  
+  .dashboard-header h2 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .patient-form {
+    padding: 1rem;
+  }
+  
+  .calendar-day {
+    font-size: 0.8rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Scrollbar styling */
+.upcoming-appointments::-webkit-scrollbar {
+  width: 6px;
+}
+
+.upcoming-appointments::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.upcoming-appointments::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.upcoming-appointments::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }

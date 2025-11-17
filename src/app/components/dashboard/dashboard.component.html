@@ -1,166 +1,264 @@
-<div class="text-center mt-5">
-  <h1>Bună, {{ prenume }} {{ nume }}!</h1>
-  <button (click)="logout()" class="btn btn-danger mt-3">
-    Logout
-  </button>
-
-<button class="btn btn-primary btn-lg rounded-pill px-4 shadow" [routerLink]="'/user/' + id">
-  UPDATE
-</button>
-
-</div>
-
-<div class="container mt-4">
-  <div class="row mb-3">
-    <div class="col-12">
-      <h1>Upload Image</h1>
-    </div>
-  </div>
-
-  <div class="row mb-3">
-    <div class="col-md-6">
-      <input type="file" (change)="onFileSelected($event)" class="form-control" />
-    </div>
-    <div class="col-md-6 d-flex align-items-center gap-2">
-      <input type="button" (click)="analyzeTumor()" value="Analizează Tumoare" class="btn btn-warning" [disabled]="!selectedFile || isAnalyzing" />
-      <input type="button" (click)="uploadImage()" value="Upload" class="btn btn-primary" [disabled]="!selectedFile" />
-    </div>
-  </div>
-  <div class="row mb-3">
-  <div class="col-md-6">
-    <input type="text" [(ngModel)]="numePacient" placeholder="Nume" class="form-control"    />
-  </div>
-  <div class="col-md-6">
-    <input type="text" [(ngModel)]="prenumePacient" placeholder="Preume" class="form-control"    />
-  </div>
-  <div class="col-md-6">
-    <input type="date" [(ngModel)]="dataNasterii" placeholder="Data nasterii" class="form-control"    />
-  </div>
-  <div class="col-md-6">
-    <textarea [(ngModel)]="detalii" placeholder="Detalii" class="form-control"   ></textarea>
-  </div>
-  <div class="col-md-6">
-    <textarea [(ngModel)]="istoricMedical" placeholder="Istoric medical" class="form-control"   ></textarea>
-  </div>
-  <div class="col-md-6">
-    <input type="text" [(ngModel)]="cnp" placeholder="CNP" class="form-control"    />
-  </div>
-  <div class="col-md-6">
-    <input type="text" [(ngModel)]="numarTelefon" placeholder="Numar telefon" class="form-control"   />
-  </div>
-</div>
-
-<div class="row mb-3">
-  <div class="col-md-6">
-    <input type="text" [(ngModel)]="numarTelefon" placeholder="Numar telefon" class="form-control"   />
-  </div>
-</div>
-
-<!-- Rezultat predicție tumoare -->
-<div class="row mb-3" *ngIf="predictionResult">
-  <div class="col-12">
-    <label class="form-label fw-bold">Rezultat analiză tumoare cerebrală:</label>
-    <div class="alert" 
-         [ngClass]="{'alert-danger': predictionResult.includes('detectată'), 
-                     'alert-success': predictionResult.includes('Nu s-a detectat'),
-                     'alert-info': isAnalyzing,
-                     'alert-warning': predictionResult.includes('disponibil') || predictionResult.includes('Eroare')}">
-      <strong>{{ predictionResult }}</strong>
-      <span *ngIf="predictionConfidence > 0"> 
-        - Încredere: {{ (predictionConfidence * 100).toFixed(2) }}%
-      </span>
-      <div *ngIf="isAnalyzing" class="spinner-border spinner-border-sm ms-2" role="status">
-        <span class="visually-hidden">Se analizează...</span>
+<!-- Header -->
+<div class="dashboard-header">
+  <div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center py-3">
+      <div>
+        <h2 class="mb-0">Bună, {{ prenume }} {{ nume }}!</h2>
+        <small class="text-muted">Panou de administrare</small>
       </div>
-      <small *ngIf="predictionResult.includes('disponibil')" class="d-block mt-2">
-        <em>Notă: Imaginea a fost încărcată cu succes. Serviciul ML poate fi activat ulterior.</em>
-      </small>
-    </div>
-  </div>
-</div>
-
-<div class="row mb-3">
-  <div class="col-md-6">
-    <select [(ngModel)]="sex" class="form-control">
-      <option value="" disabled selected>Selectează categoria</option>
-      <option value="FEMININ">Feminin</option>
-      <option value="MASCULIN">Maculin</option>
-      
-    </select>
-  </div>
-</div>
-
-  <hr />
-
-  <div class="row mb-3">
-    <div class="col-12">
-      <div *ngIf="message" class="alert alert-info">
-        {{ message }}
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" [routerLink]="'/user/' + id">
+          <i class="bi bi-person-gear"></i> Profil
+        </button>
+        <button (click)="logout()" class="btn btn-danger">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
       </div>
     </div>
   </div>
+</div>
 
-  <div class="row mb-4">
-    <div class="col-12 text-center" *ngIf="retrievedImage">
-      <img [src]="retrievedImage" class="img-fluid rounded" alt="Uploaded Image" />
-    </div>
-  </div>
-
+<div class="container-fluid mt-4">
   <div class="row">
-    <div class="col-12">
-      <h2>Imaginile tale</h2>
-      
-      <!-- Bară de căutare -->
-      <div class="row mb-3">
-        <div class="col-md-8">
-          <div class="input-group">
-            <input type="text" 
-                   [(ngModel)]="searchTerm" 
-                   (input)="searchImages()" 
-                   class="form-control" 
-                   placeholder="Caută după numele pacientului...">
-            <button class="btn btn-outline-secondary" 
-                    type="button" 
-                    (click)="clearSearch()" 
-                    *ngIf="searchTerm">
-              <i class="bi bi-x-lg"></i> Șterge
+    <!-- Coloana stângă - Upload și Imagini -->
+    <div class="col-lg-8">
+      <!-- Upload Section -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0"><i class="bi bi-upload"></i> Încărcare Imagine Medicală</h5>
+        </div>
+        <div class="card-body">
+          <!-- File Selection -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Selectare Imagine</label>
+            <input type="file" (change)="onFileSelected($event)" class="form-control" accept="image/*" />
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="mb-3 d-flex gap-2">
+            <button (click)="analyzeTumor()" class="btn btn-warning flex-fill" [disabled]="!selectedFile || isAnalyzing">
+              <i class="bi bi-clipboard-pulse"></i> Analizează Tumoare
+            </button>
+            <button (click)="uploadImage()" class="btn btn-success flex-fill" [disabled]="!selectedFile">
+              <i class="bi bi-cloud-upload"></i> Încarcă Imagine
             </button>
           </div>
-        </div>
-        <div class="col-md-4">
-          <small class="text-muted">
-            Afișate: {{ filteredImagini.length }} din {{ imagini.length }} imagini
-          </small>
-        </div>
-      </div>
 
-      <!-- Lista de imagini filtrate -->
-      <div class="d-flex flex-wrap gap-3">
-        <div *ngFor="let image of filteredImagini; let i = index" class="patient-card" 
-             (click)="viewImage(image)"
-             (contextmenu)="onRightClick($event, image, i)">
-          <div class="image-wrapper">
-            <img [src]="image.imagine" [alt]="'Image ' + image.id" class="patient-image" />
-          </div>
-          <div class="patient-info">
-            <div class="patient-name">
-              <strong>{{ image.numePacient }} {{ image.prenumePacient }}</strong>
+          <!-- Patient Info Form -->
+          <div class="patient-form">
+            <h6 class="mb-3 text-primary"><i class="bi bi-person-badge"></i> Informații Pacient</h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Nume</label>
+                <input type="text" [(ngModel)]="numePacient" placeholder="Introduceți numele" class="form-control" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Prenume</label>
+                <input type="text" [(ngModel)]="prenumePacient" placeholder="Introduceți prenumele" class="form-control" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">CNP</label>
+                <input type="text" [(ngModel)]="cnp" placeholder="Introduceți CNP" class="form-control" maxlength="13" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Data Nașterii</label>
+                <input type="date" [(ngModel)]="dataNasterii" class="form-control" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Sex</label>
+                <select [(ngModel)]="sex" class="form-control">
+                  <option value="" disabled selected>Selectează categoria</option>
+                  <option value="FEMININ">Feminin</option>
+                  <option value="MASCULIN">Masculin</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Număr Telefon</label>
+                <input type="text" [(ngModel)]="numarTelefon" placeholder="07xxxxxxxx" class="form-control" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Detalii</label>
+                <textarea [(ngModel)]="detalii" placeholder="Detalii suplimentare..." class="form-control" rows="2"></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Istoric Medical</label>
+                <textarea [(ngModel)]="istoricMedical" placeholder="Istoric medical pacient..." class="form-control" rows="2"></textarea>
+              </div>
             </div>
-            <div class="patient-details" *ngIf="image.cnp">
-              <small class="text-muted">CNP: {{ image.cnp }}</small>
+          </div>
+
+          <!-- Prediction Result -->
+          <div class="mt-3" *ngIf="predictionResult">
+            <div class="alert" 
+                 [ngClass]="{'alert-danger': predictionResult.includes('detectată'), 
+                             'alert-success': predictionResult.includes('Nu s-a detectat'),
+                             'alert-info': isAnalyzing,
+                             'alert-warning': predictionResult.includes('disponibil') || predictionResult.includes('Eroare')}">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <div class="flex-grow-1">
+                  <strong>{{ predictionResult }}</strong>
+                  <span *ngIf="predictionConfidence > 0"> 
+                    - Încredere: {{ (predictionConfidence * 100).toFixed(2) }}%
+                  </span>
+                </div>
+                <div *ngIf="isAnalyzing" class="spinner-border spinner-border-sm" role="status">
+                  <span class="visually-hidden">Se analizează...</span>
+                </div>
+              </div>
+              <small *ngIf="predictionResult.includes('disponibil')" class="d-block mt-2">
+                <em>Notă: Imaginea a fost încărcată cu succes. Serviciul ML poate fi activat ulterior.</em>
+              </small>
             </div>
+          </div>
+
+          <!-- Status Message -->
+          <div *ngIf="message" class="alert alert-info mt-3">
+            <i class="bi bi-check-circle"></i> {{ message }}
           </div>
         </div>
       </div>
 
-      <!-- Mesaj când nu sunt rezultate -->
-      <div *ngIf="filteredImagini.length === 0 && imagini.length > 0" class="alert alert-info mt-3">
-        <i class="bi bi-info-circle"></i> Nu s-au găsit imagini pentru căutarea "{{ searchTerm }}"
-      </div>
+      <!-- Images Gallery -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-images"></i> Imaginile tale</h5>
+          <span class="badge bg-light text-dark">{{ filteredImagini.length }} / {{ imagini.length }}</span>
+        </div>
+        <div class="card-body">
+          <!-- Bară de căutare -->
+          <div class="mb-3">
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input type="text" 
+                     [(ngModel)]="searchTerm" 
+                     (input)="searchImages()" 
+                     class="form-control" 
+                     placeholder="Caută după numele pacientului sau CNP...">
+              <button class="btn btn-outline-secondary" 
+                      type="button" 
+                      (click)="clearSearch()" 
+                      *ngIf="searchTerm">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+          </div>
 
-      <!-- Mesaj când nu sunt imagini deloc -->
-      <div *ngIf="imagini.length === 0" class="alert alert-warning mt-3">
-        <i class="bi bi-exclamation-triangle"></i> Nu aveți imagini încărcate încă.
+          <!-- Lista de imagini filtrate -->
+          <div class="images-gallery">
+            <div *ngFor="let image of filteredImagini; let i = index" class="patient-card" 
+                 (click)="viewImage(image)"
+                 (contextmenu)="onRightClick($event, image, i)">
+              <div class="image-wrapper">
+                <img [src]="image.imagine" [alt]="'Image ' + image.id" class="patient-image" />
+              </div>
+              <div class="patient-info">
+                <div class="patient-name">
+                  <strong>{{ image.numePacient }} {{ image.prenumePacient }}</strong>
+                </div>
+                <div class="patient-details" *ngIf="image.cnp">
+                  <small class="text-muted">CNP: {{ image.cnp }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mesaj când nu sunt rezultate -->
+          <div *ngIf="filteredImagini.length === 0 && imagini.length > 0" class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Nu s-au găsit imagini pentru căutarea "{{ searchTerm }}"
+          </div>
+
+          <!-- Mesaj când nu sunt imagini deloc -->
+          <div *ngIf="imagini.length === 0" class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i> Nu aveți imagini încărcate încă.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coloana dreaptă - Calendar -->
+    <div class="col-lg-4">
+      <div class="card shadow-sm sticky-top" style="top: 20px;">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0"><i class="bi bi-calendar-week"></i> Calendar Programări</h5>
+        </div>
+        <div class="card-body">
+          <!-- Calendar -->
+          <div class="calendar-container">
+            <div class="calendar-header">
+              <button class="btn btn-sm btn-outline-secondary" (click)="previousMonth()">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+              <h6 class="mb-0">{{ currentMonthName }} {{ currentYear }}</h6>
+              <button class="btn btn-sm btn-outline-secondary" (click)="nextMonth()">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
+            
+            <div class="calendar-grid">
+              <!-- Zilele săptămânii -->
+              <div class="calendar-weekdays">
+                <div class="weekday">Lu</div>
+                <div class="weekday">Ma</div>
+                <div class="weekday">Mi</div>
+                <div class="weekday">Jo</div>
+                <div class="weekday">Vi</div>
+                <div class="weekday">Sâ</div>
+                <div class="weekday">Du</div>
+              </div>
+              
+              <!-- Zilele lunii -->
+              <div class="calendar-days">
+                <div *ngFor="let day of calendarDays" 
+                     class="calendar-day" 
+                     [class.other-month]="day.otherMonth"
+                     [class.today]="day.isToday"
+                     [class.selected]="day.selected"
+                     (click)="selectDay(day)">
+                  {{ day.day }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Programări viitoare -->
+          <div class="mt-4">
+            <h6 class="text-muted mb-3"><i class="bi bi-clock-history"></i> Programări Viitoare</h6>
+            <div class="upcoming-appointments">
+              <div class="alert alert-info text-center">
+                <small><i class="bi bi-info-circle"></i> Funcționalitate în dezvoltare</small>
+              </div>
+              <!-- Exemplu de programare - va fi completat în viitor -->
+              <!--
+              <div class="appointment-item">
+                <div class="appointment-date">
+                  <strong>20 Nov</strong>
+                  <small>14:00</small>
+                </div>
+                <div class="appointment-details">
+                  <strong>Ion Popescu</strong>
+                  <small>Consultație operație</small>
+                </div>
+              </div>
+              -->
+            </div>
+          </div>
+
+          <!-- Statistici rapide -->
+          <div class="mt-4">
+            <h6 class="text-muted mb-3"><i class="bi bi-graph-up"></i> Statistici</h6>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-number">{{ imagini.length }}</div>
+                <div class="stat-label">Total Imagini</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number">0</div>
+                <div class="stat-label">Programări</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
