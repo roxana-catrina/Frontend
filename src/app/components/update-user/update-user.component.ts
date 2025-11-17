@@ -30,7 +30,7 @@ export class UpdateUserComponent {
           private router:Router,
           private phoneService:PhoneService,
         private countryService:CountryService,
-       private location : Location) {
+       public location : Location) {
       this.id = this.activatedRoute.snapshot.params["id"];
       
   }
@@ -99,10 +99,14 @@ export class UpdateUserComponent {
     this.serviceUser.updateUser(this.id, userData).subscribe((data) => {
       console.log(data);
       if (data.id != null) {
-        this.location.back(); // navighează înapoi la pagina anterioară
+        this.router.navigate(['/dashboard']); // navighează la dashboard
       }
     });
   }
+}
+
+goToDashboard() {
+  this.router.navigate(['/dashboard']);
 }
 
 }
