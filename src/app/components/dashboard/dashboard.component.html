@@ -436,3 +436,27 @@
     </div>
   </div>
 </div>
+
+<!-- Modal pentru confirmare ștergere programare -->
+<div *ngIf="showDeleteConfirmModal" class="modal-overlay" (click)="cancelDeleteProgramare()">
+  <div class="modal-content-confirm" (click)="$event.stopPropagation()">
+    <div class="modal-header-confirm">
+      <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+      <h5>Confirmare Ștergere</h5>
+    </div>
+    
+    <div class="modal-body-confirm">
+      <p>Sigur dorești să ștergi această programare?</p>
+      <p class="text-muted mb-0"><small>Această acțiune nu poate fi anulată.</small></p>
+    </div>
+    
+    <div class="modal-footer-confirm">
+      <button class="btn btn-secondary" (click)="cancelDeleteProgramare()">
+        <i class="bi bi-x-circle"></i> Anulează
+      </button>
+      <button class="btn btn-danger" (click)="confirmDeleteProgramare()">
+        <i class="bi bi-trash"></i> Șterge
+      </button>
+    </div>
+  </div>
+</div>

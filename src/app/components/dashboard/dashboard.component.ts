@@ -66,6 +66,8 @@ numarTelefon: string = '';
   programariZiSelectata: Programare[] = [];
   showProgramareModal: boolean = false;
   showProgramariZiModal: boolean = false;
+  showDeleteConfirmModal: boolean = false;
+  programareToDelete: number | null = null;
   
   // Date formular programare
   programareNume: string = '';
@@ -772,30 +774,42 @@ loadDashboardData(): void {
   }
 
   deleteProgramare(id: number) {
-    if (confirm('Sigur dorești să ștergi această programare?')) {
-      this.programareService.deleteProgramare(id).subscribe({
-        next: () => {
-          console.log('Programare ștearsă cu succes');
-          
-          // Actualizează lista de programări din zi
-          this.programariZiSelectata = this.programariZiSelectata.filter(p => p.id !== id);
-          
-          // Închide modalul dacă nu mai sunt programări
-          if (this.programariZiSelectata.length === 0) {
-            this.closeProgramariZiModal();
-          }
-          
-          // Reîncarcă toate programările și actualizează calendarul
-          this.loadProgramari();
-          
-          alert('Programare ștearsă cu succes!');
-        },
-        error: (error) => {
-          console.error('Eroare la ștergerea programării:', error);
-          alert('Eroare la ștergerea programării!');
+    this.programareToDelete = id;
+    this.showDeleteConfirmModal = true;
+  }
+
+  confirmDeleteProgramare() {
+    if (this.programareToDelete === null) return;
+    
+    this.programareService.deleteProgramare(this.programareToDelete).subscribe({
+      next: () => {
+        console.log('Programare ștearsă cu succes');
+        
+        // Actualizează lista de programări din zi
+        this.programariZiSelectata = this.programariZiSelectata.filter(p => p.id !== this.programareToDelete);
+        
+        // Închide modalul dacă nu mai sunt programări
+        if (this.programariZiSelectata.length === 0) {
+          this.closeProgramariZiModal();
         }
-      });
-    }
+        
+        // Reîncarcă toate programările și actualizează calendarul
+        this.loadProgramari();
+        
+        this.showDeleteConfirmModal = false;
+        this.programareToDelete = null;
+      },
+      error: (error) => {
+        console.error('Eroare la ștergerea programării:', error);
+        this.showDeleteConfirmModal = false;
+        this.programareToDelete = null;
+      }
+    });
+  }
+
+  cancelDeleteProgramare() {
+    this.showDeleteConfirmModal = false;
+    this.programareToDelete = null;
   }
 
   formatProgramareDate(date: Date | string): string {
