@@ -374,3 +374,65 @@
     </div>
   </div>
 </div>
+
+<!-- Modal pentru vizualizare programări zi selectată -->
+<div *ngIf="showProgramariZiModal" class="modal-overlay" (click)="closeProgramariZiModal()">
+  <div class="modal-content-programare" (click)="$event.stopPropagation()">
+    <div class="modal-header-programare">
+      <h5><i class="bi bi-calendar-day"></i> Programări {{ formatSelectedDate() }}</h5>
+      <button class="btn-close" (click)="closeProgramariZiModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body-programare">
+      <div class="alert alert-info mb-3">
+        <i class="bi bi-info-circle"></i> 
+        <strong>{{ programariZiSelectata.length }}</strong> programare/programări găsite
+      </div>
+
+      <div class="programari-zi-list">
+        <div *ngFor="let prog of programariZiSelectata" class="programare-card">
+          <div class="programare-header">
+            <div class="programare-time">
+              <i class="bi bi-clock"></i>
+              <strong>{{ formatProgramareInterval(prog.dataProgramare, prog.durataMinute || 30) }}</strong>
+            </div>
+            <button class="btn btn-sm btn-outline-danger" 
+                    (click)="deleteProgramare(prog.id!)"
+                    title="Șterge programarea">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+          <div class="programare-body">
+            <div class="programare-info">
+              <i class="bi bi-person"></i>
+              <strong>{{ prog.pacientNume }} {{ prog.pacientPrenume }}</strong>
+            </div>
+            <div class="programare-info" *ngIf="prog.pacientCnp">
+              <i class="bi bi-card-text"></i>
+              <span>CNP: {{ prog.pacientCnp }}</span>
+            </div>
+            <div class="programare-info" *ngIf="prog.tipConsultatie">
+              <i class="bi bi-clipboard-pulse"></i>
+              <span>{{ prog.tipConsultatie }}</span>
+            </div>
+            <div class="programare-info" *ngIf="prog.detalii">
+              <i class="bi bi-journal-text"></i>
+              <small class="text-muted">{{ prog.detalii }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer-programare">
+      <button class="btn btn-secondary" (click)="closeProgramariZiModal()">
+        <i class="bi bi-x-circle"></i> Închide
+      </button>
+      <button class="btn btn-success" (click)="openCreateProgramareModal()">
+        <i class="bi bi-plus-circle"></i> Adaugă Programare
+      </button>
+    </div>
+  </div>
+</div>

@@ -63,7 +63,9 @@ numarTelefon: string = '';
   // Proprietăți pentru programări
   programari: Programare[] = [];
   programariViitoare: Programare[] = [];
+  programariZiSelectata: Programare[] = [];
   showProgramareModal: boolean = false;
+  showProgramariZiModal: boolean = false;
   
   // Date formular programare
   programareNume: string = '';
@@ -504,8 +506,25 @@ loadDashboardData(): void {
     this.selectedDate = new Date(this.currentYear, this.currentMonth, day.day);
     console.log('Zi selectată:', this.selectedDate);
     
-    // Deschide modalul pentru creare programare
-    this.showProgramareModal = true;
+    // Verifică dacă există programări în această zi
+    this.programariZiSelectata = this.programari.filter(prog => {
+      const progDate = new Date(prog.dataProgramare);
+      return progDate.getDate() === day.day &&
+             progDate.getMonth() === this.currentMonth &&
+             progDate.getFullYear() === this.currentYear;
+    }).sort((a, b) => {
+      // Sortează după oră
+      return new Date(a.dataProgramare).getTime() - new Date(b.dataProgramare).getTime();
+    });
+
+    if (this.programariZiSelectata.length > 0) {
+      // Dacă există programări, arată lista
+      console.log(`Ziua ${day.day} are ${this.programariZiSelectata.length} programări`);
+      this.showProgramariZiModal = true;
+    } else {
+      // Dacă nu există, deschide modalul pentru creare programare
+      this.showProgramareModal = true;
+    }
   }
 
   // Metode pentru programări
@@ -743,15 +762,37 @@ loadDashboardData(): void {
     }, 200);
   }
 
+  closeProgramariZiModal() {
+    this.showProgramariZiModal = false;
+  }
+
+  openCreateProgramareModal() {
+    this.showProgramariZiModal = false;
+    this.showProgramareModal = true;
+  }
+
   deleteProgramare(id: number) {
     if (confirm('Sigur dorești să ștergi această programare?')) {
       this.programareService.deleteProgramare(id).subscribe({
         next: () => {
           console.log('Programare ștearsă cu succes');
+          
+          // Actualizează lista de programări din zi
+          this.programariZiSelectata = this.programariZiSelectata.filter(p => p.id !== id);
+          
+          // Închide modalul dacă nu mai sunt programări
+          if (this.programariZiSelectata.length === 0) {
+            this.closeProgramariZiModal();
+          }
+          
+          // Reîncarcă toate programările și actualizează calendarul
           this.loadProgramari();
+          
+          alert('Programare ștearsă cu succes!');
         },
         error: (error) => {
           console.error('Eroare la ștergerea programării:', error);
+          alert('Eroare la ștergerea programării!');
         }
       });
     }

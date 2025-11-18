@@ -503,3 +503,80 @@
 .autocomplete-suggestions::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Lista programări pentru o zi */
+.programari-zi-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.programare-card {
+  background-color: #f8f9fa;
+  border-left: 4px solid #667eea;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s;
+}
+
+.programare-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateX(2px);
+}
+
+.programare-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.programare-time {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #667eea;
+  font-size: 1rem;
+}
+
+.programare-time i {
+  font-size: 1.2rem;
+}
+
+.programare-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.programare-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #495057;
+}
+
+.programare-info i {
+  color: #6c757d;
+  min-width: 20px;
+}
+
+.programari-zi-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.programari-zi-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.programari-zi-list::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.programari-zi-list::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
