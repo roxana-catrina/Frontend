@@ -599,14 +599,25 @@ loadDashboardData(): void {
     // Combină data selectată cu ora
     const [hours, minutes] = this.programareOra.split(':');
     const dataProgramare = new Date(this.selectedDate);
-    dataProgramare.setHours(parseInt(hours), parseInt(minutes), 0);
+    dataProgramare.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+    // Format în ISO local (fără conversie UTC)
+    const year = dataProgramare.getFullYear();
+    const month = String(dataProgramare.getMonth() + 1).padStart(2, '0');
+    const day = String(dataProgramare.getDate()).padStart(2, '0');
+    const hour = String(dataProgramare.getHours()).padStart(2, '0');
+    const minute = String(dataProgramare.getMinutes()).padStart(2, '0');
+    const second = String(dataProgramare.getSeconds()).padStart(2, '0');
+    
+    // Format: YYYY-MM-DDTHH:mm:ss
+    const dataFormatata = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
 
     const programareDTO: ProgramareDTO = {
       userId: userId,
       pacientNume: this.programareNume,
       pacientPrenume: this.programarePrenume,
       pacientCnp: this.programareCnp,
-      dataProgramare: dataProgramare.toISOString(),
+      dataProgramare: dataFormatata,
       durataMinute: this.programareDurata,
       tipConsultatie: this.programareTip,
       detalii: this.programareDetalii
