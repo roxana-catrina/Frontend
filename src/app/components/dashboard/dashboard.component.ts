@@ -601,6 +601,15 @@ loadDashboardData(): void {
     const dataProgramare = new Date(this.selectedDate);
     dataProgramare.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
+    // Verifică dacă există conflict cu alte programări
+    const conflict = this.verificaConflictProgramare(dataProgramare, this.programareDurata);
+    if (conflict) {
+      const startTime = this.formatProgramareTime(conflict.dataProgramare);
+      const endTime = this.calculateEndTime(conflict.dataProgramare, conflict.durataMinute || 30);
+      alert(`Există deja o programare în acest interval!\n\nPacient: ${conflict.pacientNume} ${conflict.pacientPrenume}\nInterval: ${startTime} - ${endTime}`);
+      return;
+    }
+
     // Format în ISO local (fără conversie UTC)
     const year = dataProgramare.getFullYear();
     const month = String(dataProgramare.getMonth() + 1).padStart(2, '0');
@@ -642,6 +651,34 @@ loadDashboardData(): void {
         alert('Eroare la adăugarea programării!');
       }
     });
+  }
+
+  verificaConflictProgramare(dataNoua: Date, durataNoua: number): Programare | null {
+    const startNoua = dataNoua.getTime();
+    const endNoua = startNoua + (durataNoua * 60 * 1000); // convertește minute în milisecunde
+
+    // Verifică toate programările existente
+    for (const prog of this.programari) {
+      const dataProg = new Date(prog.dataProgramare);
+      const startExistent = dataProg.getTime();
+      const durataExistent = prog.durataMinute || 30;
+      const endExistent = startExistent + (durataExistent * 60 * 1000);
+
+      // Verifică dacă intervalele se suprapun
+      const seSuprapun = (startNoua < endExistent) && (endNoua > startExistent);
+      
+      if (seSuprapun) {
+        console.log('⚠️ CONFLICT PROGRAMARE GĂSIT:');
+        console.log('Programare existentă:', prog);
+        console.log('Start existent:', new Date(startExistent));
+        console.log('End existent:', new Date(endExistent));
+        console.log('Start nou:', new Date(startNoua));
+        console.log('End nou:', new Date(endNoua));
+        return prog;
+      }
+    }
+
+    return null;
   }
 
   closeProgramareModal() {
@@ -728,6 +765,18 @@ loadDashboardData(): void {
   formatProgramareTime(date: Date | string): string {
     const d = new Date(date);
     return d.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  calculateEndTime(startDate: Date | string, durataMinute: number): string {
+    const start = new Date(startDate);
+    const end = new Date(start.getTime() + (durataMinute * 60 * 1000));
+    return end.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  formatProgramareInterval(date: Date | string, durata: number): string {
+    const startTime = this.formatProgramareTime(date);
+    const endTime = this.calculateEndTime(date, durata);
+    return `${startTime} - ${endTime}`;
   }
 
   formatSelectedDate(): string {

@@ -239,6 +239,9 @@
                 <div class="appointment-details">
                   <strong>{{ programare.pacientNume }} {{ programare.pacientPrenume }}</strong>
                   <small>{{ programare.tipConsultatie || 'Consultație' }}</small>
+                  <small class="text-muted d-block">
+                    <i class="bi bi-clock"></i> {{ formatProgramareInterval(programare.dataProgramare, programare.durataMinute || 30) }}
+                  </small>
                 </div>
                 <button class="btn btn-sm btn-outline-danger" (click)="deleteProgramare(programare.id!)" title="Șterge programarea">
                   <i class="bi bi-trash"></i>
