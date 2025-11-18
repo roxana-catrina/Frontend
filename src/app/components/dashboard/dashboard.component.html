@@ -460,3 +460,25 @@
     </div>
   </div>
 </div>
+
+<!-- Notificări personalizate -->
+<div *ngIf="showNotification" class="notification-overlay">
+  <div class="notification-toast" 
+       [ngClass]="{
+         'notification-success': notificationType === 'success',
+         'notification-error': notificationType === 'error',
+         'notification-warning': notificationType === 'warning'
+       }">
+    <div class="notification-icon">
+      <i *ngIf="notificationType === 'success'" class="bi bi-check-circle-fill"></i>
+      <i *ngIf="notificationType === 'error'" class="bi bi-x-circle-fill"></i>
+      <i *ngIf="notificationType === 'warning'" class="bi bi-exclamation-triangle-fill"></i>
+    </div>
+    <div class="notification-content">
+      <p class="notification-message">{{ notificationMessage }}</p>
+    </div>
+    <button class="notification-close" (click)="closeNotification()">
+      <i class="bi bi-x"></i>
+    </button>
+  </div>
+</div>

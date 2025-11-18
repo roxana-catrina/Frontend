@@ -69,6 +69,11 @@ numarTelefon: string = '';
   showDeleteConfirmModal: boolean = false;
   programareToDelete: number | null = null;
   
+  // Notificări personalizate
+  showNotification: boolean = false;
+  notificationMessage: string = '';
+  notificationType: 'success' | 'error' | 'warning' = 'success';
+  
   // Date formular programare
   programareNume: string = '';
   programarePrenume: string = '';
@@ -257,12 +262,18 @@ numarTelefon: string = '';
           
           this.loadDashboardData();
           this.loadUserImages();
+          
+          // Afișează notificare personalizată
+          this.showCustomNotification('Imagine încărcată cu succes!', 'success');
         },
         error: (error) => {
           console.error("Eroare la încărcarea imaginii:", error);
           this.message = 'Eroare la încărcarea imaginii';
           this.loadDashboardData();
           this.loadUserImages();
+          
+          // Afișează notificare de eroare
+          this.showCustomNotification('Eroare la încărcarea imaginii', 'error');
         }
       });
     });
@@ -610,7 +621,7 @@ loadDashboardData(): void {
 
   createProgramare() {
     if (!this.selectedDate || !this.programareNume || !this.programarePrenume || !this.programareOra) {
-      alert('Te rog completează toate câmpurile obligatorii!');
+      this.showCustomNotification('Te rog completează toate câmpurile obligatorii!', 'warning');
       return;
     }
 
@@ -627,7 +638,10 @@ loadDashboardData(): void {
     if (conflict) {
       const startTime = this.formatProgramareTime(conflict.dataProgramare);
       const endTime = this.calculateEndTime(conflict.dataProgramare, conflict.durataMinute || 30);
-      alert(`Există deja o programare în acest interval!\n\nPacient: ${conflict.pacientNume} ${conflict.pacientPrenume}\nInterval: ${startTime} - ${endTime}`);
+      this.showCustomNotification(
+        `Există deja o programare în acest interval! Pacient: ${conflict.pacientNume} ${conflict.pacientPrenume} (${startTime} - ${endTime})`,
+        'warning'
+      );
       return;
     }
 
@@ -665,11 +679,11 @@ loadDashboardData(): void {
         console.log('Programare creată cu succes:', response);
         this.closeProgramareModal();
         this.loadProgramari();
-        alert('Programare adăugată cu succes!');
+        this.showCustomNotification('Programare adăugată cu succes!', 'success');
       },
       error: (error) => {
         console.error('Eroare la crearea programării:', error);
-        alert('Eroare la adăugarea programării!');
+        this.showCustomNotification('Eroare la adăugarea programării!', 'error');
       }
     });
   }
@@ -842,5 +856,21 @@ loadDashboardData(): void {
       year: 'numeric' 
     };
     return this.selectedDate.toLocaleDateString('ro-RO', options);
+  }
+
+  // Sistem de notificări personalizate
+  showCustomNotification(message: string, type: 'success' | 'error' | 'warning') {
+    this.notificationMessage = message;
+    this.notificationType = type;
+    this.showNotification = true;
+
+    // Ascunde automat după 4 secunde
+    setTimeout(() => {
+      this.closeNotification();
+    }, 4000);
+  }
+
+  closeNotification() {
+    this.showNotification = false;
   }
 }
