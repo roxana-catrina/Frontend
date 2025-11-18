@@ -239,6 +239,9 @@
                 <div class="appointment-details">
                   <strong>{{ programare.pacientNume }} {{ programare.pacientPrenume }}</strong>
                   <small>{{ programare.tipConsultatie || 'Consultație' }}</small>
+                  <small class="text-muted d-block">
+                    <i class="bi bi-clock"></i> {{ formatProgramareInterval(programare.dataProgramare, programare.durataMinute || 30) }}
+                  </small>
                 </div>
                 <button class="btn btn-sm btn-outline-danger" (click)="deleteProgramare(programare.id!)" title="Șterge programarea">
                   <i class="bi bi-trash"></i>
@@ -369,5 +372,113 @@
         <i class="bi bi-check-circle"></i> Salvează Programarea
       </button>
     </div>
+  </div>
+</div>
+
+<!-- Modal pentru vizualizare programări zi selectată -->
+<div *ngIf="showProgramariZiModal" class="modal-overlay" (click)="closeProgramariZiModal()">
+  <div class="modal-content-programare" (click)="$event.stopPropagation()">
+    <div class="modal-header-programare">
+      <h5><i class="bi bi-calendar-day"></i> Programări {{ formatSelectedDate() }}</h5>
+      <button class="btn-close" (click)="closeProgramariZiModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body-programare">
+      <div class="alert alert-info mb-3">
+        <i class="bi bi-info-circle"></i> 
+        <strong>{{ programariZiSelectata.length }}</strong> programare/programări găsite
+      </div>
+
+      <div class="programari-zi-list">
+        <div *ngFor="let prog of programariZiSelectata" class="programare-card">
+          <div class="programare-header">
+            <div class="programare-time">
+              <i class="bi bi-clock"></i>
+              <strong>{{ formatProgramareInterval(prog.dataProgramare, prog.durataMinute || 30) }}</strong>
+            </div>
+            <button class="btn btn-sm btn-outline-danger" 
+                    (click)="deleteProgramare(prog.id!)"
+                    title="Șterge programarea">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+          <div class="programare-body">
+            <div class="programare-info">
+              <i class="bi bi-person"></i>
+              <strong>{{ prog.pacientNume }} {{ prog.pacientPrenume }}</strong>
+            </div>
+            <div class="programare-info" *ngIf="prog.pacientCnp">
+              <i class="bi bi-card-text"></i>
+              <span>CNP: {{ prog.pacientCnp }}</span>
+            </div>
+            <div class="programare-info" *ngIf="prog.tipConsultatie">
+              <i class="bi bi-clipboard-pulse"></i>
+              <span>{{ prog.tipConsultatie }}</span>
+            </div>
+            <div class="programare-info" *ngIf="prog.detalii">
+              <i class="bi bi-journal-text"></i>
+              <small class="text-muted">{{ prog.detalii }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer-programare">
+      <button class="btn btn-secondary" (click)="closeProgramariZiModal()">
+        <i class="bi bi-x-circle"></i> Închide
+      </button>
+      <button class="btn btn-success" (click)="openCreateProgramareModal()">
+        <i class="bi bi-plus-circle"></i> Adaugă Programare
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal pentru confirmare ștergere programare -->
+<div *ngIf="showDeleteConfirmModal" class="modal-overlay" (click)="cancelDeleteProgramare()">
+  <div class="modal-content-confirm" (click)="$event.stopPropagation()">
+    <div class="modal-header-confirm">
+      <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+      <h5>Confirmare Ștergere</h5>
+    </div>
+    
+    <div class="modal-body-confirm">
+      <p>Sigur dorești să ștergi această programare?</p>
+      <p class="text-muted mb-0"><small>Această acțiune nu poate fi anulată.</small></p>
+    </div>
+    
+    <div class="modal-footer-confirm">
+      <button class="btn btn-secondary" (click)="cancelDeleteProgramare()">
+        <i class="bi bi-x-circle"></i> Anulează
+      </button>
+      <button class="btn btn-danger" (click)="confirmDeleteProgramare()">
+        <i class="bi bi-trash"></i> Șterge
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Notificări personalizate -->
+<div *ngIf="showNotification" class="notification-overlay">
+  <div class="notification-toast" 
+       [ngClass]="{
+         'notification-success': notificationType === 'success',
+         'notification-error': notificationType === 'error',
+         'notification-warning': notificationType === 'warning'
+       }">
+    <div class="notification-icon">
+      <i *ngIf="notificationType === 'success'" class="bi bi-check-circle-fill"></i>
+      <i *ngIf="notificationType === 'error'" class="bi bi-x-circle-fill"></i>
+      <i *ngIf="notificationType === 'warning'" class="bi bi-exclamation-triangle-fill"></i>
+    </div>
+    <div class="notification-content">
+      <p class="notification-message">{{ notificationMessage }}</p>
+    </div>
+    <button class="notification-close" (click)="closeNotification()">
+      <i class="bi bi-x"></i>
+    </button>
   </div>
 </div>

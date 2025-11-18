@@ -63,7 +63,16 @@ numarTelefon: string = '';
   // Proprietăți pentru programări
   programari: Programare[] = [];
   programariViitoare: Programare[] = [];
+  programariZiSelectata: Programare[] = [];
   showProgramareModal: boolean = false;
+  showProgramariZiModal: boolean = false;
+  showDeleteConfirmModal: boolean = false;
+  programareToDelete: number | null = null;
+  
+  // Notificări personalizate
+  showNotification: boolean = false;
+  notificationMessage: string = '';
+  notificationType: 'success' | 'error' | 'warning' = 'success';
   
   // Date formular programare
   programareNume: string = '';
@@ -253,12 +262,18 @@ numarTelefon: string = '';
           
           this.loadDashboardData();
           this.loadUserImages();
+          
+          // Afișează notificare personalizată
+          this.showCustomNotification('Imagine încărcată cu succes!', 'success');
         },
         error: (error) => {
           console.error("Eroare la încărcarea imaginii:", error);
           this.message = 'Eroare la încărcarea imaginii';
           this.loadDashboardData();
           this.loadUserImages();
+          
+          // Afișează notificare de eroare
+          this.showCustomNotification('Eroare la încărcarea imaginii', 'error');
         }
       });
     });
@@ -504,8 +519,25 @@ loadDashboardData(): void {
     this.selectedDate = new Date(this.currentYear, this.currentMonth, day.day);
     console.log('Zi selectată:', this.selectedDate);
     
-    // Deschide modalul pentru creare programare
-    this.showProgramareModal = true;
+    // Verifică dacă există programări în această zi
+    this.programariZiSelectata = this.programari.filter(prog => {
+      const progDate = new Date(prog.dataProgramare);
+      return progDate.getDate() === day.day &&
+             progDate.getMonth() === this.currentMonth &&
+             progDate.getFullYear() === this.currentYear;
+    }).sort((a, b) => {
+      // Sortează după oră
+      return new Date(a.dataProgramare).getTime() - new Date(b.dataProgramare).getTime();
+    });
+
+    if (this.programariZiSelectata.length > 0) {
+      // Dacă există programări, arată lista
+      console.log(`Ziua ${day.day} are ${this.programariZiSelectata.length} programări`);
+      this.showProgramariZiModal = true;
+    } else {
+      // Dacă nu există, deschide modalul pentru creare programare
+      this.showProgramareModal = true;
+    }
   }
 
   // Metode pentru programări
@@ -589,7 +621,7 @@ loadDashboardData(): void {
 
   createProgramare() {
     if (!this.selectedDate || !this.programareNume || !this.programarePrenume || !this.programareOra) {
-      alert('Te rog completează toate câmpurile obligatorii!');
+      this.showCustomNotification('Te rog completează toate câmpurile obligatorii!', 'warning');
       return;
     }
 
@@ -599,14 +631,37 @@ loadDashboardData(): void {
     // Combină data selectată cu ora
     const [hours, minutes] = this.programareOra.split(':');
     const dataProgramare = new Date(this.selectedDate);
-    dataProgramare.setHours(parseInt(hours), parseInt(minutes), 0);
+    dataProgramare.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+    // Verifică dacă există conflict cu alte programări
+    const conflict = this.verificaConflictProgramare(dataProgramare, this.programareDurata);
+    if (conflict) {
+      const startTime = this.formatProgramareTime(conflict.dataProgramare);
+      const endTime = this.calculateEndTime(conflict.dataProgramare, conflict.durataMinute || 30);
+      this.showCustomNotification(
+        `Există deja o programare în acest interval! Pacient: ${conflict.pacientNume} ${conflict.pacientPrenume} (${startTime} - ${endTime})`,
+        'warning'
+      );
+      return;
+    }
+
+    // Format în ISO local (fără conversie UTC)
+    const year = dataProgramare.getFullYear();
+    const month = String(dataProgramare.getMonth() + 1).padStart(2, '0');
+    const day = String(dataProgramare.getDate()).padStart(2, '0');
+    const hour = String(dataProgramare.getHours()).padStart(2, '0');
+    const minute = String(dataProgramare.getMinutes()).padStart(2, '0');
+    const second = String(dataProgramare.getSeconds()).padStart(2, '0');
+    
+    // Format: YYYY-MM-DDTHH:mm:ss
+    const dataFormatata = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
 
     const programareDTO: ProgramareDTO = {
       userId: userId,
       pacientNume: this.programareNume,
       pacientPrenume: this.programarePrenume,
       pacientCnp: this.programareCnp,
-      dataProgramare: dataProgramare.toISOString(),
+      dataProgramare: dataFormatata,
       durataMinute: this.programareDurata,
       tipConsultatie: this.programareTip,
       detalii: this.programareDetalii
@@ -624,13 +679,41 @@ loadDashboardData(): void {
         console.log('Programare creată cu succes:', response);
         this.closeProgramareModal();
         this.loadProgramari();
-        alert('Programare adăugată cu succes!');
+        this.showCustomNotification('Programare adăugată cu succes!', 'success');
       },
       error: (error) => {
         console.error('Eroare la crearea programării:', error);
-        alert('Eroare la adăugarea programării!');
+        this.showCustomNotification('Eroare la adăugarea programării!', 'error');
       }
     });
+  }
+
+  verificaConflictProgramare(dataNoua: Date, durataNoua: number): Programare | null {
+    const startNoua = dataNoua.getTime();
+    const endNoua = startNoua + (durataNoua * 60 * 1000); // convertește minute în milisecunde
+
+    // Verifică toate programările existente
+    for (const prog of this.programari) {
+      const dataProg = new Date(prog.dataProgramare);
+      const startExistent = dataProg.getTime();
+      const durataExistent = prog.durataMinute || 30;
+      const endExistent = startExistent + (durataExistent * 60 * 1000);
+
+      // Verifică dacă intervalele se suprapun
+      const seSuprapun = (startNoua < endExistent) && (endNoua > startExistent);
+      
+      if (seSuprapun) {
+        console.log('⚠️ CONFLICT PROGRAMARE GĂSIT:');
+        console.log('Programare existentă:', prog);
+        console.log('Start existent:', new Date(startExistent));
+        console.log('End existent:', new Date(endExistent));
+        console.log('Start nou:', new Date(startNoua));
+        console.log('End nou:', new Date(endNoua));
+        return prog;
+      }
+    }
+
+    return null;
   }
 
   closeProgramareModal() {
@@ -695,18 +778,52 @@ loadDashboardData(): void {
     }, 200);
   }
 
+  closeProgramariZiModal() {
+    this.showProgramariZiModal = false;
+  }
+
+  openCreateProgramareModal() {
+    this.showProgramariZiModal = false;
+    this.showProgramareModal = true;
+  }
+
   deleteProgramare(id: number) {
-    if (confirm('Sigur dorești să ștergi această programare?')) {
-      this.programareService.deleteProgramare(id).subscribe({
-        next: () => {
-          console.log('Programare ștearsă cu succes');
-          this.loadProgramari();
-        },
-        error: (error) => {
-          console.error('Eroare la ștergerea programării:', error);
+    this.programareToDelete = id;
+    this.showDeleteConfirmModal = true;
+  }
+
+  confirmDeleteProgramare() {
+    if (this.programareToDelete === null) return;
+    
+    this.programareService.deleteProgramare(this.programareToDelete).subscribe({
+      next: () => {
+        console.log('Programare ștearsă cu succes');
+        
+        // Actualizează lista de programări din zi
+        this.programariZiSelectata = this.programariZiSelectata.filter(p => p.id !== this.programareToDelete);
+        
+        // Închide modalul dacă nu mai sunt programări
+        if (this.programariZiSelectata.length === 0) {
+          this.closeProgramariZiModal();
         }
-      });
-    }
+        
+        // Reîncarcă toate programările și actualizează calendarul
+        this.loadProgramari();
+        
+        this.showDeleteConfirmModal = false;
+        this.programareToDelete = null;
+      },
+      error: (error) => {
+        console.error('Eroare la ștergerea programării:', error);
+        this.showDeleteConfirmModal = false;
+        this.programareToDelete = null;
+      }
+    });
+  }
+
+  cancelDeleteProgramare() {
+    this.showDeleteConfirmModal = false;
+    this.programareToDelete = null;
   }
 
   formatProgramareDate(date: Date | string): string {
@@ -719,6 +836,18 @@ loadDashboardData(): void {
     return d.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
   }
 
+  calculateEndTime(startDate: Date | string, durataMinute: number): string {
+    const start = new Date(startDate);
+    const end = new Date(start.getTime() + (durataMinute * 60 * 1000));
+    return end.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  formatProgramareInterval(date: Date | string, durata: number): string {
+    const startTime = this.formatProgramareTime(date);
+    const endTime = this.calculateEndTime(date, durata);
+    return `${startTime} - ${endTime}`;
+  }
+
   formatSelectedDate(): string {
     if (!this.selectedDate) return '';
     const options: Intl.DateTimeFormatOptions = { 
@@ -727,5 +856,21 @@ loadDashboardData(): void {
       year: 'numeric' 
     };
     return this.selectedDate.toLocaleDateString('ro-RO', options);
+  }
+
+  // Sistem de notificări personalizate
+  showCustomNotification(message: string, type: 'success' | 'error' | 'warning') {
+    this.notificationMessage = message;
+    this.notificationType = type;
+    this.showNotification = true;
+
+    // Ascunde automat după 4 secunde
+    setTimeout(() => {
+      this.closeNotification();
+    }, 4000);
+  }
+
+  closeNotification() {
+    this.showNotification = false;
   }
 }
