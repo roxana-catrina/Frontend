@@ -238,6 +238,12 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     // Subscribe to notifications
     this.notificationSubscription = this.websocketService.onNotification().subscribe({
       next: (notification) => {
+        console.log('========== NOTIFICATION RECEIVED ==========');
+        console.log('Raw notification:', notification);
+        console.log('Notification type:', notification?.tip);
+        console.log('Is null?', notification === null);
+        console.log('=========================================');
+        
         if (notification) {
           console.log('New notification:', notification);
           
@@ -305,14 +311,20 @@ export class MesagerieComponent implements OnInit, OnDestroy {
   updateUnreadCountAndBadges(): void {
     if (!this.currentUserId) return;
     
-    // Actualizează doar contorul fără a reîncărca toate conversațiile
-    this.mesajService.countUnreadMessages(this.currentUserId).subscribe({
-      next: (count) => {
-        this.unreadCount = count;
-        console.log('Contor actualizat:', count);
-      },
-      error: (error) => console.error('Error updating unread count:', error)
-    });
+    // Așteaptă 500ms pentru ca backend-ul să salveze mesajul
+    setTimeout(() => {
+      // Actualizează contorul global
+      this.mesajService.countUnreadMessages(this.currentUserId!).subscribe({
+        next: (count) => {
+          this.unreadCount = count;
+          console.log('Contor actualizat:', count);
+          
+          // Reîncarcă conversațiile pentru a actualiza badge-urile individuale
+          this.loadRecentConversations();
+        },
+        error: (error) => console.error('Error updating unread count:', error)
+      });
+    }, 500);
   }
 
   selectUser(user: any): void {

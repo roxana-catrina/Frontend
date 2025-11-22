@@ -45,8 +45,12 @@ export class WebsocketService {
 
       // Subscribe to notifications
       this.stompClient!.subscribe(`/user/${userId}/queue/notifications`, (message) => {
+        console.log('📢 WebSocket: Notification message received on queue');
+        console.log('📢 Message body:', message.body);
         const notification = JSON.parse(message.body);
+        console.log('📢 Parsed notification:', notification);
         this.notificationSubject.next(notification);
+        console.log('📢 Notification sent to subscribers');
       });
 
       // Subscribe to typing indicators
