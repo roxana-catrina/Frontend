@@ -46,6 +46,10 @@
         [class.has-unread]="user.unreadMessagesCount > 0"
         (click)="selectUser(user)">
         <div class="user-avatar">
+          <img [src]="getUserProfilePhoto(user)" 
+               [alt]="user.prenume + ' ' + user.nume"
+               (error)="onImageError($event)"
+               class="avatar-img">
           <i class="bi bi-person-circle"></i>
           <span class="unread-badge" *ngIf="user.unreadMessagesCount > 0">{{ user.unreadMessagesCount }}</span>
         </div>
@@ -81,6 +85,10 @@
         class="user-card" 
         (click)="selectUser(user)">
         <div class="user-avatar">
+          <img [src]="getUserProfilePhoto(user)" 
+               [alt]="user.prenume + ' ' + user.nume"
+               (error)="onImageError($event)"
+               class="avatar-img">
           <i class="bi bi-person-circle"></i>
         </div>
         <div class="user-info">
@@ -111,6 +119,10 @@
         [class.has-unread]="user.unreadMessagesCount > 0"
         (click)="selectUser(user)">
         <div class="user-avatar">
+          <img [src]="getUserProfilePhoto(user)" 
+               [alt]="user.prenume + ' ' + user.nume"
+               (error)="onImageError($event)"
+               class="avatar-img">
           <i class="bi bi-person-circle"></i>
           <span class="unread-badge" *ngIf="user.unreadMessagesCount > 0">{{ user.unreadMessagesCount }}</span>
         </div>
@@ -157,6 +169,10 @@
     <div class="chat-header">
       <div class="chat-user-info">
         <div class="chat-avatar">
+          <img [src]="getUserProfilePhoto(selectedUser)" 
+               [alt]="selectedUser?.prenume + ' ' + selectedUser?.nume"
+               (error)="onImageError($event)"
+               class="avatar-img">
           <i class="bi bi-person-circle"></i>
         </div>
         <div class="chat-user-details">

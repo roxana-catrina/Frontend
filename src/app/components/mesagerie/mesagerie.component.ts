@@ -315,6 +315,41 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     return mesaj.expeditorId === this.currentUserId ? 'me' : 'other';
   }
 
+  getUserProfilePhoto(user: any): string {
+    if (!user) return '';
+    
+    // Dacă obiectul user are profilePhotoUrl explicit
+    if (user.profilePhotoUrl) {
+      // Dacă URL-ul este relativ, adaugă baza
+      if (!user.profilePhotoUrl.startsWith('http')) {
+        return `http://localhost:8083${user.profilePhotoUrl}`;
+      }
+      return user.profilePhotoUrl;
+    }
+    
+    // Altfel, construiește URL-ul bazat pe ID
+    if (user.id) {
+      return this.userService.getProfilePhotoUrl(user.id);
+    }
+    
+    return '';
+  }
+
+  hasProfilePhoto(user: any): boolean {
+    // Flag pentru a determina dacă să încercăm să afișăm imaginea
+    return !!user && (!!user.profilePhotoUrl || !!user.id);
+  }
+
+  onImageError(event: Event): void {
+    // Ascunde imaginea în caz de eroare pentru a afișa iconul
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+    // Forțează re-evaluarea pentru a afișa iconul
+    if (img.parentElement) {
+      img.parentElement.classList.add('no-image');
+    }
+  }
+
   goBack(): void {
     this.router.navigate(['/dashboard']);
   }
