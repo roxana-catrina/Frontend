@@ -178,18 +178,47 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     // Subscribe to incoming messages
     this.messageSubscription = this.websocketService.onMessage().subscribe({
       next: (mesaj) => {
-        if (mesaj && this.selectedUser && 
-            (mesaj.expeditorId === this.selectedUser.id || mesaj.destinatarId === this.selectedUser.id)) {
-          this.messages.push(mesaj);
-          this.scrollToBottom();
+        console.log('Mesaj primit prin WebSocket:', mesaj);
+        
+        if (!mesaj) return;
+        
+        // Verifică dacă mesajul aparține conversației active
+        const isActiveConversation = this.selectedUser && this.showChat &&
+            ((mesaj.expeditorId === this.selectedUser.id && mesaj.destinatarId === this.currentUserId) ||
+            (mesaj.destinatarId === this.selectedUser.id && mesaj.expeditorId === this.currentUserId));
+        
+        if (isActiveConversation) {
+          console.log('Mesaj pentru conversația activă:', mesaj);
+          
+          // Adaugă mesajul la conversația curentă doar dacă nu există deja
+          const existingMessage = this.messages.find(m => 
+            m.expeditorId === mesaj.expeditorId && 
+            m.destinatarId === mesaj.destinatarId && 
+            m.continut === mesaj.continut &&
+            m.dataTrimitere && mesaj.dataTrimitere &&
+            Math.abs(new Date(m.dataTrimitere).getTime() - new Date(mesaj.dataTrimitere).getTime()) < 2000
+          );
+          
+          if (!existingMessage) {
+            console.log('Adaugă mesaj nou la conversație');
+            this.messages.push(mesaj);
+            setTimeout(() => this.scrollToBottom(), 100);
+          } else {
+            console.log('Mesaj duplicat, ignorat');
+          }
           
           // Marchează ca citit dacă este de la utilizatorul selectat
-          if (mesaj.expeditorId === this.selectedUser.id) {
-            this.markAsRead(mesaj.expeditorId);
+          if (mesaj.expeditorId === this.selectedUser.id && mesaj.destinatarId === this.currentUserId) {
+            setTimeout(() => {
+              this.markAsRead(mesaj.expeditorId);
+            }, 300);
           }
+        } else {
+          console.log('Mesaj nu este pentru conversația activă');
         }
-        // Actualizează contorul de mesaje necitite
-        this.loadUnreadCount();
+        
+        // Actualizează contorul și badge-urile
+        this.updateUnreadCountAndBadges();
       },
       error: (error) => console.error('Error receiving message:', error)
     });
@@ -216,6 +245,19 @@ export class MesagerieComponent implements OnInit, OnDestroy {
         this.loadRecentConversations();
       },
       error: (error) => console.error('Error loading unread count:', error)
+    });
+  }
+
+  updateUnreadCountAndBadges(): void {
+    if (!this.currentUserId) return;
+    
+    // Actualizează doar contorul fără a reîncărca toate conversațiile
+    this.mesajService.countUnreadMessages(this.currentUserId).subscribe({
+      next: (count) => {
+        this.unreadCount = count;
+        console.log('Contor actualizat:', count);
+      },
+      error: (error) => console.error('Error updating unread count:', error)
     });
   }
 
@@ -265,10 +307,20 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     // Trimite mesajul prin API
     this.mesajService.trimiteMesaj(mesajRequest).subscribe({
       next: (mesaj) => {
-        // Mesajul va fi adăugat prin WebSocket
-        this.messages.push(mesaj);
+        console.log('Mesaj trimis cu succes:', mesaj);
+        // Adaugă mesajul local imediat pentru feedback instant
+        const existingMessage = this.messages.find(m => 
+          m.expeditorId === mesaj.expeditorId && 
+          m.destinatarId === mesaj.destinatarId && 
+          m.continut === mesaj.continut
+        );
+        
+        if (!existingMessage) {
+          this.messages.push(mesaj);
+          this.scrollToBottom();
+        }
+        
         this.messageText = '';
-        this.scrollToBottom();
       },
       error: (error) => {
         console.error('Error sending message:', error);
@@ -289,7 +341,8 @@ export class MesagerieComponent implements OnInit, OnDestroy {
             msg.dataCitire = new Date();
           }
         });
-        this.loadUnreadCount();
+        // Folosește metoda optimizată în loc de loadUnreadCount
+        this.updateUnreadCountAndBadges();
       },
       error: (error) => console.error('Error marking as read:', error)
     });
