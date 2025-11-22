@@ -24,6 +24,11 @@ export class UpdateUserComponent {
   taraUser:string='';
   user: any;
   updateUserForm!: FormGroup;
+  
+  // Profile photo
+  selectedProfilePhoto: File | null = null;
+  profilePhotoPreview: string | null = null;
+  defaultAvatar: string = 'https://via.placeholder.com/150/667eea/ffffff?text=Avatar';
   constructor(private activatedRoute: ActivatedRoute,
               private serviceUser: UserService,
             private fb: FormBuilder,
@@ -63,6 +68,15 @@ export class UpdateUserComponent {
       const result = this.phoneService.schimbarePrefix(data.tara, data.numar_telefon);
     //  console.log("tara data ",data.tara)
       this.user=data;
+      
+      // Load profile photo if exists
+      if (data.profilePhotoUrl) {
+        this.profilePhotoPreview = data.profilePhotoUrl;
+      } else {
+        // Try to load from backend endpoint
+        this.profilePhotoPreview = this.serviceUser.getProfilePhotoUrl(id);
+      }
+      
     //  console.log("results:",result)
       if (result) {
         this.prefix = result.prefix;
@@ -96,10 +110,35 @@ export class UpdateUserComponent {
   if (result) {
     const userData = { ...formValue, numar_telefon: result.numarTelefonComplet };
 
-    this.serviceUser.updateUser(this.id, userData).subscribe((data) => {
-      console.log(data);
-      if (data.id != null) {
-        this.router.navigate(['/dashboard']); // navighează la dashboard
+    // Update user data first
+    this.serviceUser.updateUser(this.id, userData).subscribe({
+      next: (data) => {
+        console.log(data);
+        
+        // If profile photo is selected, upload it
+        if (this.selectedProfilePhoto) {
+          const formData = new FormData();
+          formData.append('profilePhoto', this.selectedProfilePhoto);
+          
+          this.serviceUser.uploadProfilePhoto(this.id, formData).subscribe({
+            next: (response) => {
+              console.log('Profile photo uploaded:', response);
+              this.router.navigate(['/dashboard']);
+            },
+            error: (error) => {
+              console.error('Error uploading profile photo:', error);
+              // Navigate anyway even if photo upload fails
+              this.router.navigate(['/dashboard']);
+            }
+          });
+        } else {
+          // No photo to upload, just navigate
+          this.router.navigate(['/dashboard']);
+        }
+      },
+      error: (error) => {
+        console.error('Error updating user:', error);
+        alert('Eroare la actualizarea profilului. Încercați din nou.');
       }
     });
   }
@@ -107,6 +146,29 @@ export class UpdateUserComponent {
 
 goToDashboard() {
   this.router.navigate(['/dashboard']);
+}
+
+onProfilePhotoSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files[0]) {
+    this.selectedProfilePhoto = input.files[0];
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      this.profilePhotoPreview = e.target.result;
+    };
+    reader.readAsDataURL(this.selectedProfilePhoto);
+  }
+}
+
+removeProfilePhoto(): void {
+  this.selectedProfilePhoto = null;
+  this.profilePhotoPreview = null;
+  const fileInput = document.getElementById('profilePhoto') as HTMLInputElement;
+  if (fileInput) {
+    fileInput.value = '';
+  }
 }
 
 }
