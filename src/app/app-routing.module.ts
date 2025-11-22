@@ -7,13 +7,15 @@ import { LoginComponent } from './components/login/login.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ImagineComponent } from './components/imagine/imagine.component';
 import { HomeComponent } from './home/home.component';
+import { MesagerieComponent } from './components/mesagerie/mesagerie.component';
 const routes: Routes = [
   {path: 'user',component:PostUserComponent},
   {path: '',component:HomeComponent},
   {path: 'user/:id',component:UpdateUserComponent},
   {path: 'authenticate', component: LoginComponent},
   { path: 'dashboard', component: DashboardComponent},
-  {path: 'dashboard/imagine/:id', component: ImagineComponent}
+  {path: 'dashboard/imagine/:id', component: ImagineComponent},
+  {path: 'mesagerie', component: MesagerieComponent}
  // {path: '', redirectTo : 'authenticate'}
 ];
 
