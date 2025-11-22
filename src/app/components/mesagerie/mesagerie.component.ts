@@ -178,17 +178,28 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     // Subscribe to incoming messages
     this.messageSubscription = this.websocketService.onMessage().subscribe({
       next: (mesaj) => {
+        console.log('========================================');
         console.log('Mesaj primit prin WebSocket:', mesaj);
+        console.log('Current User ID:', this.currentUserId);
+        console.log('Selected User:', this.selectedUser);
+        console.log('Show Chat:', this.showChat);
         
-        if (!mesaj) return;
+        if (!mesaj) {
+          console.log('Mesaj este null, ignorat');
+          return;
+        }
         
         // Verifică dacă mesajul aparține conversației active
-        const isActiveConversation = this.selectedUser && this.showChat &&
-            ((mesaj.expeditorId === this.selectedUser.id && mesaj.destinatarId === this.currentUserId) ||
-            (mesaj.destinatarId === this.selectedUser.id && mesaj.expeditorId === this.currentUserId));
+        const isFromSelectedUser = mesaj.expeditorId === this.selectedUser?.id && mesaj.destinatarId === this.currentUserId;
+        const isToSelectedUser = mesaj.destinatarId === this.selectedUser?.id && mesaj.expeditorId === this.currentUserId;
+        const isActiveConversation = this.selectedUser && this.showChat && (isFromSelectedUser || isToSelectedUser);
+        
+        console.log('Is from selected user?', isFromSelectedUser);
+        console.log('Is to selected user?', isToSelectedUser);
+        console.log('Is active conversation?', isActiveConversation);
         
         if (isActiveConversation) {
-          console.log('Mesaj pentru conversația activă:', mesaj);
+          console.log('✓ Mesaj pentru conversația activă');
           
           // Adaugă mesajul la conversația curentă doar dacă nu există deja
           const existingMessage = this.messages.find(m => 
@@ -200,11 +211,11 @@ export class MesagerieComponent implements OnInit, OnDestroy {
           );
           
           if (!existingMessage) {
-            console.log('Adaugă mesaj nou la conversație');
+            console.log('✓ Adaugă mesaj nou la conversație');
             this.messages.push(mesaj);
             setTimeout(() => this.scrollToBottom(), 100);
           } else {
-            console.log('Mesaj duplicat, ignorat');
+            console.log('✗ Mesaj duplicat, ignorat');
           }
           
           // Marchează ca citit dacă este de la utilizatorul selectat
@@ -214,8 +225,9 @@ export class MesagerieComponent implements OnInit, OnDestroy {
             }, 300);
           }
         } else {
-          console.log('Mesaj nu este pentru conversația activă');
+          console.log('✗ Mesaj nu este pentru conversația activă');
         }
+        console.log('========================================');
         
         // Actualizează contorul și badge-urile
         this.updateUnreadCountAndBadges();
@@ -228,8 +240,50 @@ export class MesagerieComponent implements OnInit, OnDestroy {
       next: (notification) => {
         if (notification) {
           console.log('New notification:', notification);
-          this.loadUnreadCount();
-          // Poți afișa o notificare vizuală aici
+          
+          // Dacă este o notificare de mesaj nou și conversația este activă cu expeditorul
+          if (notification.tip === 'MESAJ_NOU' && 
+              this.selectedUser && 
+              this.showChat && 
+              notification.expeditorId === this.selectedUser.id) {
+            
+            console.log('✓ Notificare pentru conversația activă - reîncarcă mesajele');
+            console.log('Current messages count:', this.messages.length);
+            
+            // Așteaptă 500ms pentru ca backend-ul să salveze mesajul
+            setTimeout(() => {
+              // Reîncarcă conversația pentru a obține noul mesaj
+              if (this.currentUserId) {
+                this.mesajService.getConversation(this.currentUserId, this.selectedUser.id).subscribe({
+                  next: (mesaje) => {
+                    console.log('Mesaje primite de la server:', mesaje.length);
+                    console.log('Mesaje curente în conversație:', this.messages.length);
+                    
+                    // Găsește mesajele noi bazat pe ID
+                    const currentIds = new Set(this.messages.map(m => m.id).filter(id => id !== undefined));
+                    const newMessages = mesaje.filter(msg => msg.id && !currentIds.has(msg.id));
+                    
+                    console.log('Mesaje noi găsite (după ID):', newMessages.length);
+                    
+                    if (newMessages.length > 0) {
+                      console.log('✓ Adăugat', newMessages.length, 'mesaje noi');
+                      newMessages.forEach(msg => console.log('  - Mesaj ID:', msg.id, 'Continut:', msg.continut));
+                      this.messages.push(...newMessages);
+                      setTimeout(() => this.scrollToBottom(), 100);
+                      
+                      // Marchează ca citit
+                      this.markAsRead(notification.expeditorId);
+                    } else {
+                      console.log('✗ Nu există mesaje noi de adăugat (posibil deja adăugate local)');
+                    }
+                  },
+                  error: (error) => console.error('Error reloading conversation:', error)
+                });
+              }
+            }, 500); // Delay de 500ms
+          }
+          
+          this.updateUnreadCountAndBadges();
         }
       }
     });
@@ -304,20 +358,24 @@ export class MesagerieComponent implements OnInit, OnDestroy {
       continut: this.messageText.trim()
     };
 
+    console.log('Trimit mesaj:', mesajRequest);
+
     // Trimite mesajul prin API
     this.mesajService.trimiteMesaj(mesajRequest).subscribe({
       next: (mesaj) => {
         console.log('Mesaj trimis cu succes:', mesaj);
+        console.log('Messages înainte de adăugare:', this.messages.length);
+        
         // Adaugă mesajul local imediat pentru feedback instant
-        const existingMessage = this.messages.find(m => 
-          m.expeditorId === mesaj.expeditorId && 
-          m.destinatarId === mesaj.destinatarId && 
-          m.continut === mesaj.continut
-        );
+        const existingMessage = this.messages.find(m => m.id === mesaj.id);
         
         if (!existingMessage) {
+          console.log('✓ Adaugă mesajul trimis la conversație');
           this.messages.push(mesaj);
-          this.scrollToBottom();
+          console.log('Messages după adăugare:', this.messages.length);
+          setTimeout(() => this.scrollToBottom(), 100);
+        } else {
+          console.log('✗ Mesajul există deja în conversație');
         }
         
         this.messageText = '';
