@@ -165,6 +165,30 @@
   margin: 0 auto;
 }
 
+.section-header {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.875rem 1.5rem;
+  border-radius: 15px;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  color: #2d3748;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #667eea;
+}
+
+.section-header:first-of-type {
+  margin-top: 0;
+}
+
+.section-header i {
+  color: #667eea;
+  font-size: 1.35rem;
+}
+
 .users-count {
   background: rgba(255, 255, 255, 0.95);
   padding: 0.75rem 1.5rem;
@@ -209,6 +233,16 @@
   border-color: #667eea;
 }
 
+.user-card.has-unread {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  border-color: #667eea;
+  box-shadow: 0 5px 25px rgba(102, 126, 234, 0.2);
+}
+
+.user-card.has-unread:hover {
+  box-shadow: 0 15px 45px rgba(102, 126, 234, 0.4);
+}
+
 .user-avatar {
   width: 70px;
   height: 70px;
@@ -221,6 +255,37 @@
   font-size: 2.5rem;
   flex-shrink: 0;
   box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+  position: relative;
+}
+
+.unread-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ef4444;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 3px solid white;
+  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.5);
+  animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 3px 10px rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(239, 68, 68, 0.7);
+  }
 }
 
 .user-info {

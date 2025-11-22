@@ -18,6 +18,8 @@ export class MesagerieComponent implements OnInit, OnDestroy {
   searchTerm: string = '';
   allUsers: any[] = [];
   filteredUsers: any[] = [];
+  usersWithMessages: any[] = []; // Utilizatori cu mesaje necitite
+  otherUsers: any[] = []; // Restul utilizatorilor
   currentUserId: number | null = null;
   currentUserName: string = '';
   
@@ -77,7 +79,7 @@ export class MesagerieComponent implements OnInit, OnDestroy {
       next: (users) => {
         // Filtrăm utilizatorul curent din listă
         this.allUsers = users.filter((user: any) => user.id !== this.currentUserId);
-        this.filteredUsers = [...this.allUsers];
+        this.loadRecentConversations();
       },
       error: (error) => {
         console.error('Eroare la încărcarea utilizatorilor:', error);
@@ -85,14 +87,78 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadRecentConversations(): void {
+    if (!this.currentUserId) return;
+
+    this.mesajService.getRecentConversations(this.currentUserId).subscribe({
+      next: (recentMessages: Mesaj[]) => {
+        // Extrage ID-urile utilizatorilor cu care ai avut conversații
+        const userIdsWithMessages = new Set<number>();
+        const unreadCounts = new Map<number, number>();
+
+        recentMessages.forEach(msg => {
+          const otherUserId = msg.expeditorId === this.currentUserId ? msg.destinatarId : msg.expeditorId;
+          userIdsWithMessages.add(otherUserId);
+          
+          // Numără mesajele necitite de la fiecare utilizator
+          if (!msg.citit && msg.destinatarId === this.currentUserId) {
+            unreadCounts.set(otherUserId, (unreadCounts.get(otherUserId) || 0) + 1);
+          }
+        });
+
+        // Separă utilizatorii în două categorii
+        this.usersWithMessages = [];
+        this.otherUsers = [];
+
+        this.allUsers.forEach(user => {
+          const unreadCount = unreadCounts.get(user.id) || 0;
+          const userWithUnread = { ...user, unreadMessagesCount: unreadCount };
+
+          if (userIdsWithMessages.has(user.id)) {
+            this.usersWithMessages.push(userWithUnread);
+          } else {
+            this.otherUsers.push(userWithUnread);
+          }
+        });
+
+        // Sortează utilizatorii cu mesaje - cei cu mesaje necitite primii
+        this.usersWithMessages.sort((a, b) => {
+          if (a.unreadMessagesCount !== b.unreadMessagesCount) {
+            return b.unreadMessagesCount - a.unreadMessagesCount;
+          }
+          return 0;
+        });
+
+        // Actualizează lista filtrată
+        this.updateFilteredUsers();
+      },
+      error: (error) => {
+        console.error('Error loading recent conversations:', error);
+        this.usersWithMessages = [];
+        this.otherUsers = this.allUsers.map(user => ({ ...user, unreadMessagesCount: 0 }));
+        this.updateFilteredUsers();
+      }
+    });
+  }
+
+  updateFilteredUsers(): void {
+    if (!this.searchTerm.trim()) {
+      this.filteredUsers = [...this.usersWithMessages, ...this.otherUsers];
+    } else {
+      this.searchUsers();
+    }
+  }
+
   searchUsers(): void {
     if (!this.searchTerm.trim()) {
-      this.filteredUsers = [...this.allUsers];
+      this.updateFilteredUsers();
       return;
     }
 
     const searchLower = this.searchTerm.toLowerCase().trim();
-    this.filteredUsers = this.allUsers.filter(user => {
+    const allUsersToSearch = [...this.usersWithMessages, ...this.otherUsers];
+    
+    this.filteredUsers = allUsersToSearch.filter(user => {
       const fullName = `${user.prenume || ''} ${user.nume || ''}`.toLowerCase();
       const email = (user.email || '').toLowerCase();
       return fullName.includes(searchLower) || email.includes(searchLower);
@@ -146,6 +212,8 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     this.mesajService.countUnreadMessages(this.currentUserId).subscribe({
       next: (count) => {
         this.unreadCount = count;
+        // Reîncarcă conversațiile pentru a actualiza badge-urile
+        this.loadRecentConversations();
       },
       error: (error) => console.error('Error loading unread count:', error)
     });

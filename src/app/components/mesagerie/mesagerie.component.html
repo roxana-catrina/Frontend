@@ -33,19 +33,86 @@
 
   <!-- Users List -->
   <div class="users-list">
-    <div class="users-count" *ngIf="filteredUsers.length > 0">
-      <i class="bi bi-people"></i>
-      <span>{{ filteredUsers.length }} utilizator(i) găsit(ă)</span>
+    <!-- Utilizatori cu mesaje -->
+    <div *ngIf="usersWithMessages.length > 0 && !searchTerm" class="section-header">
+      <i class="bi bi-chat-dots-fill"></i>
+      <span>Conversații Recente ({{ usersWithMessages.length }})</span>
     </div>
 
-    <!-- User Cards -->
-    <div class="user-cards">
+    <div class="user-cards" *ngIf="usersWithMessages.length > 0 && !searchTerm">
       <div 
-        *ngFor="let user of filteredUsers" 
+        *ngFor="let user of usersWithMessages" 
+        class="user-card" 
+        [class.has-unread]="user.unreadMessagesCount > 0"
+        (click)="selectUser(user)">
+        <div class="user-avatar">
+          <i class="bi bi-person-circle"></i>
+          <span class="unread-badge" *ngIf="user.unreadMessagesCount > 0">{{ user.unreadMessagesCount }}</span>
+        </div>
+        <div class="user-info">
+          <div class="user-name-email">
+            <h4>{{ user.prenume }} {{ user.nume }}</h4>
+            <p class="user-email">{{ user.email }}</p>
+          </div>
+          <div class="user-details" *ngIf="user.telefon || user.specialitate">
+            <span *ngIf="user.telefon" class="detail-item">
+              <i class="bi bi-telephone"></i> {{ user.telefon }}
+            </span>
+            <span *ngIf="user.specialitate" class="detail-item">
+              <i class="bi bi-briefcase"></i> {{ user.specialitate }}
+            </span>
+          </div>
+        </div>
+        <div class="user-action">
+          <i class="bi bi-chat-left-text"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alți utilizatori -->
+    <div *ngIf="otherUsers.length > 0 && !searchTerm" class="section-header">
+      <i class="bi bi-people"></i>
+      <span>Toți Utilizatorii ({{ otherUsers.length }})</span>
+    </div>
+
+    <div class="user-cards" *ngIf="otherUsers.length > 0 && !searchTerm">
+      <div 
+        *ngFor="let user of otherUsers" 
         class="user-card" 
         (click)="selectUser(user)">
         <div class="user-avatar">
           <i class="bi bi-person-circle"></i>
+        </div>
+        <div class="user-info">
+          <div class="user-name-email">
+            <h4>{{ user.prenume }} {{ user.nume }}</h4>
+            <p class="user-email">{{ user.email }}</p>
+          </div>
+          <div class="user-details" *ngIf="user.telefon || user.specialitate">
+            <span *ngIf="user.telefon" class="detail-item">
+              <i class="bi bi-telephone"></i> {{ user.telefon }}
+            </span>
+            <span *ngIf="user.specialitate" class="detail-item">
+              <i class="bi bi-briefcase"></i> {{ user.specialitate }}
+            </span>
+          </div>
+        </div>
+        <div class="user-action">
+          <i class="bi bi-chat-left-text"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rezultate căutare -->
+    <div class="user-cards" *ngIf="searchTerm">
+      <div 
+        *ngFor="let user of filteredUsers" 
+        class="user-card"
+        [class.has-unread]="user.unreadMessagesCount > 0"
+        (click)="selectUser(user)">
+        <div class="user-avatar">
+          <i class="bi bi-person-circle"></i>
+          <span class="unread-badge" *ngIf="user.unreadMessagesCount > 0">{{ user.unreadMessagesCount }}</span>
         </div>
         <div class="user-info">
           <div class="user-name-email">
