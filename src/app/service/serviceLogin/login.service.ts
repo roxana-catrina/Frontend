@@ -14,7 +14,7 @@ export class LoginService {
 
   // Metodă pentru autentificare
   login(credentials: { email: string; parola: string }) {
-    return this.http.post('/authenticate', credentials, { withCredentials: true });
+    return this.http.post('/api/authenticate', credentials, { withCredentials: true });
   }
  
     

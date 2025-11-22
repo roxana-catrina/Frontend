@@ -71,6 +71,28 @@
   border-radius: 20px;
 }
 
+.badge-notification {
+  background: #ef4444;
+  color: white;
+  padding: 0.25rem 0.625rem;
+  border-radius: 50%;
+  font-size: 0.875rem;
+  font-weight: 700;
+  min-width: 24px;
+  text-align: center;
+  display: inline-block;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
 /* Search Section */
 .search-section {
   padding: 2rem;
@@ -573,6 +595,24 @@
 .welcome-message p {
   font-size: 1.1rem;
   margin: 0;
+}
+
+.loading-message {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #667eea;
+}
+
+.loading-message .spinner-border {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+}
+
+.loading-message p {
+  font-size: 1rem;
+  margin: 0;
+  color: #a0aec0;
 }
 
 /* Message Bubbles */

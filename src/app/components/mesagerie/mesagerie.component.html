@@ -7,6 +7,7 @@
     <h2><i class="bi bi-chat-dots"></i> Mesagerie</h2>
     <div class="header-info">
       <span class="user-name">{{ currentUserName }}</span>
+      <span class="badge-notification" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
     </div>
   </div>
 
@@ -103,17 +104,24 @@
 
     <!-- Chat Messages -->
     <div class="chat-messages">
-      <div class="welcome-message" *ngIf="messages.length === 0">
+      <div class="welcome-message" *ngIf="messages.length === 0 && !isLoading">
         <i class="bi bi-chat-heart"></i>
         <p>Începe o conversație cu {{ selectedUser?.prenume }}</p>
       </div>
 
+      <div class="loading-message" *ngIf="isLoading">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Se încarcă...</span>
+        </div>
+        <p>Se încarcă conversația...</p>
+      </div>
+
       <div *ngFor="let message of messages" 
            class="message" 
-           [ngClass]="{'message-sent': message.sender === 'me', 'message-received': message.sender !== 'me'}">
+           [ngClass]="{'message-sent': getMessageSender(message) === 'me', 'message-received': getMessageSender(message) !== 'me'}">
         <div class="message-bubble">
-          <p class="message-text">{{ message.text }}</p>
-          <span class="message-time">{{ message.timestamp | date:'HH:mm' }}</span>
+          <p class="message-text">{{ message.continut }}</p>
+          <span class="message-time">{{ message.dataTrimitere | date:'HH:mm' }}</span>
         </div>
       </div>
     </div>
