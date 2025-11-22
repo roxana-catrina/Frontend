@@ -1,0 +1,230 @@
+<div class="mesagerie-container">
+  <!-- Header -->
+  <div class="mesagerie-header">
+    <button class="btn-back" (click)="goBack()">
+      <i class="bi bi-arrow-left"></i>
+    </button>
+    <h2><i class="bi bi-chat-dots"></i> Mesagerie</h2>
+    <div class="header-info">
+      <span class="user-name">{{ currentUserName }}</span>
+      <span class="badge-notification" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+    </div>
+  </div>
+
+  <!-- Search Section -->
+  <div class="search-section">
+    <div class="search-container">
+      <i class="bi bi-search search-icon"></i>
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        (input)="searchUsers()" 
+        class="search-input" 
+        placeholder="Caută utilizatori după nume sau email..."
+        autocomplete="off" />
+      <button 
+        *ngIf="searchTerm" 
+        class="clear-btn" 
+        (click)="clearSearch()">
+        <i class="bi bi-x-circle-fill"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Users List -->
+  <div class="users-list">
+    <!-- Utilizatori cu mesaje -->
+    <div *ngIf="usersWithMessages.length > 0 && !searchTerm" class="section-header">
+      <i class="bi bi-chat-dots-fill"></i>
+      <span>Conversații Recente ({{ usersWithMessages.length }})</span>
+    </div>
+
+    <div class="user-cards" *ngIf="usersWithMessages.length > 0 && !searchTerm">
+      <div 
+        *ngFor="let user of usersWithMessages" 
+        class="user-card" 
+        [class.has-unread]="user.unreadMessagesCount > 0"
+        (click)="selectUser(user)">
+        <div class="user-avatar">
+          <img [src]="getUserProfilePhoto(user)" 
+               [alt]="user.prenume + ' ' + user.nume"
+               (error)="onImageError($event)"
+               class="avatar-img">
+          <i class="bi bi-person-circle"></i>
+          <span class="unread-badge" *ngIf="user.unreadMessagesCount > 0">{{ user.unreadMessagesCount }}</span>
+        </div>
+        <div class="user-info">
+          <div class="user-name-email">
+            <h4>{{ user.prenume }} {{ user.nume }}</h4>
+            <p class="user-email">{{ user.email }}</p>
+          </div>
+          <div class="user-details" *ngIf="user.telefon || user.specialitate">
+            <span *ngIf="user.telefon" class="detail-item">
+              <i class="bi bi-telephone"></i> {{ user.telefon }}
+            </span>
+            <span *ngIf="user.specialitate" class="detail-item">
+              <i class="bi bi-briefcase"></i> {{ user.specialitate }}
+            </span>
+          </div>
+        </div>
+        <div class="user-action">
+          <i class="bi bi-chat-left-text"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alți utilizatori -->
+    <div *ngIf="otherUsers.length > 0 && !searchTerm" class="section-header">
+      <i class="bi bi-people"></i>
+      <span>Toți Utilizatorii ({{ otherUsers.length }})</span>
+    </div>
+
+    <div class="user-cards" *ngIf="otherUsers.length > 0 && !searchTerm">
+      <div 
+        *ngFor="let user of otherUsers" 
+        class="user-card" 
+        (click)="selectUser(user)">
+        <div class="user-avatar">
+          <img [src]="getUserProfilePhoto(user)" 
+               [alt]="user.prenume + ' ' + user.nume"
+               (error)="onImageError($event)"
+               class="avatar-img">
+          <i class="bi bi-person-circle"></i>
+        </div>
+        <div class="user-info">
+          <div class="user-name-email">
+            <h4>{{ user.prenume }} {{ user.nume }}</h4>
+            <p class="user-email">{{ user.email }}</p>
+          </div>
+          <div class="user-details" *ngIf="user.telefon || user.specialitate">
+            <span *ngIf="user.telefon" class="detail-item">
+              <i class="bi bi-telephone"></i> {{ user.telefon }}
+            </span>
+            <span *ngIf="user.specialitate" class="detail-item">
+              <i class="bi bi-briefcase"></i> {{ user.specialitate }}
+            </span>
+          </div>
+        </div>
+        <div class="user-action">
+          <i class="bi bi-chat-left-text"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rezultate căutare -->
+    <div class="user-cards" *ngIf="searchTerm">
+      <div 
+        *ngFor="let user of filteredUsers" 
+        class="user-card"
+        [class.has-unread]="user.unreadMessagesCount > 0"
+        (click)="selectUser(user)">
+        <div class="user-avatar">
+          <img [src]="getUserProfilePhoto(user)" 
+               [alt]="user.prenume + ' ' + user.nume"
+               (error)="onImageError($event)"
+               class="avatar-img">
+          <i class="bi bi-person-circle"></i>
+          <span class="unread-badge" *ngIf="user.unreadMessagesCount > 0">{{ user.unreadMessagesCount }}</span>
+        </div>
+        <div class="user-info">
+          <div class="user-name-email">
+            <h4>{{ user.prenume }} {{ user.nume }}</h4>
+            <p class="user-email">{{ user.email }}</p>
+          </div>
+          <div class="user-details" *ngIf="user.telefon || user.specialitate">
+            <span *ngIf="user.telefon" class="detail-item">
+              <i class="bi bi-telephone"></i> {{ user.telefon }}
+            </span>
+            <span *ngIf="user.specialitate" class="detail-item">
+              <i class="bi bi-briefcase"></i> {{ user.specialitate }}
+            </span>
+          </div>
+        </div>
+        <div class="user-action">
+          <i class="bi bi-chat-left-text"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Results -->
+    <div class="no-results" *ngIf="filteredUsers.length === 0 && allUsers.length > 0">
+      <i class="bi bi-search"></i>
+      <h3>Niciun rezultat</h3>
+      <p>Nu s-au găsit utilizatori pentru "{{ searchTerm }}"</p>
+    </div>
+
+    <!-- No Users -->
+    <div class="no-users" *ngIf="allUsers.length === 0">
+      <i class="bi bi-people"></i>
+      <h3>Nu există utilizatori</h3>
+      <p>Nu există alți utilizatori în sistem momentan</p>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Window -->
+<div class="chat-overlay" *ngIf="showChat" (click)="closeChat()">
+  <div class="chat-window" (click)="$event.stopPropagation()">
+    <!-- Chat Header -->
+    <div class="chat-header">
+      <div class="chat-user-info">
+        <div class="chat-avatar">
+          <img [src]="getUserProfilePhoto(selectedUser)" 
+               [alt]="selectedUser?.prenume + ' ' + selectedUser?.nume"
+               (error)="onImageError($event)"
+               class="avatar-img">
+          <i class="bi bi-person-circle"></i>
+        </div>
+        <div class="chat-user-details">
+          <h4>{{ selectedUser?.prenume }} {{ selectedUser?.nume }}</h4>
+          <p class="online-status"><i class="bi bi-circle-fill"></i> Online</p>
+        </div>
+      </div>
+      <button class="btn-close-chat" (click)="closeChat()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Chat Messages -->
+    <div class="chat-messages">
+      <div class="welcome-message" *ngIf="messages.length === 0 && !isLoading">
+        <i class="bi bi-chat-heart"></i>
+        <p>Începe o conversație cu {{ selectedUser?.prenume }}</p>
+      </div>
+
+      <div class="loading-message" *ngIf="isLoading">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Se încarcă...</span>
+        </div>
+        <p>Se încarcă conversația...</p>
+      </div>
+
+      <div *ngFor="let message of messages" 
+           class="message" 
+           [ngClass]="{'message-sent': getMessageSender(message) === 'me', 'message-received': getMessageSender(message) !== 'me'}">
+        <div class="message-bubble">
+          <p class="message-text">{{ message.continut }}</p>
+          <span class="message-time">{{ message.dataTrimitere | date:'HH:mm' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Input -->
+    <div class="chat-input-container">
+      <div class="chat-input-wrapper">
+        <textarea 
+          [(ngModel)]="messageText" 
+          (keypress)="onKeyPress($event)"
+          class="chat-input" 
+          placeholder="Scrie un mesaj..."
+          rows="1"></textarea>
+        <button 
+          class="btn-send" 
+          (click)="sendMessage()"
+          [disabled]="!messageText.trim()">
+          <i class="bi bi-send-fill"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

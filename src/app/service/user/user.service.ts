@@ -57,5 +57,15 @@ getImage(userId: number, id: number): Observable<Imagine> {
   return this.http.get<Imagine>(`${BASIC_URL}/api/user/${userId}/imagine/${id}`);
 }
 
+// Upload profile photo
+uploadProfilePhoto(userId: number, formData: FormData): Observable<any> {
+  return this.http.post(`${BASIC_URL}/api/user/${userId}/profile-photo`, formData);
+}
+
+// Get profile photo URL
+getProfilePhotoUrl(userId: number): string {
+  return `${BASIC_URL}/api/user/${userId}/profile-photo`;
+}
+
 
 }
