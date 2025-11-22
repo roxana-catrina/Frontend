@@ -33,6 +33,15 @@
           <p>Conectați-vă pentru a continua</p>
         </div>
 
+        <!-- Error Alert -->
+        <div class="alert-error" *ngIf="showError">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span>{{ errorMessage }}</span>
+          <button class="alert-close" (click)="showError = false">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+
         <form [formGroup]="loginForm" (ngSubmit)="login()">
           <!-- Email -->
           <div class="form-group">

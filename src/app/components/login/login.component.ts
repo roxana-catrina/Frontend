@@ -17,6 +17,9 @@ import { StorageService } from '../../service/storage/storage.service';
 export class LoginComponent {
   loginForm!: FormGroup;
   isSpinning: boolean = false;
+  errorMessage: string = '';
+  showError: boolean = false;
+  
   constructor(
     private service: LoginService,
     private fb: FormBuilder,
@@ -45,6 +48,9 @@ export class LoginComponent {
       nume: string;
     }
 
+    // Ascunde mesajul de eroare anterior
+    this.showError = false;
+    this.errorMessage = '';
 
     this.authService.login(this.loginForm.value).subscribe({
       next: (res: LoginResponse) => {
@@ -63,12 +69,19 @@ export class LoginComponent {
         console.error('Login error:', err);
 
         if (err.status === 401) {
-          alert('The password entered is incorrect. Please check and try again.');
+          this.errorMessage = 'Parola introdusă este incorectă. Vă rugăm verificați și încercați din nou.';
         } else if (err.status === 404) {
-          alert('This user does not exist. Verify data or create an account.');
+          this.errorMessage = 'Acest utilizator nu există. Verificați datele sau creați un cont.';
         } else {
-          alert('An error occurred. Please try again.');
+          this.errorMessage = 'A apărut o eroare. Vă rugăm încercați din nou.';
         }
+        
+        this.showError = true;
+        
+        // Ascunde automat mesajul după 5 secunde
+        setTimeout(() => {
+          this.showError = false;
+        }, 5000);
       }
     });
 

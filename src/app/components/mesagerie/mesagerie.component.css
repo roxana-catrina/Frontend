@@ -649,6 +649,14 @@
   font-size: 1.25rem;
 }
 
+.btn-close-chat i {
+  font-size: 1.5rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .btn-close-chat:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: rotate(90deg);
@@ -834,6 +842,14 @@
   transition: all 0.3s ease;
   font-size: 1.1rem;
   flex-shrink: 0;
+}
+
+.btn-send i {
+  font-size: 1.2rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-send:hover:not(:disabled) {
