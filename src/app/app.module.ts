@@ -22,6 +22,8 @@ import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.componen
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MesagerieComponent } from './components/mesagerie/mesagerie.component';
+import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
 
 @NgModule({
   declarations: [
@@ -32,7 +34,9 @@ import { MesagerieComponent } from './components/mesagerie/mesagerie.component';
     LoginComponent,
     DashboardComponent,
     HomeComponent,
-    MesagerieComponent
+    MesagerieComponent,
+    ForgotPasswordComponent,
+    ResetPasswordComponent
   ],
   imports: [
     BrowserModule,

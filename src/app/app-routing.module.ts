@@ -8,6 +8,8 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ImagineComponent } from './components/imagine/imagine.component';
 import { HomeComponent } from './home/home.component';
 import { MesagerieComponent } from './components/mesagerie/mesagerie.component';
+import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
 const routes: Routes = [
   {path: 'user',component:PostUserComponent},
   {path: '',component:HomeComponent},
@@ -15,7 +17,9 @@ const routes: Routes = [
   {path: 'authenticate', component: LoginComponent},
   { path: 'dashboard', component: DashboardComponent},
   {path: 'dashboard/imagine/:id', component: ImagineComponent},
-  {path: 'mesagerie', component: MesagerieComponent}
+  {path: 'mesagerie', component: MesagerieComponent},
+  {path: 'forgot-password', component: ForgotPasswordComponent},
+  {path: 'reset-password', component: ResetPasswordComponent}
  // {path: '', redirectTo : 'authenticate'}
 ];
 
