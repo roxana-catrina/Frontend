@@ -90,6 +90,7 @@ export class ImagineComponent implements OnInit {
             // Reset editing states
             this.isEditingObservatii = false;
             this.isZoomed = false;
+            this.isAnalyzing = false;  // Reset analyzing flag când schimbăm imaginea
             this.resetZoom();
             
             console.log('Image and patient loaded:', this.image, this.pacient);
@@ -434,6 +435,7 @@ export class ImagineComponent implements OnInit {
           this.image.confidenta = Math.round(result.confidence * 100); // Convertim la procent
           this.image.tipTumoare = result.type || undefined;
           this.image.dataAnalizei = new Date();
+
                 
               },
               error: (error: any) => {
