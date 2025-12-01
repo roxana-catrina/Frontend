@@ -8,6 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatDialogModule } from '@angular/material/dialog';
 import { ImagineService } from '../../service/imagine/imagine.service';
 import { PacientService } from '../../service/pacient/pacient.service';
+import { BrainTumorService } from '../../service/brain-tumor/brain-tumor.service';
 import { ConfirmDialogComponent } from '../../confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -58,38 +59,52 @@ export class ImagineComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private imageService: ImagineService,
-    private pacientService: PacientService
+    private pacientService: PacientService,
+    private brainTumorService: BrainTumorService
   ) {}
 
   ngOnInit() {
-    const imageId = this.route.snapshot.paramMap.get('id');
-    const userId = localStorage.getItem('id');
+    // Subscribe to route param changes to handle image switching
+    this.route.paramMap.subscribe(params => {
+      const imageId = params.get('id');
+      const userId = localStorage.getItem('id');
 
-    if (imageId && userId) {
-      // First, get all patients to find which patient has this image
-      this.pacientService.getAllPacienti(userId).subscribe({
-        next: (pacienti: Pacient[]) => {
-          // Find the patient that has this image
-          for (const p of pacienti) {
-            const foundImage = p.imagini?.find(img => img.id === imageId);
-            if (foundImage) {
-              this.image = foundImage;
-              this.pacient = p;
-              this.observatiiEdit = this.image.observatii || '';
-              console.log('Image and patient loaded:', this.image, this.pacient);
-              return;
-            }
+      if (imageId && userId) {
+        this.loadImageData(imageId, userId);
+      }
+    });
+  }
+
+  loadImageData(imageId: string, userId: string) {
+    // First, get all patients to find which patient has this image
+    this.pacientService.getAllPacienti(userId).subscribe({
+      next: (pacienti: Pacient[]) => {
+        // Find the patient that has this image
+        for (const p of pacienti) {
+          const foundImage = p.imagini?.find(img => img.id === imageId);
+          if (foundImage) {
+            this.image = foundImage;
+            this.pacient = p;
+            this.observatiiEdit = this.image.observatii || '';
+            
+            // Reset editing states
+            this.isEditingObservatii = false;
+            this.isZoomed = false;
+            this.resetZoom();
+            
+            console.log('Image and patient loaded:', this.image, this.pacient);
+            return;
           }
-          // If no image found, navigate back
-          console.error('Image not found');
-          this.router.navigate(['/dashboard']);
-        },
-        error: (error: any) => {
-          console.error('Error loading patients:', error);
-          this.router.navigate(['/dashboard']);
         }
-      });
-    }
+        // If no image found, navigate back
+        console.error('Image not found');
+        this.router.navigate(['/dashboard']);
+      },
+      error: (error: any) => {
+        console.error('Error loading patients:', error);
+        this.router.navigate(['/dashboard']);
+      }
+    });
   }
 
     
@@ -100,12 +115,8 @@ export class ImagineComponent implements OnInit {
   }
 
   selectImage(img: Imagine) {
-    // Update the current image and observatii
-    this.image = img;
-    this.observatiiEdit = img.observatii || '';
-    this.isEditingObservatii = false;
-    
-    // Optionally navigate to the new image URL
+    // Just navigate to the new image URL
+    // The paramMap subscription in ngOnInit will handle reloading the data
     this.router.navigate(['/dashboard/imagine', img.id]);
   }
 
@@ -337,69 +348,122 @@ export class ImagineComponent implements OnInit {
     const userId = localStorage.getItem('id');
     if (!userId) return;
 
-    this.isAnalyzing = true;
-
-    // Update status la 'in_procesare'
-    this.image.statusAnaliza = 'in_procesare';
-    
-    console.log('🔬 Inițiere analiză imagine:', this.image.id);
-
-    // Trimite cerere de analiză către backend
-    this.imageService.updateImage(this.image.id, this.pacient.id, userId, this.image).subscribe({
-      next: (updated: Imagine) => {
-        console.log('✅ Analiză inițiată:', updated);
-        this.image = updated;
-        
-        // TODO: Backend-ul ar trebui să trimită imaginea către serviciul AI
-        // și să actualizeze rezultatele când sunt gata
-        
-        // Simulare pentru demonstrație (ȘTERGE CÂND AI BACKEND REAL)
-        setTimeout(() => {
-          this.simulateAnalysisComplete();
-        }, 5000);
-
-        alert('Analiza a fost inițiată! Rezultatele vor fi disponibile în curând.');
-        this.isAnalyzing = false;
-      },
-      error: (error: any) => {
-        console.error('❌ Eroare la inițierea analizei:', error);
-        alert('Eroare la inițierea analizei: ' + (error.error?.message || error.message));
-        this.isAnalyzing = false;
-        if (this.image) {
-          this.image.statusAnaliza = 'eroare';
-        }
-      }
-    });
-  }
-
-  // Simulare rezultat analiză (DOAR PENTRU TESTARE - ȘTERGE CÂND AI BACKEND REAL)
-  private simulateAnalysisComplete(): void {
-    if (!this.image || !this.pacient) return;
-
-    const userId = localStorage.getItem('id');
-    if (!userId) return;
-
-    // Simulare rezultat
-    this.image.statusAnaliza = 'finalizata';
-    this.image.areTumoare = Math.random() > 0.5; // Random pentru demo
-    this.image.confidenta = Math.floor(Math.random() * 30) + 70; // 70-100%
-    this.image.dataAnalizei = new Date();
-    
-    if (this.image.areTumoare) {
-      const tipuri = ['Glioma', 'Meningioma', 'Pituitary Adenoma'];
-      this.image.tipTumoare = tipuri[Math.floor(Math.random() * tipuri.length)];
+    // Verificăm dacă avem URL-ul imaginii pentru a-l descărca
+    if (!this.image.imageUrl) {
+      alert('Nu există URL pentru imagine');
+      return;
     }
 
-    console.log('✅ Analiză completată (simulare):', this.image);
+    this.isAnalyzing = true;
 
-    // Salvează rezultatul
-    this.imageService.updateImage(this.image.id, this.pacient.id, userId, this.image).subscribe({
-      next: (updated: Imagine) => {
-        console.log('✅ Rezultat salvat:', updated);
-        this.image = updated;
+    // Reset rezultate vechi și setează status la 'in_procesare' (doar local, nu salvăm încă)
+    this.image.statusAnaliza = 'in_procesare';
+    this.image.areTumoare = undefined;
+    this.image.tipTumoare = undefined;
+    this.image.confidenta = undefined;
+    this.image.dataAnalizei = undefined;
+    
+    console.log('🔬 Inițiere analiză imagine:', this.image.id);
+    console.log('📥 Descărcare imagine de la:', this.image.imageUrl);
+
+    // Descărcăm direct imaginea și o trimitem către AI
+    // Vom salva în backend DOAR după ce avem rezultatul complet de la AI
+    this.downloadImageAndAnalyze(this.image.imageUrl);
+  }
+
+  private downloadImageAndAnalyze(imageUrl: string): void {
+    console.log('📥 Descărcare imagine pentru analiză...');
+    
+    // Descărcăm imaginea ca blob
+    fetch(imageUrl)
+      .then(response => response.blob())
+      .then(blob => {
+        // Convertim blob-ul în File
+        const file = new File([blob], 'brain-scan.jpg', { type: blob.type || 'image/jpeg' });
+        console.log('✅ Imagine descărcată:', file.name, file.size, 'bytes');
+        
+        // Trimitem către serviciul AI
+        return this.callAIService(file);
+      })
+      .catch(error => {
+        console.error('❌ Eroare la descărcarea imaginii:', error);
+        this.isAnalyzing = false;
+        if (this.image) {
+          this.image.statusAnaliza = 'neanalizata';
+        }
+        alert('Nu s-a putut descărca imaginea pentru analiză.\nVă rugăm să încercați din nou.');
+      });
+  }
+
+  private callAIService(file: File): void {
+    console.log('🤖 Trimitere imagine către serviciul AI...');
+    
+    this.brainTumorService.predictTumor(file).subscribe({
+      next: (result) => {
+        console.log('✅ Rezultat primit de la AI:', result);
+        
+        // Verificăm dacă avem rezultat valid (fie success=true, fie avem hasTumor definit)
+        if ((result.success || result.hasTumor !== undefined) && this.image && this.pacient) {
+          // Procesăm rezultatul AI
+          this.image.statusAnaliza = 'finalizata';
+          this.image.areTumoare = result.hasTumor;
+          this.image.confidenta = Math.round(result.confidence * 100); // Convertim la procent
+          this.image.tipTumoare = result.type || undefined;
+          this.image.dataAnalizei = new Date();
+
+          console.log('💾 Salvare rezultat în backend:', this.image);
+
+          // Salvăm rezultatul în backend
+          const userId = localStorage.getItem('id');
+          if (userId) {
+            this.imageService.updateImage(this.image.id, this.pacient.id, userId, this.image).subscribe({
+              next: (updated: Imagine) => {
+                console.log('✅ Rezultat salvat în backend:', updated);
+                this.image = updated;
+                
+                // Actualizează și imaginea în lista pacientului
+                if (this.pacient && this.pacient.imagini) {
+                  const index = this.pacient.imagini.findIndex(img => img.id === updated.id);
+                  if (index !== -1) {
+                    this.pacient.imagini[index] = updated;
+                  }
+                }
+                
+                this.image.statusAnaliza = 'finalizata';
+          this.image.areTumoare = result.hasTumor;
+          this.image.confidenta = Math.round(result.confidence * 100); // Convertim la procent
+          this.image.tipTumoare = result.type || undefined;
+          this.image.dataAnalizei = new Date();
+                
+              },
+              error: (error: any) => {
+                console.error('❌ Eroare la salvarea rezultatului:', error);
+                this.isAnalyzing = false;
+                alert('Rezultatul analizei este disponibil, dar nu a putut fi salvat pe server.');
+              }
+            });
+          }
+        } else {
+          // Eroare reală la analiză
+          console.error('❌ Analiza a eșuat:', result);
+          this.isAnalyzing = false;
+          
+          if (this.image) {
+            this.image.statusAnaliza = 'neanalizata';
+          }
+          
+          alert('Nu s-a putut finaliza analiza imaginii.\nVă rugăm să încercați din nou.');
+        }
       },
-      error: (error: any) => {
-        console.error('❌ Eroare la salvarea rezultatului:', error);
+      error: (error) => {
+        console.error('❌ Eroare la comunicarea cu serviciul AI:', error);
+        this.isAnalyzing = false;
+        
+        if (this.image) {
+          this.image.statusAnaliza = 'neanalizata';
+        }
+        
+        alert('Serviciul de analiză AI nu este disponibil momentan.\nVă rugăm să încercați mai târziu.');
       }
     });
   }
