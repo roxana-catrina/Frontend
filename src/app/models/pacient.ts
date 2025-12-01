@@ -16,5 +16,6 @@ export interface Pacient {
   cnp: string;
   numarTelefon: string;
   istoricMedical?: string;
+  profilePictureUrl?: string; // Poza de profil pacient
   imagini: Imagine[]; // List of images
 }

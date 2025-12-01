@@ -1152,6 +1152,119 @@ textarea.form-control {
   border-top: 1px solid #dee2e6;
 }
 
+/* Profil Pacient Styles */
+.profile-picture-section {
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.profile-picture-section:hover {
+  transform: scale(1.02);
+}
+
+.profile-picture-container {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.profile-picture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-picture-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 4rem;
+}
+
+.profile-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  color: white;
+  font-size: 2rem;
+}
+
+.profile-picture-container:hover .profile-overlay {
+  opacity: 1;
+}
+
+/* Modal Profil Styles */
+.profile-modal {
+  max-width: 500px;
+}
+
+.profile-upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.current-profile-picture {
+  display: flex;
+  justify-content: center;
+}
+
+.profile-preview {
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  border: 5px solid white;
+}
+
+.profile-preview-placeholder {
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  border: 5px solid white;
+}
+
+.profile-preview-placeholder i {
+  font-size: 5rem;
+  margin-bottom: 1rem;
+}
+
+.profile-preview-placeholder p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.profile-upload-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
 
 
 

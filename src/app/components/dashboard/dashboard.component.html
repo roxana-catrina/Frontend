@@ -39,12 +39,23 @@
 
           <!-- Action Buttons -->
           <div class="mb-3 d-flex gap-2">
-            <button (click)="analyzeTumor()" class="btn btn-warning flex-fill" [disabled]="!selectedFile || isAnalyzing">
+            <button (click)="analyzeTumor()" class="btn btn-warning" [disabled]="!selectedFile || isAnalyzing">
               <i class="bi bi-clipboard-pulse"></i> Analizează Tumoare
             </button>
-            <button (click)="uploadImage()" class="btn btn-success flex-fill" [disabled]="!selectedFile">
-              <i class="bi bi-cloud-upload"></i> Încarcă Imagine
+            <button (click)="uploadImage()" class="btn btn-success" [disabled]="!selectedFile">
+              <i class="bi bi-cloud-upload"></i> Încarcă cu Imagine
             </button>
+            <button (click)="createPacientWithoutImage()" class="btn btn-primary">
+              <i class="bi bi-person-plus"></i> Creează Pacient
+            </button>
+          </div>
+
+          <div class="alert alert-info mb-3">
+            <small>
+              <i class="bi bi-info-circle"></i> 
+              <strong>Notă:</strong> Poți crea un pacient fără imagine medicală folosind butonul "Creează Pacient". 
+              Imaginile pot fi adăugate mai târziu din pagina pacientului.
+            </small>
           </div>
 
           <!-- Patient Info Form -->

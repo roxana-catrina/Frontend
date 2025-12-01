@@ -54,6 +54,12 @@ export class ImagineComponent implements OnInit {
   autoAnalyze: boolean = false;
   isUploading: boolean = false;
 
+  // Modal poza profil pacient
+  showProfilePictureModal: boolean = false;
+  profilePictureFile: File | null = null;
+  profilePicturePreviewUrl: string | null = null;
+  isUploadingProfile: boolean = false;
+
   constructor(
     private dialog: MatDialog,
     private route: ActivatedRoute,
@@ -490,6 +496,76 @@ export class ImagineComponent implements OnInit {
       observatii: ''
     };
     this.autoAnalyze = false;
+  }
+
+  // Metode pentru poza de profil pacient
+  openProfilePictureModal(): void {
+    this.showProfilePictureModal = true;
+    this.profilePictureFile = null;
+    this.profilePicturePreviewUrl = this.pacient?.profilePictureUrl || null;
+  }
+
+  closeProfilePictureModal(): void {
+    this.showProfilePictureModal = false;
+    this.profilePictureFile = null;
+    this.profilePicturePreviewUrl = null;
+  }
+
+  onProfilePictureSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.profilePictureFile = file;
+      
+      // Preview
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.profilePicturePreviewUrl = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeProfilePicture(event: Event): void {
+    event.stopPropagation();
+    this.profilePictureFile = null;
+    this.profilePicturePreviewUrl = this.pacient?.profilePictureUrl || null;
+  }
+
+  uploadProfilePicture(): void {
+    if (!this.pacient) {
+      return;
+    }
+
+    const userId = localStorage.getItem('id');
+    if (!userId) return;
+
+    this.isUploadingProfile = true;
+
+    // Dacă nu este selectată nicio poză, doar închidem modalul
+    if (!this.profilePictureFile) {
+      setTimeout(() => {
+        this.isUploadingProfile = false;
+        this.closeProfilePictureModal();
+      }, 300);
+      return;
+    }
+
+    // Aici ar trebui să trimiți imaginea către backend pentru upload pe Cloudinary
+    // Deocamdată simulăm upload-ul
+    const formData = new FormData();
+    formData.append('file', this.profilePictureFile);
+    formData.append('pacientId', this.pacient.id);
+    formData.append('userId', userId);
+
+    // TODO: Implementează upload-ul real către backend
+    // this.pacientService.uploadProfilePicture(formData).subscribe({...})
+    
+    // Simulare - în practică ar trebui să aștepți răspunsul de la backend
+    setTimeout(() => {
+      alert('Funcția de upload pentru poza de profil va fi implementată în backend.');
+      this.isUploadingProfile = false;
+      this.closeProfilePictureModal();
+    }, 1000);
   }
 
   onFileSelected(event: any): void {

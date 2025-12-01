@@ -15,7 +15,9 @@ export class PacientService {
   // Create new patient
   createPacient(userId: string, pacient: Partial<Pacient>): Observable<Pacient> {
     const token = localStorage.getItem('token');
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    const headers = new HttpHeaders()
+      .set('Authorization', `Bearer ${token}`)
+      .set('Content-Type', 'application/json');
     return this.http.post<Pacient>(`${BASIC_URL}/api/user/${userId}/pacient`, pacient, { headers });
   }
 

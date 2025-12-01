@@ -256,6 +256,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Validare date pacient
+    if (!this.numePacient || !this.prenumePacient || !this.cnp || !this.dataNasterii || !this.sex || !this.numarTelefon) {
+      this.showCustomNotification('Completează toate câmpurile obligatorii ale pacientului!', 'warning');
+      return;
+    }
+
     // Prepare FormData with both patient data and file
     const formData = new FormData();
     
@@ -276,7 +282,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Add the file
     formData.append('file', this.selectedFile, this.selectedFile.name);
 
-    console.log('=== DEBUG: Înregistrare Pacient cu Date ===');
+    console.log('=== DEBUG: Înregistrare Pacient cu Imagine ===');
     console.log('User ID:', id);
     console.log('Date pacient trimise:', JSON.stringify(pacientData, null, 2));
     console.log('Fișier:', this.selectedFile.name, '-', this.selectedFile.type);
@@ -306,6 +312,65 @@ export class DashboardComponent implements OnInit, OnDestroy {
         console.error('Message:', error.message);
         console.error('Detalii complete:', JSON.stringify(error, null, 2));
         this.showCustomNotification('Eroare la crearea pacientului', 'error');
+      }
+    });
+  }
+
+  // Metodă nouă pentru crearea pacientului fără imagine
+  createPacientWithoutImage() {
+    let id: string | null = localStorage.getItem("id");
+    if (!id) {
+      this.showCustomNotification('Eroare: Utilizator neautentificat', 'error');
+      return;
+    }
+
+    // Validare date pacient
+    if (!this.numePacient || !this.prenumePacient || !this.cnp || !this.dataNasterii || !this.sex || !this.numarTelefon) {
+      this.showCustomNotification('Completează toate câmpurile obligatorii ale pacientului!', 'warning');
+      return;
+    }
+
+    // Creează FormData fără fișier - backend-ul poate accepta doar datele
+    const formData = new FormData();
+    
+    const pacientData = {
+      numePacient: this.numePacient,
+      prenumePacient: this.prenumePacient,
+      sex: this.sex,
+      dataNasterii: this.dataNasterii,
+      cnp: this.cnp,
+      numarTelefon: this.numarTelefon,
+      detalii: this.detalii || '',
+      istoricMedical: this.istoricMedical || ''
+    };
+    
+    formData.append('pacientData', JSON.stringify(pacientData));
+    // Nu adăugăm fișier - backend-ul ar trebui să accepte acest lucru
+
+    console.log('=== DEBUG: Creare Pacient fără Imagine ===');
+    console.log('User ID:', id);
+    console.log('Date pacient:', JSON.stringify(pacientData, null, 2));
+    console.log('Endpoint:', `/api/user/${id}/pacient/withdata`);
+    console.log('==========================================');
+
+    // Folosim același endpoint ca și pentru pacient cu imagine
+    this.pacientService.createPacientWithImage(id, formData).subscribe({
+      next: (response: any) => {
+        console.log('✓ Pacient creat cu succes:', response);
+        this.message = 'Pacient înregistrat cu succes!';
+        
+        // Reset form
+        this.resetForm();
+        
+        // Reload data
+        this.loadDashboardData();
+        
+        // Show success notification
+        this.showCustomNotification('Pacient înregistrat cu succes!', 'success');
+      },
+      error: (error: any) => {
+        console.error('✗ Eroare la crearea pacientului:', error);
+        this.showCustomNotification('Eroare la crearea pacientului. Verifică că toate datele sunt corecte.', 'error');
       }
     });
   }
