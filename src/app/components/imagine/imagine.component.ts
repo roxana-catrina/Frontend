@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { UserService } from '../../service/user/user.service';
 import { Imagine } from '../../models/imagine';
+import { Pacient } from '../../models/pacient';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDialogModule } from '@angular/material/dialog';
 import { ImagineService } from '../../service/imagine/imagine.service';
-import { DashboardComponent } from '../dashboard/dashboard.component';
+import { PacientService } from '../../service/pacient/pacient.service';
 import { ConfirmDialogComponent } from '../../confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -18,6 +18,7 @@ import { ConfirmDialogComponent } from '../../confirm-dialog/confirm-dialog.comp
 })
 export class ImagineComponent implements OnInit {
   image: Imagine | null = null;
+  pacient: Pacient | null = null;
   isZoomed: boolean = false;
   zoomLevel: number = 1;
   isDragging: boolean = false;
@@ -30,32 +31,39 @@ export class ImagineComponent implements OnInit {
     private dialog: MatDialog,
     private route: ActivatedRoute,
     private router: Router,
-    private userService: UserService,
     private imageService: ImagineService,
-   // private dashboardComponent: DashboardComponent
+    private pacientService: PacientService
   ) {}
 
- ngOnInit() {
-  const imageId = this.route.snapshot.paramMap.get('id');
-  const userId = localStorage.getItem('id');
+  ngOnInit() {
+    const imageId = this.route.snapshot.paramMap.get('id');
+    const userId = localStorage.getItem('id');
 
-  if (imageId && userId) {
-    this.userService.getImage(Number(userId), Number(imageId))
-      .subscribe({
-        next: (image: Imagine) => {
-          this.image = image;
-         
-          
-          // Aici poți face procesări suplimentare dacă e cazul
-          console.log('Image loaded:', this.image);
+    if (imageId && userId) {
+      // First, get all patients to find which patient has this image
+      this.pacientService.getAllPacienti(userId).subscribe({
+        next: (pacienti: Pacient[]) => {
+          // Find the patient that has this image
+          for (const p of pacienti) {
+            const foundImage = p.imagini?.find(img => img.id === imageId);
+            if (foundImage) {
+              this.image = foundImage;
+              this.pacient = p;
+              console.log('Image and patient loaded:', this.image, this.pacient);
+              return;
+            }
+          }
+          // If no image found, navigate back
+          console.error('Image not found');
+          this.router.navigate(['/dashboard']);
         },
-        error: (error) => {
-          console.error('Error loading image:', error);
+        error: (error: any) => {
+          console.error('Error loading patients:', error);
           this.router.navigate(['/dashboard']);
         }
       });
+    }
   }
-}
 
     
   
@@ -133,37 +141,35 @@ export class ImagineComponent implements OnInit {
 
   
   
-deleteImage(): void {
-  const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-    data: { message: 'Ești sigur că vrei să ștergi această imagine?' }
-  });
+  deleteImage(): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: { message: 'Ești sigur că vrei să ștergi această imagine?' }
+    });
 
-  dialogRef.afterClosed().subscribe(result => {
-    if (result) {
-      const userId = localStorage.getItem('id');
-      if (!userId || !this.image) {
-        console.error('Lipsesc informații');
-        return;
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const userId = localStorage.getItem('id');
+        if (!userId || !this.image || !this.pacient) {
+          console.error('Lipsesc informații');
+          return;
+        }
+
+        this.imageService.deleteImage(this.image.id, userId, this.pacient.id)
+          .subscribe({
+            next: () => {
+              const event = new CustomEvent('imageDeleted', {
+                detail: { imageId: this.image?.id }
+              });
+              window.dispatchEvent(event);
+              this.router.navigate(['/dashboard']);
+            },
+            error: (err: any) => {
+              console.error('Eroare la ștergere:', err);
+              this.router.navigate(['/dashboard']);
+            }
+          });
       }
-
-      this.imageService.deleteImage(this.image.id, userId)
-        .subscribe({
-          next: () => {
-            const event = new CustomEvent('imageDeleted', {
-              detail: { imageId: this.image?.id }
-            });
-            window.dispatchEvent(event);
-            this.router.navigate(['/dashboard']);
-          },
-          error: (err) => {
-            console.error('Eroare la ștergere:', err);
-            this.router.navigate(['/dashboard']);
-          }
-        });
-    }
-  });
+    });
   }
-}
-
-  
+}  
 

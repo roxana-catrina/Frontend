@@ -1,9 +1,9 @@
 export interface Mesaj {
-  id?: number;
-  expeditorId: number;
+  id?: string;
+  expeditorId: string;
   expeditorNume?: string;
   expeditorPrenume?: string;
-  destinatarId: number;
+  destinatarId: string;
   destinatarNume?: string;
   destinatarPrenume?: string;
   continut: string;
@@ -13,20 +13,20 @@ export interface Mesaj {
 }
 
 export interface MesajRequest {
-  expeditorId: number;
-  destinatarId: number;
+  expeditorId: string;
+  destinatarId: string;
   continut: string;
 }
 
 export interface Notificare {
-  id?: number;
-  userId: number;
+  id?: string;
+  userId: string;
   tip: string;
-  mesajId?: number;
+  mesajId?: string;
   continut: string;
   citit?: boolean;
   dataCreare?: Date;
-  expeditorId?: number;
+  expeditorId?: string;
   expeditorNume?: string;
   expeditorPrenume?: string;
 }

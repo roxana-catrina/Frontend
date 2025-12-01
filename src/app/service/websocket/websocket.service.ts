@@ -39,8 +39,12 @@ export class WebsocketService {
 
       // Subscribe to personal message queue
       this.stompClient!.subscribe(`/user/${userId}/queue/messages`, (message) => {
+        console.log('🎯 WebSocket: Mesaj primit pe queue /user/' + userId + '/queue/messages');
+        console.log('📦 Message body:', message.body);
         const mesaj: Mesaj = JSON.parse(message.body);
+        console.log('📨 Mesaj parsed:', mesaj);
         this.messageSubject.next(mesaj);
+        console.log('✅ Mesaj trimis către subscribers');
       });
 
       // Subscribe to notifications
@@ -90,12 +94,17 @@ export class WebsocketService {
 
   sendMessage(mesaj: any): void {
     if (this.stompClient && this.stompClient.connected) {
+      console.log('📤 WebSocket: Trimite mesaj la /app/chat.send');
+      console.log('   Mesaj:', mesaj);
       this.stompClient.publish({
         destination: '/app/chat.send',
         body: JSON.stringify(mesaj)
       });
+      console.log('✅ Mesaj trimis prin WebSocket');
     } else {
-      console.error('Cannot send message: WebSocket not connected');
+      console.error('❌ Cannot send message: WebSocket not connected');
+      console.error('   stompClient exists:', !!this.stompClient);
+      console.error('   stompClient.connected:', this.stompClient?.connected);
     }
   }
 

@@ -27,7 +27,7 @@ export class ProgramareService {
   }
 
   // Obține toate programările unui utilizator
-  getAllProgramari(userId: number): Observable<Programare[]> {
+  getAllProgramari(userId: string): Observable<Programare[]> {
     return this.http.get<Programare[]>(
       BASE_URL + `api/programari/user/${userId}`,
       { headers: this.createAuthorizationHeader() }
@@ -35,23 +35,51 @@ export class ProgramareService {
   }
 
   // Obține programările pentru o anumită lună
-  getProgramariByMonth(userId: number, year: number, month: number): Observable<Programare[]> {
+  getProgramariByMonth(userId: string, year: number, month: number): Observable<Programare[]> {
+    const url = BASE_URL + `api/programari/user/${userId}/month?year=${year}&month=${month}`;
+    console.log('🔧 SERVICE - getProgramariByMonth');
+    console.log('   - userId (tip):', typeof userId, '- valoare:', userId);
+    console.log('   - year:', year);
+    console.log('   - month:', month);
+    console.log('   - URL complet:', url);
+    console.log('   - Headers:', this.createAuthorizationHeader());
     return this.http.get<Programare[]>(
-      BASE_URL + `api/programari/user/${userId}/month?year=${year}&month=${month}`,
+      url,
       { headers: this.createAuthorizationHeader() }
     );
   }
 
   // Obține programările viitoare
-  getProgramariViitoare(userId: number): Observable<Programare[]> {
+  getProgramariViitoare(userId: string): Observable<Programare[]> {
+    const url = BASE_URL + `api/programari/user/${userId}/upcoming`;
+    console.log('🔧 SERVICE - getProgramariViitoare');
+    console.log('   - userId (tip):', typeof userId, '- valoare:', userId);
+    console.log('   - URL complet:', url);
+    console.log('   - Headers:', this.createAuthorizationHeader());
     return this.http.get<Programare[]>(
-      BASE_URL + `api/programari/user/${userId}/upcoming`,
+      url,
+      { headers: this.createAuthorizationHeader() }
+    );
+  }
+
+  // Obține programările pentru un pacient
+  getProgramariByPacient(pacientId: string): Observable<Programare[]> {
+    return this.http.get<Programare[]>(
+      BASE_URL + `api/programari/pacient/${pacientId}`,
+      { headers: this.createAuthorizationHeader() }
+    );
+  }
+
+  // Obține programările viitoare pentru un pacient
+  getProgramariViitoareByPacient(pacientId: string): Observable<Programare[]> {
+    return this.http.get<Programare[]>(
+      BASE_URL + `api/programari/pacient/${pacientId}/upcoming`,
       { headers: this.createAuthorizationHeader() }
     );
   }
 
   // Actualizează o programare
-  updateProgramare(id: number, programareDTO: ProgramareDTO): Observable<Programare> {
+  updateProgramare(id: string, programareDTO: ProgramareDTO): Observable<Programare> {
     return this.http.put<Programare>(
       BASE_URL + `api/programari/${id}`,
       programareDTO,
@@ -60,7 +88,7 @@ export class ProgramareService {
   }
 
   // Șterge o programare
-  deleteProgramare(id: number): Observable<void> {
+  deleteProgramare(id: string): Observable<void> {
     return this.http.delete<void>(
       BASE_URL + `api/programari/${id}`,
       { headers: this.createAuthorizationHeader() }
@@ -68,7 +96,7 @@ export class ProgramareService {
   }
 
   // Actualizează statusul unei programări
-  updateStatus(id: number, status: string): Observable<Programare> {
+  updateStatus(id: string, status: string): Observable<Programare> {
     return this.http.patch<Programare>(
       BASE_URL + `api/programari/${id}/status`,
       { status },

@@ -153,14 +153,14 @@
                  (click)="viewImage(image)"
                  (contextmenu)="onRightClick($event, image, i)">
               <div class="image-wrapper">
-                <img [src]="image.imagine" [alt]="'Image ' + image.id" class="patient-image" />
+                <img [src]="image.imageUrl" [alt]="'Image ' + image.id" class="patient-image" />
               </div>
               <div class="patient-info">
                 <div class="patient-name">
-                  <strong>{{ image.numePacient }} {{ image.prenumePacient }}</strong>
+                  <strong>{{ getPacientByImageId(image.id)?.numePacient }} {{ getPacientByImageId(image.id)?.prenumePacient }}</strong>
                 </div>
-                <div class="patient-details" *ngIf="image.cnp">
-                  <small class="text-muted">CNP: {{ image.cnp }}</small>
+                <div class="patient-details" *ngIf="getPacientByImageId(image.id)?.cnp">
+                  <small class="text-muted">CNP: {{ getPacientByImageId(image.id)?.cnp }}</small>
                 </div>
               </div>
             </div>

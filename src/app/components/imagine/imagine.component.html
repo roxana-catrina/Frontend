@@ -35,10 +35,10 @@
           <div class="d-flex justify-content-between align-items-center">
             <small class="text-muted">
               <i class="bi bi-calendar-event"></i> 
-              Data încărcare: {{ image?.dataNasterii || 'N/A' }}
+              Data naşterii pacient: {{ pacient?.dataNasterii || 'N/A' }}
             </small>
             <button type="button" class="btn btn-danger" (click)="deleteImage()">
-              <i class="bi bi-trash"></i> Șterge Imagine
+              <i class="bi bi-trash"></i> Şterge Imagine
             </button>
           </div>
         </div>
@@ -62,25 +62,25 @@
                 <span class="info-label">
                   <i class="bi bi-person-fill"></i> Nume:
                 </span>
-                <span class="info-value">{{ image?.numePacient || 'N/A' }}</span>
+                <span class="info-value">{{ pacient?.numePacient || 'N/A' }}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">
                   <i class="bi bi-person-fill"></i> Prenume:
                 </span>
-                <span class="info-value">{{ image?.prenumePacient || 'N/A' }}</span>
+                <span class="info-value">{{ pacient?.prenumePacient || 'N/A' }}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">
                   <i class="bi bi-credit-card-2-front"></i> CNP:
                 </span>
-                <span class="info-value">{{ image?.cnp || 'N/A' }}</span>
+                <span class="info-value">{{ pacient?.cnp || 'N/A' }}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">
                   <i class="bi bi-gender-ambiguous"></i> Sex:
                 </span>
-                <span class="info-value">{{ image?.sex || 'N/A' }}</span>
+                <span class="info-value">{{ pacient?.sex || 'N/A' }}</span>
               </div>
             </div>
 
@@ -93,13 +93,13 @@
                 <span class="info-label">
                   <i class="bi bi-phone"></i> Telefon:
                 </span>
-                <span class="info-value">{{ image?.numarTelefon || 'N/A' }}</span>
+                <span class="info-value">{{ pacient?.numarTelefon || 'N/A' }}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">
-                  <i class="bi bi-calendar3"></i> Data nașterii:
+                  <i class="bi bi-calendar3"></i> Data naşterii:
                 </span>
-                <span class="info-value">{{ image?.dataNasterii || 'N/A' }}</span>
+                <span class="info-value">{{ pacient?.dataNasterii || 'N/A' }}</span>
               </div>
             </div>
 
@@ -113,7 +113,7 @@
                   <i class="bi bi-clipboard-pulse"></i> Istoric Medical:
                 </span>
                 <div class="info-value-box">
-                  {{ image?.istoricMedical || 'Nu există informații disponibile' }}
+                  {{ pacient?.istoricMedical || 'Nu există informații disponibile' }}
                 </div>
               </div>
               <div class="info-item vertical">
@@ -121,7 +121,7 @@
                   <i class="bi bi-file-text"></i> Detalii:
                 </span>
                 <div class="info-value-box">
-                  {{ image?.detalii || 'Nu există detalii suplimentare' }}
+                  {{ pacient?.detalii || 'Nu există detalii suplimentare' }}
                 </div>
               </div>
             </div>

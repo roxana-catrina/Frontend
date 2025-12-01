@@ -7,8 +7,8 @@ export enum StatusProgramare {
 }
 
 export interface Programare {
-  id?: number;
-  userId: number;
+  id?: string;
+  pacientId?: string; // Reference to Pacient ID
   pacientNume: string;
   pacientPrenume: string;
   pacientCnp?: string;
@@ -22,7 +22,7 @@ export interface Programare {
 }
 
 export interface ProgramareDTO {
-  userId: number;
+  pacientId?: string; // Reference to Pacient ID
   pacientNume: string;
   pacientPrenume: string;
   pacientCnp?: string;
