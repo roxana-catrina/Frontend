@@ -3,8 +3,11 @@ import { Router } from '@angular/router';
 import { StorageService } from '../../service/storage/storage.service';
 import { User } from '../../models/user';
 import { Imagine } from '../../models/imagine';
+import { Pacient, Sex } from '../../models/pacient';
 import { Programare, ProgramareDTO, StatusProgramare } from '../../models/programare';
 import { UserService } from '../../service/user/user.service';
+import { PacientService } from '../../service/pacient/pacient.service';
+import { ImagineService } from '../../service/imagine/imagine.service';
 import { BrainTumorService, PredictionResult } from '../../service/brain-tumor/brain-tumor.service';
 import { ProgramareService } from '../../service/programare/programare.service';
 
@@ -20,7 +23,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   nume: string | null = localStorage.getItem("nume");
   id :string | null=localStorage.getItem("id");
   selectedFiles: File[] = [];
-  imagini: Imagine[] = [];
+  pacienti: Pacient[] = []; // List of patients
+  selectedPacient: Pacient | null = null; // Currently selected patient
+  imagini: Imagine[] = []; // Images for display
   message: string = '';
   base64Data: any;
   retrievedImage: any;
@@ -32,15 +37,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   selectedImageData: string | null = null;
   selectedIndex: number | null = null;
   
-    selectedFile: File | null = null;
-numePacient: string = '';
-prenumePacient: string = '';
-detalii: string = '';
-dataNasterii: string ='';
-istoricMedical: string = '';
-sex: string = '';
-cnp: string = '';
-numarTelefon: string = '';
+  selectedFile: File | null = null;
+  numePacient: string = '';
+  prenumePacient: string = '';
+  detalii: string = '';
+  dataNasterii: string ='';
+  istoricMedical: string = '';
+  sex: string = '';
+  cnp: string = '';
+  numarTelefon: string = '';
   private imageDeletedListener: any;
 
   // Proprietăți pentru căutare
@@ -67,7 +72,7 @@ numarTelefon: string = '';
   showProgramareModal: boolean = false;
   showProgramariZiModal: boolean = false;
   showDeleteConfirmModal: boolean = false;
-  programareToDelete: number | null = null;
+  programareToDelete: string | null = null;
   
   // Notificări personalizate
   showNotification: boolean = false;
@@ -84,15 +89,17 @@ numarTelefon: string = '';
   programareDurata: number = 30;
   
   // Autocomplete pentru pacienți
-  pacientiSuggestions: Imagine[] = [];
+  pacientiSuggestions: Pacient[] = [];
   showPacientiSuggestions: boolean = false;
-  pacientiFiltrati: Imagine[] = [];
+  pacientiFiltrati: Pacient[] = [];
 
  // userId = 1; // ID-ul utilizatorului
 
   constructor(
     private router: Router,
     private userService: UserService,
+    private pacientService: PacientService,
+    private imagineService: ImagineService,
     private brainTumorService: BrainTumorService,
     private programareService: ProgramareService
   ) { }
@@ -156,30 +163,30 @@ numarTelefon: string = '';
     }
   }
 
-  loadUserImages() {
+  loadPacienti() {
     let id: string | null = localStorage.getItem("id");
-    let userId: number = id ? Number(id) : 0;
+    if (!id) return;
 
-    this.userService.getUserImages(userId).subscribe({
-      next: (imageDataArray: any) => {
-        console.log("Date primite de la API:", imageDataArray);
-
-        if (!imageDataArray || imageDataArray.length === 0) {
-          console.warn("Nu s-au primit imagini.");
-          this.imagini = [];
-          return;
-        }
-
-        this.imagini = imageDataArray.map((image: any) => ({
-          id: image.id,
-          imagine: image.imageUrl , // Asigură-te că imageUrl este corect
-          tip: image.tip
-        }));
-
-        console.log("Imagini procesate:", this.imagini);
+    this.pacientService.getAllPacienti(id).subscribe({
+      next: (pacienti: Pacient[]) => {
+        console.log("Pacienți primiți de la API:", pacienti);
+        this.pacienti = pacienti;
+        
+        // Flatten all images from all patients for display
+        this.imagini = [];
+        pacienti.forEach(pacient => {
+          if (pacient.imagini && pacient.imagini.length > 0) {
+            this.imagini.push(...pacient.imagini);
+          }
+        });
+        
+        this.filteredImagini = [...this.imagini];
+        console.log("Total imagini încărcate:", this.imagini.length);
       },
-      error: (error) => {
-        console.error("Eroare la încărcarea imaginilor:", error);
+      error: (error: any) => {
+        console.error("Eroare la încărcarea pacienților:", error);
+        this.pacienti = [];
+        this.imagini = [];
       }
     });
   }
@@ -189,10 +196,11 @@ numarTelefon: string = '';
       this.contextMenuVisible = true;
       this.menuX = event.clientX;
       this.menuY = event.clientY;
-      this.selectedImageData = image.imagine;
+      this.selectedImageData = image.imageUrl;
       console.log("Selected image data:", this.selectedImageData);
-      console.log(image.imagine);
+      console.log(image.imageUrl);
       this.selectedIndex = index;
+      this.selectedImageId = image.id;
     }
 
 
@@ -233,49 +241,68 @@ numarTelefon: string = '';
   }
 
   uploadImage() {
-    this.selectedFiles.forEach(file => {
-      let id: string | null = localStorage.getItem("id");
-      let userId: number = id ? Number(id) : 0;
-      const fileType = file.type;
-      
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('nume_pacient', this.numePacient);
-      formData.append('prenume_pacient', this.prenumePacient);
-      formData.append('sex', this.sex);
-      formData.append('istoric_medical', this.istoricMedical);
-      formData.append("data_nasterii", this.dataNasterii ? this.dataNasterii.substring(0, 10) : "");
-      formData.append('detalii', this.detalii);
-      formData.append('cnp', this.cnp);
-      formData.append('numar_telefon', this.numarTelefon);
+    if (!this.selectedFile) {
+      this.showCustomNotification('Selectează o imagine mai întâi!', 'warning');
+      return;
+    }
 
-      // Încărcați imaginea în baza de date (fără analiză automată)
-      this.userService.uploadImage(userId, formData).subscribe({
-        next: (response: any) => {
-          console.log("Imagine încărcată cu succes", response);
-          this.message = 'Imagine încărcată cu succes!';
-          this.selectedFiles = [];
-          this.selectedFile = null;
-          
-          // Resetați formularul
-          this.resetForm();
-          
-          this.loadDashboardData();
-          this.loadUserImages();
-          
-          // Afișează notificare personalizată
-          this.showCustomNotification('Imagine încărcată cu succes!', 'success');
-        },
-        error: (error) => {
-          console.error("Eroare la încărcarea imaginii:", error);
-          this.message = 'Eroare la încărcarea imaginii';
-          this.loadDashboardData();
-          this.loadUserImages();
-          
-          // Afișează notificare de eroare
-          this.showCustomNotification('Eroare la încărcarea imaginii', 'error');
-        }
-      });
+    let id: string | null = localStorage.getItem("id");
+    if (!id) {
+      this.showCustomNotification('Eroare: Utilizator neautentificat', 'error');
+      return;
+    }
+
+    // Prepare FormData with both patient data and file
+    const formData = new FormData();
+    
+    // Add patient data as JSON string
+    const pacientData = {
+      numePacient: this.numePacient,
+      prenumePacient: this.prenumePacient,
+      sex: this.sex,
+      dataNasterii: this.dataNasterii,
+      cnp: this.cnp,
+      numarTelefon: this.numarTelefon,
+      detalii: this.detalii || '',
+      istoricMedical: this.istoricMedical || ''
+    };
+    
+    formData.append('pacientData', JSON.stringify(pacientData));
+    
+    // Add the file
+    formData.append('file', this.selectedFile, this.selectedFile.name);
+
+    console.log('=== DEBUG: Înregistrare Pacient cu Date ===');
+    console.log('User ID:', id);
+    console.log('Date pacient trimise:', JSON.stringify(pacientData, null, 2));
+    console.log('Fișier:', this.selectedFile.name, '-', this.selectedFile.type);
+    console.log('Endpoint:', `/api/user/${id}/pacient/withdata`);
+    console.log('==========================================');
+
+    // Send to the new endpoint that handles both patient and image
+    this.pacientService.createPacientWithImage(id, formData).subscribe({
+      next: (response: any) => {
+        console.log('✓ Răspuns de la backend:', JSON.stringify(response, null, 2));
+        this.message = 'Pacient și imagine încărcate cu succes!';
+        this.selectedFiles = [];
+        this.selectedFile = null;
+        
+        // Reset form
+        this.resetForm();
+        
+        // Reload data
+        this.loadDashboardData();
+        
+        // Show success notification
+        this.showCustomNotification(response.message || 'Pacient și imagine încărcate cu succes!', 'success');
+      },
+      error: (error: any) => {
+        console.error('✗ Eroare la crearea pacientului:', error);
+        console.error('Status:', error.status);
+        console.error('Message:', error.message);
+        console.error('Detalii complete:', JSON.stringify(error, null, 2));
+        this.showCustomNotification('Eroare la crearea pacientului', 'error');
+      }
     });
   }
 
@@ -292,70 +319,28 @@ numarTelefon: string = '';
 
 loadDashboardData(): void {
   let id: string | null = localStorage.getItem("id");
-  let userId: number = id ? Number(id) : 0;
+  if (!id) return;
 
-  this.userService.getUserImages(userId).subscribe({
-    next: (images: any) => {
-      console.log("Date primite de la API:", images);
-
-      if (!images || images.length === 0) {
-        console.warn("Nu s-au primit imagini.");
-        this.imagini = [];
-        return;
-      }
-
-      // Backend-ul returnează doar: id, imageUrl, nume (filename), tip, cloudinaryPublicId
-      // Trebuie să facem apeluri individuale pentru a obține datele pacientului
-      this.imagini = images.map((image: any) => {
-        console.log("Procesare imagine:", image);
-        return {
-          id: image.id,
-          imagine: image.imageUrl,
-          tip: image.tip,
-          nume: image.nume, // numele fișierului
-          numePacient: '',  // Va fi încărcat separat
-          prenumePacient: '', // Va fi încărcat separat
-          cnp: '',
-          dataNasterii: '',
-          sex: '',
-          detalii: '',
-          istoricMedical: '',
-          numarTelefon: ''
-        };
+  this.pacientService.getAllPacienti(id).subscribe({
+    next: (pacienti: Pacient[]) => {
+      console.log("Pacienți primiți de la API:", pacienti);
+      this.pacienti = pacienti;
+      
+      // Flatten all images from all patients for display
+      this.imagini = [];
+      pacienti.forEach(pacient => {
+        if (pacient.imagini && pacient.imagini.length > 0) {
+          this.imagini.push(...pacient.imagini);
+        }
       });
-
-      // Încarcă detaliile complete pentru fiecare imagine
-      this.imagini.forEach((img, index) => {
-        this.userService.getImage(userId, img.id).subscribe({
-          next: (fullImage: any) => {
-            console.log("Date complete pentru imagine", img.id, ":", fullImage);
-            // Actualizează imaginea cu datele complete
-            this.imagini[index] = {
-              ...this.imagini[index],
-              numePacient: fullImage.numePacient || fullImage.nume_pacient || '',
-              prenumePacient: fullImage.prenumePacient || fullImage.prenume_pacient || '',
-              cnp: fullImage.cnp || '',
-              dataNasterii: fullImage.dataNasterii || fullImage.data_nasterii || '',
-              sex: fullImage.sex || '',
-              detalii: fullImage.detalii || '',
-              istoricMedical: fullImage.istoricMedical || fullImage.istoric_medical || '',
-              numarTelefon: fullImage.numarTelefon || fullImage.numar_telefon || ''
-            };
-            // Actualizează și imaginile filtrate
-            this.filteredImagini = [...this.imagini];
-          },
-          error: (err) => {
-            console.error("Eroare la încărcarea detaliilor imaginii", img.id, err);
-          }
-        });
-      });
-
+      
       this.filteredImagini = [...this.imagini];
-      console.log("Imagini procesate:", this.imagini);
-      console.log("Imagini filtrate initial:", this.filteredImagini);
+      console.log("Total imagini încărcate:", this.imagini.length);
     },
-    error: (error) => {
-      console.error("Eroare la încărcarea imaginilor:", error);
+    error: (error: any) => {
+      console.error("Eroare la încărcarea pacienților:", error);
+      this.pacienti = [];
+      this.imagini = [];
     }
   });
 }
@@ -397,9 +382,13 @@ loadDashboardData(): void {
     }
 
     this.filteredImagini = this.imagini.filter(image => {
-      const numePacient = (image.numePacient || '').toLowerCase();
-      const prenumePacient = (image.prenumePacient || '').toLowerCase();
-      const cnp = (image.cnp || '').toLowerCase();
+      // Find the patient for this image
+      const pacient = this.getPacientByImageId(image.id);
+      if (!pacient) return false;
+      
+      const numePacient = (pacient.numePacient || '').toLowerCase();
+      const prenumePacient = (pacient.prenumePacient || '').toLowerCase();
+      const cnp = (pacient.cnp || '').toLowerCase();
       const numeComplet = `${numePacient} ${prenumePacient}`.trim();
       
       console.log(`Verificare imagine ${image.id}:`, {
@@ -417,6 +406,16 @@ loadDashboardData(): void {
     });
     
     console.log("Rezultate găsite:", this.filteredImagini.length);
+  }
+
+  // Helper method to get patient by image ID
+  getPacientByImageId(imageId: string): Pacient | null {
+    for (const pacient of this.pacienti) {
+      if (pacient.imagini && pacient.imagini.some(img => img.id === imageId)) {
+        return pacient;
+      }
+    }
+    return null;
   }
 
   // Metodă pentru resetarea căutării
@@ -543,55 +542,101 @@ loadDashboardData(): void {
   // Metode pentru programări
   loadProgramari() {
     let id: string | null = localStorage.getItem("id");
-    let userId: number = id ? Number(id) : 0;
+    if (!id) {
+      console.error('❌ Nu există user ID în localStorage!');
+      return;
+    }
 
     console.log('=== ÎNCĂRCARE PROGRAMĂRI ===');
-    console.log('User ID:', userId);
+    console.log('User ID (Doctor ID):', id);
+    console.log('Tip userId:', typeof id);
     console.log('An curent:', this.currentYear);
     console.log('Luna curentă (0-11):', this.currentMonth);
     console.log('Luna pentru API (1-12):', this.currentMonth + 1);
+    console.log('URL pentru luna:', `http://localhost:8083/api/programari/user/${id}/month?year=${this.currentYear}&month=${this.currentMonth + 1}`);
+    console.log('URL pentru viitoare:', `http://localhost:8083/api/programari/user/${id}/upcoming`);
 
     // Încarcă programările pentru luna curentă
-    this.programareService.getProgramariByMonth(userId, this.currentYear, this.currentMonth + 1).subscribe({
+    this.programareService.getProgramariByMonth(id, this.currentYear, this.currentMonth + 1).subscribe({
       next: (programari) => {
-        console.log('✅ Răspuns GET programări luna:', programari);
-        console.log('Număr programări:', programari.length);
-        this.programari = programari;
-        this.markCalendarDaysWithAppointments();
+        console.log('✅ SUCCESS - Răspuns GET programări luna:');
+        console.log('   - Status: 200 OK');
+        console.log('   - Tip răspuns:', typeof programari);
+        console.log('   - Este array?:', Array.isArray(programari));
+        console.log('   - Număr programări:', programari?.length || 0);
+        console.log('   - Date brute:', JSON.stringify(programari, null, 2));
+        
+        if (programari && programari.length > 0) {
+          this.programari = programari;
+          console.log('   - Programări setate în component');
+          
+          programari.forEach((prog, index) => {
+            console.log(`   ${index + 1}. Pacient: ${prog.pacientNume} ${prog.pacientPrenume}`);
+            console.log(`      Data: ${prog.dataProgramare}`);
+            console.log(`      Data convertită: ${new Date(prog.dataProgramare).toLocaleString()}`);
+            console.log(`      Tip consultație: ${prog.tipConsultatie || 'N/A'}`);
+            console.log(`      Status: ${prog.status || 'N/A'}`);
+          });
+          
+          this.markCalendarDaysWithAppointments();
+        } else {
+          console.warn('⚠️ Array de programări este gol sau null');
+          this.programari = [];
+        }
       },
       error: (error) => {
-        console.error('❌ Eroare la încărcarea programărilor lunii:', error);
-        console.error('Status:', error.status);
-        console.error('Message:', error.message);
+        console.error('❌ EROARE - Programări luna:');
+        console.error('   - Status:', error.status);
+        console.error('   - Status Text:', error.statusText);
+        console.error('   - Message:', error.message);
+        console.error('   - Error body:', error.error);
+        console.error('   - URL apelat:', error.url);
+        console.error('   - Eroare completă:', JSON.stringify(error, null, 2));
+        this.programari = [];
       }
     });
 
     // Încarcă programările viitoare
-    console.log('📞 Apelăm /upcoming pentru userId:', userId);
-    this.programareService.getProgramariViitoare(userId).subscribe({
+    console.log('📞 Apelăm /upcoming...');
+    this.programareService.getProgramariViitoare(id).subscribe({
       next: (programari) => {
-        console.log('✅ Răspuns GET programări viitoare:', programari);
-        console.log('Număr programări viitoare:', programari.length);
-        this.programariViitoare = programari.slice(0, 5); // Primele 5
+        console.log('✅ SUCCESS - Răspuns GET programări viitoare:');
+        console.log('   - Status: 200 OK');
+        console.log('   - Tip răspuns:', typeof programari);
+        console.log('   - Este array?:', Array.isArray(programari));
+        console.log('   - Număr programări:', programari?.length || 0);
+        console.log('   - Date brute:', JSON.stringify(programari, null, 2));
+        
+        if (programari && programari.length > 0) {
+          // Sortează după dată și ia primele 5
+          this.programariViitoare = programari
+            .sort((a, b) => new Date(a.dataProgramare).getTime() - new Date(b.dataProgramare).getTime())
+            .slice(0, 5);
+          
+          console.log('   - Programări viitoare setate (top 5):', this.programariViitoare.length);
+          
+          this.programariViitoare.forEach((prog, index) => {
+            console.log(`   ${index + 1}. Pacient: ${prog.pacientNume} ${prog.pacientPrenume}`);
+            console.log(`      Data: ${new Date(prog.dataProgramare).toLocaleString()}`);
+          });
+        } else {
+          console.warn('⚠️ Array de programări viitoare este gol sau null');
+          this.programariViitoare = [];
+        }
       },
       error: (error) => {
-        console.error('❌ Eroare la încărcarea programărilor viitoare:', error);
-        console.error('Status:', error.status);
-        console.error('Message:', error.message);
+        console.error('❌ EROARE - Programări viitoare:');
+        console.error('   - Status:', error.status);
+        console.error('   - Status Text:', error.statusText);
+        console.error('   - Message:', error.message);
+        console.error('   - Error body:', error.error);
+        console.error('   - URL apelat:', error.url);
+        console.error('   - Eroare completă:', JSON.stringify(error, null, 2));
+        this.programariViitoare = [];
       }
     });
 
-    // DEBUG: Încearcă să obții TOATE programările
-    console.log('📞 DEBUG - Apelăm /user/{userId} pentru TOATE programările');
-    this.programareService.getAllProgramari(userId).subscribe({
-      next: (toateProgramarile) => {
-        console.log('🔍 DEBUG - TOATE programările:', toateProgramarile);
-        console.log('Număr TOTAL programări:', toateProgramarile.length);
-      },
-      error: (error) => {
-        console.error('❌ DEBUG - Eroare la încărcarea TUTUROR programărilor:', error);
-      }
-    });
+    console.log('===========================');
   }
 
   markCalendarDaysWithAppointments() {
@@ -626,24 +671,39 @@ loadDashboardData(): void {
     }
 
     let id: string | null = localStorage.getItem("id");
-    let userId: number = id ? Number(id) : 0;
+    if (!id) {
+      this.showCustomNotification('Eroare: Utilizator neautentificat', 'error');
+      return;
+    }
 
     // Combină data selectată cu ora
     const [hours, minutes] = this.programareOra.split(':');
     const dataProgramare = new Date(this.selectedDate);
     dataProgramare.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
+    console.log('=== VERIFICARE CONFLICT PROGRAMARE ===');
+    console.log('Data nouă:', dataProgramare);
+    console.log('Durata nouă (minute):', this.programareDurata);
+    console.log('Programări existente de verificat:', this.programari.length);
+
     // Verifică dacă există conflict cu alte programări
     const conflict = this.verificaConflictProgramare(dataProgramare, this.programareDurata);
     if (conflict) {
       const startTime = this.formatProgramareTime(conflict.dataProgramare);
       const endTime = this.calculateEndTime(conflict.dataProgramare, conflict.durataMinute || 30);
+      
+      console.log('❌ CONFLICT DETECTAT!');
+      console.log('Programare conflictuală:', conflict);
+      
       this.showCustomNotification(
         `Există deja o programare în acest interval! Pacient: ${conflict.pacientNume} ${conflict.pacientPrenume} (${startTime} - ${endTime})`,
         'warning'
       );
       return;
     }
+    
+    console.log('✅ Nu există conflicte - se poate adăuga programarea');
+    console.log('=====================================');
 
     // Format în ISO local (fără conversie UTC)
     const year = dataProgramare.getFullYear();
@@ -656,33 +716,52 @@ loadDashboardData(): void {
     // Format: YYYY-MM-DDTHH:mm:ss
     const dataFormatata = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
 
+    // Găsește pacientul după nume, prenume și CNP
+    const pacient = this.pacienti.find(p => 
+      p.numePacient === this.programareNume &&
+      p.prenumePacient === this.programarePrenume &&
+      (!this.programareCnp || p.cnp === this.programareCnp)
+    );
+
     const programareDTO: ProgramareDTO = {
-      userId: userId,
+      pacientId: pacient?.id || '', // Trimite ID-ul pacientului dacă există
       pacientNume: this.programareNume,
       pacientPrenume: this.programarePrenume,
-      pacientCnp: this.programareCnp,
+      pacientCnp: this.programareCnp || '',
       dataProgramare: dataFormatata,
       durataMinute: this.programareDurata,
-      tipConsultatie: this.programareTip,
-      detalii: this.programareDetalii
+      tipConsultatie: this.programareTip || '',
+      detalii: this.programareDetalii || ''
     };
 
-    console.log('=== DATE TRIMISE CĂTRE BACKEND ===');
+    console.log('=== DEBUG: Creare Programare ===');
     console.log('URL:', 'http://localhost:8083/api/programari');
-    console.log('ProgramareDTO:', JSON.stringify(programareDTO, null, 2));
-    console.log('User ID:', userId);
-    console.log('Data și ora programării:', dataProgramare);
-    console.log('===================================');
+    console.log('Date programare trimise la backend:');
+    console.log(JSON.stringify(programareDTO, null, 2));
+    console.log('Câmpuri:');
+    console.log('  - pacientId:', programareDTO.pacientId || '(gol - pacient nou)');
+    console.log('  - pacientNume:', programareDTO.pacientNume);
+    console.log('  - pacientPrenume:', programareDTO.pacientPrenume);
+    console.log('  - pacientCnp:', programareDTO.pacientCnp || '(gol)');
+    console.log('  - dataProgramare:', programareDTO.dataProgramare);
+    console.log('  - durataMinute:', programareDTO.durataMinute);
+    console.log('  - tipConsultatie:', programareDTO.tipConsultatie);
+    console.log('  - detalii:', programareDTO.detalii || '(gol)');
+    console.log('Data și ora originală:', dataProgramare);
+    console.log('================================');
 
     this.programareService.createProgramare(programareDTO).subscribe({
       next: (response) => {
-        console.log('Programare creată cu succes:', response);
+        console.log('✓ Programare creată cu succes:', JSON.stringify(response, null, 2));
         this.closeProgramareModal();
         this.loadProgramari();
         this.showCustomNotification('Programare adăugată cu succes!', 'success');
       },
       error: (error) => {
-        console.error('Eroare la crearea programării:', error);
+        console.error('✗ Eroare la crearea programării:', error);
+        console.error('Status:', error.status);
+        console.error('Message:', error.message);
+        console.error('Detalii complete:', JSON.stringify(error, null, 2));
         this.showCustomNotification('Eroare la adăugarea programării!', 'error');
       }
     });
@@ -691,6 +770,10 @@ loadDashboardData(): void {
   verificaConflictProgramare(dataNoua: Date, durataNoua: number): Programare | null {
     const startNoua = dataNoua.getTime();
     const endNoua = startNoua + (durataNoua * 60 * 1000); // convertește minute în milisecunde
+
+    console.log('🔍 Verificare conflict:');
+    console.log('   Interval nou: ', new Date(startNoua), ' -> ', new Date(endNoua));
+    console.log('   Durata nouă:', durataNoua, 'minute');
 
     // Verifică toate programările existente
     for (const prog of this.programari) {
@@ -702,17 +785,22 @@ loadDashboardData(): void {
       // Verifică dacă intervalele se suprapun
       const seSuprapun = (startNoua < endExistent) && (endNoua > startExistent);
       
+      console.log(`   Comparare cu: ${prog.pacientNume} ${prog.pacientPrenume}`);
+      console.log(`      Interval existent: ${new Date(startExistent)} -> ${new Date(endExistent)}`);
+      console.log(`      Se suprapun? ${seSuprapun}`);
+      
       if (seSuprapun) {
-        console.log('⚠️ CONFLICT PROGRAMARE GĂSIT:');
-        console.log('Programare existentă:', prog);
-        console.log('Start existent:', new Date(startExistent));
-        console.log('End existent:', new Date(endExistent));
-        console.log('Start nou:', new Date(startNoua));
-        console.log('End nou:', new Date(endNoua));
+        console.log('⚠️ CONFLICT GĂSIT!');
+        console.log('   Programare conflictuală:', prog);
+        console.log('   Start existent:', new Date(startExistent));
+        console.log('   End existent:', new Date(endExistent));
+        console.log('   Start nou:', new Date(startNoua));
+        console.log('   End nou:', new Date(endNoua));
         return prog;
       }
     }
 
+    console.log('   ✅ Nu s-a găsit niciun conflict');
     return null;
   }
 
@@ -742,28 +830,21 @@ loadDashboardData(): void {
       return;
     }
 
-    // Filtrează pacienții unici după nume
-    const pacientiUnici = new Map<string, Imagine>();
-    
-    this.imagini.forEach(img => {
-      if (img.numePacient && img.prenumePacient) {
-        const key = `${img.numePacient}_${img.prenumePacient}_${img.cnp || ''}`;
-        const numeComplet = `${img.numePacient} ${img.prenumePacient}`.toLowerCase();
-        const numeLower = img.numePacient.toLowerCase();
-        
-        if (numeLower.includes(searchTerm) || numeComplet.includes(searchTerm)) {
-          if (!pacientiUnici.has(key)) {
-            pacientiUnici.set(key, img);
-          }
-        }
-      }
+    // Filtrează pacienții după nume
+    this.pacientiFiltrati = this.pacienti.filter(pacient => {
+      const numeLower = pacient.numePacient.toLowerCase();
+      const prenumeLower = pacient.prenumePacient.toLowerCase();
+      const numeComplet = `${pacient.numePacient} ${pacient.prenumePacient}`.toLowerCase();
+      
+      return numeLower.includes(searchTerm) || 
+             prenumeLower.includes(searchTerm) ||
+             numeComplet.includes(searchTerm);
     });
 
-    this.pacientiFiltrati = Array.from(pacientiUnici.values());
     this.showPacientiSuggestions = this.pacientiFiltrati.length > 0;
   }
 
-  selectPacient(pacient: Imagine) {
+  selectPacient(pacient: Pacient) {
     this.programareNume = pacient.numePacient || '';
     this.programarePrenume = pacient.prenumePacient || '';
     this.programareCnp = pacient.cnp || '';
@@ -787,7 +868,7 @@ loadDashboardData(): void {
     this.showProgramareModal = true;
   }
 
-  deleteProgramare(id: number) {
+  deleteProgramare(id: string) {
     this.programareToDelete = id;
     this.showDeleteConfirmModal = true;
   }
