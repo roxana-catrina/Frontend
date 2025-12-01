@@ -51,6 +51,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Proprietăți pentru căutare
   searchTerm: string = '';
   filteredImagini: Imagine[] = [];
+  filteredPacienti: Pacient[] = [];
 
   // Adăugați proprietăți pentru predicție
   predictionResult: string = '';
@@ -172,7 +173,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         console.log("Pacienți primiți de la API:", pacienti);
         this.pacienti = pacienti;
         
-        // Flatten all images from all patients for display
+        // Flatten all images from all patients for display (kept for backwards compatibility)
         this.imagini = [];
         pacienti.forEach(pacient => {
           if (pacient.imagini && pacient.imagini.length > 0) {
@@ -181,12 +182,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
         });
         
         this.filteredImagini = [...this.imagini];
+        this.filteredPacienti = [...this.pacienti];
+        console.log("Total pacienți:", this.pacienti.length);
         console.log("Total imagini încărcate:", this.imagini.length);
       },
       error: (error: any) => {
         console.error("Eroare la încărcarea pacienților:", error);
         this.pacienti = [];
         this.imagini = [];
+        this.filteredPacienti = [];
       }
     });
   }
@@ -335,12 +339,15 @@ loadDashboardData(): void {
       });
       
       this.filteredImagini = [...this.imagini];
+      this.filteredPacienti = [...this.pacienti];
+      console.log("Total pacienți:", this.pacienti.length);
       console.log("Total imagini încărcate:", this.imagini.length);
     },
     error: (error: any) => {
       console.error("Eroare la încărcarea pacienților:", error);
       this.pacienti = [];
       this.imagini = [];
+      this.filteredPacienti = [];
     }
   });
 }
@@ -366,6 +373,16 @@ loadDashboardData(): void {
   console.log("Navigating to image:", image);
 
   this.router.navigate(['dashboard/imagine', image.id]);
+  }
+
+  viewPacient(pacient: Pacient) {
+    console.log("Navigating to patient:", pacient);
+    // Navigate to the first image of the patient, which will show all images in the imagine component
+    if (pacient.imagini && pacient.imagini.length > 0) {
+      this.router.navigate(['dashboard/imagine', pacient.imagini[0].id]);
+    } else {
+      alert('Acest pacient nu are încă imagini încărcate.');
+    }
   }
 
   // Metodă pentru filtrarea imaginilor după numele pacientului
@@ -408,6 +425,34 @@ loadDashboardData(): void {
     console.log("Rezultate găsite:", this.filteredImagini.length);
   }
 
+  // Metodă pentru filtrarea pacienților după nume sau CNP
+  searchPacienti() {
+    const term = this.searchTerm.toLowerCase().trim();
+    
+    console.log("Căutare pacienți pentru:", term);
+    console.log("Total pacienți disponibili:", this.pacienti.length);
+    
+    if (!term) {
+      this.filteredPacienti = [...this.pacienti];
+      console.log("Căutare goală - afișez toți pacienții:", this.filteredPacienti.length);
+      return;
+    }
+
+    this.filteredPacienti = this.pacienti.filter(pacient => {
+      const numePacient = (pacient.numePacient || '').toLowerCase();
+      const prenumePacient = (pacient.prenumePacient || '').toLowerCase();
+      const cnp = (pacient.cnp || '').toLowerCase();
+      const numeComplet = `${numePacient} ${prenumePacient}`.trim();
+      
+      return numePacient.includes(term) || 
+             prenumePacient.includes(term) || 
+             numeComplet.includes(term) ||
+             cnp.includes(term);
+    });
+    
+    console.log("Pacienți găsiți:", this.filteredPacienti.length);
+  }
+
   // Helper method to get patient by image ID
   getPacientByImageId(imageId: string): Pacient | null {
     for (const pacient of this.pacienti) {
@@ -422,6 +467,7 @@ loadDashboardData(): void {
   clearSearch() {
     this.searchTerm = '';
     this.filteredImagini = [...this.imagini];
+    this.filteredPacienti = [...this.pacienti];
   }
 
   // Metode pentru calendar

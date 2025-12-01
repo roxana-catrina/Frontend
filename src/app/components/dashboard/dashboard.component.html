@@ -122,11 +122,11 @@
         </div>
       </div>
 
-      <!-- Images Gallery -->
+      <!-- Patients Gallery -->
       <div class="card shadow-sm">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-          <h5 class="mb-0"><i class="bi bi-images"></i> Imaginile tale</h5>
-          <span class="badge bg-light text-dark">{{ filteredImagini.length }} / {{ imagini.length }}</span>
+          <h5 class="mb-0"><i class="bi bi-people"></i> Pacienții tăi</h5>
+          <span class="badge bg-light text-dark">{{ filteredPacienti.length }} / {{ pacienti.length }}</span>
         </div>
         <div class="card-body">
           <!-- Bară de căutare -->
@@ -135,7 +135,7 @@
               <span class="input-group-text"><i class="bi bi-search"></i></span>
               <input type="text" 
                      [(ngModel)]="searchTerm" 
-                     (input)="searchImages()" 
+                     (input)="searchPacienti()" 
                      class="form-control" 
                      placeholder="Caută după numele pacientului sau CNP...">
               <button class="btn btn-outline-secondary" 
@@ -147,33 +147,43 @@
             </div>
           </div>
 
-          <!-- Lista de imagini filtrate -->
+          <!-- Lista de pacienți filtrați -->
           <div class="images-gallery">
-            <div *ngFor="let image of filteredImagini; let i = index" class="patient-card" 
-                 (click)="viewImage(image)"
-                 (contextmenu)="onRightClick($event, image, i)">
+            <div *ngFor="let pacient of filteredPacienti; let i = index" class="patient-card" 
+                 (click)="viewPacient(pacient)">
               <div class="image-wrapper">
-                <img [src]="image.imageUrl" [alt]="'Image ' + image.id" class="patient-image" />
+                <img *ngIf="pacient.imagini && pacient.imagini.length > 0" 
+                     [src]="pacient.imagini[0].imageUrl" 
+                     [alt]="'Prima imagine a pacientului ' + pacient.numePacient" 
+                     class="patient-image" />
+                <div *ngIf="!pacient.imagini || pacient.imagini.length === 0" 
+                     class="patient-image no-image">
+                  <i class="bi bi-person"></i>
+                </div>
               </div>
               <div class="patient-info">
                 <div class="patient-name">
-                  <strong>{{ getPacientByImageId(image.id)?.numePacient }} {{ getPacientByImageId(image.id)?.prenumePacient }}</strong>
+                  <strong>{{ pacient.numePacient }} {{ pacient.prenumePacient }}</strong>
                 </div>
-                <div class="patient-details" *ngIf="getPacientByImageId(image.id)?.cnp">
-                  <small class="text-muted">CNP: {{ getPacientByImageId(image.id)?.cnp }}</small>
+                <div class="patient-details">
+                  <small class="text-muted" *ngIf="pacient.cnp">CNP: {{ pacient.cnp }}</small>
+                  <small class="text-muted d-block">
+                    <i class="bi bi-images"></i> {{ pacient.imagini.length || 0 }} 
+                    {{ (pacient.imagini.length || 0) === 1 ? 'imagine' : 'imagini' }}
+                  </small>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Mesaj când nu sunt rezultate -->
-          <div *ngIf="filteredImagini.length === 0 && imagini.length > 0" class="alert alert-info">
-            <i class="bi bi-info-circle"></i> Nu s-au găsit imagini pentru căutarea "{{ searchTerm }}"
+          <div *ngIf="filteredPacienti.length === 0 && pacienti.length > 0" class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Nu s-au găsit pacienți pentru căutarea "{{ searchTerm }}"
           </div>
 
-          <!-- Mesaj când nu sunt imagini deloc -->
-          <div *ngIf="imagini.length === 0" class="alert alert-warning">
-            <i class="bi bi-exclamation-triangle"></i> Nu aveți imagini încărcate încă.
+          <!-- Mesaj când nu sunt pacienți deloc -->
+          <div *ngIf="pacienti.length === 0" class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i> Nu aveți pacienți încărcați încă.
           </div>
         </div>
       </div>

@@ -41,4 +41,14 @@ export class ImagineService {
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     return this.http.post<Imagine>(`${BASIC_URL}/api/user/${userId}/pacient/${pacientId}/imagine`, formData, { headers });
   }
+
+  // Update image metadata (observații, rezultate analiză)
+  updateImage(imageId: string, pacientId: string, userId: string, imagine: Imagine): Observable<Imagine> {
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders()
+      .set('Authorization', `Bearer ${token}`)
+      .set('Content-Type', 'application/json');
+    return this.http.put<Imagine>(`${BASIC_URL}/api/user/${userId}/pacient/${pacientId}/imagine/${imageId}`, imagine, { headers });
+  }
 }
+
