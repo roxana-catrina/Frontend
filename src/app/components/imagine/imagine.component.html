@@ -32,12 +32,13 @@
               {{ getAnalysisStatus() }}
             </div>
           </div>
-          <div *ngIf="!image?.imageUrl" class="no-image-placeholder">
-            <i class="bi bi-image-fill"></i>
-            <p>Imaginea nu este disponibilă</p>
+          <div *ngIf="!image" class="no-image-placeholder">
+            <i class="bi bi-inbox"></i>
+            <p>Acest pacient nu are încă imagini medicale</p>
+            <small class="text-muted">Folosește butonul de mai jos pentru a adăuga prima imagine</small>
           </div>
         </div>
-        <div class="card-footer bg-light">
+        <div class="card-footer bg-light" *ngIf="image">
           <div class="d-flex justify-content-between align-items-center">
             <small class="text-muted">
               <i class="bi bi-calendar-event"></i> 
@@ -56,7 +57,7 @@
       </div>
       
       <!-- Card informații imagine -->
-      <div class="card shadow-sm mt-3">
+      <div class="card shadow-sm mt-3" *ngIf="image">
         <div class="card-header bg-info text-white">
           <h5 class="mb-0">
             <i class="bi bi-info-circle"></i> Informații Imagine
@@ -210,7 +211,6 @@
             <i class="bi bi-info-circle"></i> Adaugă imagini RMN, CT, etc.
           </small>
         </div>
-      </div>
       
       <!-- Alte imagini ale pacientului -->
       <div class="card shadow-sm mb-3" *ngIf="pacient && pacient.imagini && pacient.imagini.length > 1">

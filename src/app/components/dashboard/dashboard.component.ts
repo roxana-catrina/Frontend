@@ -442,11 +442,14 @@ loadDashboardData(): void {
 
   viewPacient(pacient: Pacient) {
     console.log("Navigating to patient:", pacient);
-    // Navigate to the first image of the patient, which will show all images in the imagine component
+    // Navigate to the first image of the patient, or to patient profile if no images
     if (pacient.imagini && pacient.imagini.length > 0) {
+      // Dacă are imagini, mergem la prima imagine
       this.router.navigate(['dashboard/imagine', pacient.imagini[0].id]);
     } else {
-      alert('Acest pacient nu are încă imagini încărcate.');
+      // Dacă nu are imagini, mergem la profilul pacientului folosind un ID special
+      // Vom modifica componenta imagine să accepte și pacientId
+      this.router.navigate(['dashboard/pacient', pacient.id]);
     }
   }
 

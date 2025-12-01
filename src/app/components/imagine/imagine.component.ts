@@ -70,13 +70,47 @@ export class ImagineComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Subscribe to route param changes to handle image switching
+    // Subscribe to route param changes to handle image/patient switching
     this.route.paramMap.subscribe(params => {
       const imageId = params.get('id');
+      const pacientId = params.get('pacientId');
       const userId = localStorage.getItem('id');
 
-      if (imageId && userId) {
+      if (pacientId && userId) {
+        // Încarcă pacientul direct fără imagine
+        this.loadPacientData(pacientId, userId);
+      } else if (imageId && userId) {
+        // Încarcă imaginea (fluxul original)
         this.loadImageData(imageId, userId);
+      }
+    });
+  }
+
+  loadPacientData(pacientId: string, userId: string) {
+    // Încarcă direct pacientul când nu are imagini
+    this.pacientService.getAllPacienti(userId).subscribe({
+      next: (pacienti: Pacient[]) => {
+        const foundPacient = pacienti.find(p => p.id === pacientId);
+        if (foundPacient) {
+          this.pacient = foundPacient;
+          this.image = null; // Nu avem imagine selectată
+          this.observatiiEdit = '';
+          
+          // Reset editing states
+          this.isEditingObservatii = false;
+          this.isZoomed = false;
+          this.isAnalyzing = false;
+          this.resetZoom();
+          
+          console.log('Patient loaded without image:', this.pacient);
+        } else {
+          console.error('Patient not found');
+          this.router.navigate(['/dashboard']);
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading patient:', error);
+        this.router.navigate(['/dashboard']);
       }
     });
   }
@@ -669,19 +703,44 @@ export class ImagineComponent implements OnInit {
       next: (newImage: Imagine) => {
         console.log('✅ Imagine încărcată cu succes:', newImage);
         
-        // Adaugă imaginea la lista de imagini a pacientului
-        if (this.pacient && this.pacient.imagini) {
-          this.pacient.imagini.push(newImage);
-        }
-
-        this.isUploading = false;
-        this.closeAddImageModal();
-        
-        alert('Imaginea a fost încărcată cu succes!\n\n' + 
-              (this.autoAnalyze ? 'Analiza este în curs de desfășurare...' : 'Poți analiza imaginea mai târziu.'));
-
-        // Navighează la noua imagine
-        this.router.navigate(['/imagine', newImage.id]);
+        // Reîncarcă datele complete ale pacientului pentru a obține lista actualizată de imagini
+        this.pacientService.getAllPacienti(userId).subscribe({
+          next: (pacienti: Pacient[]) => {
+            const updatedPacient = pacienti.find(p => p.id === this.pacient?.id);
+            if (updatedPacient) {
+              this.pacient = updatedPacient;
+              
+              // Setează noua imagine ca imagine curentă
+              const uploadedImage = updatedPacient.imagini?.find(img => img.id === newImage.id);
+              if (uploadedImage) {
+                this.image = uploadedImage;
+                this.observatiiEdit = this.image.observatii || '';
+              }
+              
+              console.log('✅ Pacient actualizat cu noua imagine:', this.pacient);
+            }
+            
+            this.isUploading = false;
+            this.closeAddImageModal();
+            
+            alert('Imaginea a fost încărcată cu succes!\n\n' + 
+                  (this.autoAnalyze ? 'Analiza este în curs de desfășurare...' : 'Poți analiza imaginea mai târziu.'));
+          },
+          error: (reloadError) => {
+            console.error('⚠️ Eroare la reîncărcarea pacientului:', reloadError);
+            // Chiar dacă reîncărcarea eșuează, adaugă imaginea local
+            if (this.pacient && this.pacient.imagini) {
+              this.pacient.imagini.push(newImage);
+              this.image = newImage;
+              this.observatiiEdit = newImage.observatii || '';
+            }
+            
+            this.isUploading = false;
+            this.closeAddImageModal();
+            
+            alert('Imaginea a fost încărcată cu succes!');
+          }
+        });
       },
       error: (error: any) => {
         console.error('❌ Eroare la încărcarea imaginii:', error);

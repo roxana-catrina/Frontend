@@ -17,6 +17,7 @@ const routes: Routes = [
   {path: 'authenticate', component: LoginComponent},
   { path: 'dashboard', component: DashboardComponent},
   {path: 'dashboard/imagine/:id', component: ImagineComponent},
+  {path: 'dashboard/pacient/:pacientId', component: ImagineComponent}, // Rută nouă pentru pacient fără imagini
   {path: 'mesagerie', component: MesagerieComponent},
   {path: 'forgot-password', component: ForgotPasswordComponent},
   {path: 'reset-password', component: ResetPasswordComponent}
