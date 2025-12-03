@@ -51,6 +51,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Proprietăți pentru căutare
   searchTerm: string = '';
   filteredImagini: Imagine[] = [];
+  filteredPacienti: Pacient[] = [];
 
   // Adăugați proprietăți pentru predicție
   predictionResult: string = '';
@@ -172,7 +173,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         console.log("Pacienți primiți de la API:", pacienti);
         this.pacienti = pacienti;
         
-        // Flatten all images from all patients for display
+        // Flatten all images from all patients for display (kept for backwards compatibility)
         this.imagini = [];
         pacienti.forEach(pacient => {
           if (pacient.imagini && pacient.imagini.length > 0) {
@@ -181,12 +182,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
         });
         
         this.filteredImagini = [...this.imagini];
+        this.filteredPacienti = [...this.pacienti];
+        console.log("Total pacienți:", this.pacienti.length);
         console.log("Total imagini încărcate:", this.imagini.length);
       },
       error: (error: any) => {
         console.error("Eroare la încărcarea pacienților:", error);
         this.pacienti = [];
         this.imagini = [];
+        this.filteredPacienti = [];
       }
     });
   }
@@ -252,6 +256,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Validare date pacient
+    if (!this.numePacient || !this.prenumePacient || !this.cnp || !this.dataNasterii || !this.sex || !this.numarTelefon) {
+      this.showCustomNotification('Completează toate câmpurile obligatorii ale pacientului!', 'warning');
+      return;
+    }
+
     // Prepare FormData with both patient data and file
     const formData = new FormData();
     
@@ -272,7 +282,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Add the file
     formData.append('file', this.selectedFile, this.selectedFile.name);
 
-    console.log('=== DEBUG: Înregistrare Pacient cu Date ===');
+    console.log('=== DEBUG: Înregistrare Pacient cu Imagine ===');
     console.log('User ID:', id);
     console.log('Date pacient trimise:', JSON.stringify(pacientData, null, 2));
     console.log('Fișier:', this.selectedFile.name, '-', this.selectedFile.type);
@@ -306,6 +316,65 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Metodă nouă pentru crearea pacientului fără imagine
+  createPacientWithoutImage() {
+    let id: string | null = localStorage.getItem("id");
+    if (!id) {
+      this.showCustomNotification('Eroare: Utilizator neautentificat', 'error');
+      return;
+    }
+
+    // Validare date pacient
+    if (!this.numePacient || !this.prenumePacient || !this.cnp || !this.dataNasterii || !this.sex || !this.numarTelefon) {
+      this.showCustomNotification('Completează toate câmpurile obligatorii ale pacientului!', 'warning');
+      return;
+    }
+
+    // Creează FormData fără fișier - backend-ul poate accepta doar datele
+    const formData = new FormData();
+    
+    const pacientData = {
+      numePacient: this.numePacient,
+      prenumePacient: this.prenumePacient,
+      sex: this.sex,
+      dataNasterii: this.dataNasterii,
+      cnp: this.cnp,
+      numarTelefon: this.numarTelefon,
+      detalii: this.detalii || '',
+      istoricMedical: this.istoricMedical || ''
+    };
+    
+    formData.append('pacientData', JSON.stringify(pacientData));
+    // Nu adăugăm fișier - backend-ul ar trebui să accepte acest lucru
+
+    console.log('=== DEBUG: Creare Pacient fără Imagine ===');
+    console.log('User ID:', id);
+    console.log('Date pacient:', JSON.stringify(pacientData, null, 2));
+    console.log('Endpoint:', `/api/user/${id}/pacient/withdata`);
+    console.log('==========================================');
+
+    // Folosim același endpoint ca și pentru pacient cu imagine
+    this.pacientService.createPacientWithImage(id, formData).subscribe({
+      next: (response: any) => {
+        console.log('✓ Pacient creat cu succes:', response);
+        this.message = 'Pacient înregistrat cu succes!';
+        
+        // Reset form
+        this.resetForm();
+        
+        // Reload data
+        this.loadDashboardData();
+        
+        // Show success notification
+        this.showCustomNotification('Pacient înregistrat cu succes!', 'success');
+      },
+      error: (error: any) => {
+        console.error('✗ Eroare la crearea pacientului:', error);
+        this.showCustomNotification('Eroare la crearea pacientului. Verifică că toate datele sunt corecte.', 'error');
+      }
+    });
+  }
+
   resetForm() {
     this.numePacient = '';
     this.prenumePacient = '';
@@ -335,12 +404,15 @@ loadDashboardData(): void {
       });
       
       this.filteredImagini = [...this.imagini];
+      this.filteredPacienti = [...this.pacienti];
+      console.log("Total pacienți:", this.pacienti.length);
       console.log("Total imagini încărcate:", this.imagini.length);
     },
     error: (error: any) => {
       console.error("Eroare la încărcarea pacienților:", error);
       this.pacienti = [];
       this.imagini = [];
+      this.filteredPacienti = [];
     }
   });
 }
@@ -366,6 +438,19 @@ loadDashboardData(): void {
   console.log("Navigating to image:", image);
 
   this.router.navigate(['dashboard/imagine', image.id]);
+  }
+
+  viewPacient(pacient: Pacient) {
+    console.log("Navigating to patient:", pacient);
+    // Navigate to the first image of the patient, or to patient profile if no images
+    if (pacient.imagini && pacient.imagini.length > 0) {
+      // Dacă are imagini, mergem la prima imagine
+      this.router.navigate(['dashboard/imagine', pacient.imagini[0].id]);
+    } else {
+      // Dacă nu are imagini, mergem la profilul pacientului folosind un ID special
+      // Vom modifica componenta imagine să accepte și pacientId
+      this.router.navigate(['dashboard/pacient', pacient.id]);
+    }
   }
 
   // Metodă pentru filtrarea imaginilor după numele pacientului
@@ -408,6 +493,34 @@ loadDashboardData(): void {
     console.log("Rezultate găsite:", this.filteredImagini.length);
   }
 
+  // Metodă pentru filtrarea pacienților după nume sau CNP
+  searchPacienti() {
+    const term = this.searchTerm.toLowerCase().trim();
+    
+    console.log("Căutare pacienți pentru:", term);
+    console.log("Total pacienți disponibili:", this.pacienti.length);
+    
+    if (!term) {
+      this.filteredPacienti = [...this.pacienti];
+      console.log("Căutare goală - afișez toți pacienții:", this.filteredPacienti.length);
+      return;
+    }
+
+    this.filteredPacienti = this.pacienti.filter(pacient => {
+      const numePacient = (pacient.numePacient || '').toLowerCase();
+      const prenumePacient = (pacient.prenumePacient || '').toLowerCase();
+      const cnp = (pacient.cnp || '').toLowerCase();
+      const numeComplet = `${numePacient} ${prenumePacient}`.trim();
+      
+      return numePacient.includes(term) || 
+             prenumePacient.includes(term) || 
+             numeComplet.includes(term) ||
+             cnp.includes(term);
+    });
+    
+    console.log("Pacienți găsiți:", this.filteredPacienti.length);
+  }
+
   // Helper method to get patient by image ID
   getPacientByImageId(imageId: string): Pacient | null {
     for (const pacient of this.pacienti) {
@@ -422,6 +535,7 @@ loadDashboardData(): void {
   clearSearch() {
     this.searchTerm = '';
     this.filteredImagini = [...this.imagini];
+    this.filteredPacienti = [...this.pacienti];
   }
 
   // Metode pentru calendar

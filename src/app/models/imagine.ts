@@ -5,4 +5,16 @@ export interface Imagine {
   tip: string;
   imageUrl: string;
   cloudinaryPublicId: string;
+  
+  // Informații despre analiză
+  areTumoare?: boolean;
+  tipTumoare?: string; // ex: 'glioma', 'meningioma', 'pituitary', etc.
+  confidenta?: number; // Procentaj încredere detecție (0-100)
+  dataAnalizei?: Date;
+  statusAnaliza?: 'neanalizata' | 'in_procesare' | 'finalizata' | 'eroare';
+  
+  // Observații și detalii
+  observatii?: string;
+  dataIncarcare?: Date;
+  dataModificare?: Date;
 }

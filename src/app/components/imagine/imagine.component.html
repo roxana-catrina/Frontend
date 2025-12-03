@@ -25,21 +25,143 @@
             <div class="zoom-hint">
               <i class="bi bi-zoom-in"></i> Click pentru zoom
             </div>
+            
+            <!-- Status analiză badge -->
+            <div class="analysis-badge" [ngClass]="getAnalysisBadgeClass()">
+              <i [class]="getAnalysisIcon()"></i>
+              {{ getAnalysisStatus() }}
+            </div>
           </div>
-          <div *ngIf="!image?.imageUrl" class="no-image-placeholder">
-            <i class="bi bi-image-fill"></i>
-            <p>Imaginea nu este disponibilă</p>
+          <div *ngIf="!image" class="no-image-placeholder">
+            <i class="bi bi-inbox"></i>
+            <p>Acest pacient nu are încă imagini medicale</p>
+            <small class="text-muted">Folosește butonul de mai jos pentru a adăuga prima imagine</small>
           </div>
         </div>
-        <div class="card-footer bg-light">
+        <div class="card-footer bg-light" *ngIf="image">
           <div class="d-flex justify-content-between align-items-center">
             <small class="text-muted">
               <i class="bi bi-calendar-event"></i> 
-              Data naşterii pacient: {{ pacient?.dataNasterii || 'N/A' }}
+              Data încărcare: {{ (image && image.dataIncarcare) ? (image.dataIncarcare | date:'dd/MM/yyyy HH:mm') : 'N/A' }}
             </small>
-            <button type="button" class="btn btn-danger" (click)="deleteImage()">
-              <i class="bi bi-trash"></i> Şterge Imagine
+            <div class="action-buttons">
+              <button type="button" class="btn btn-primary me-2" (click)="openImageInfoModal()">
+                <i class="bi bi-pencil-square"></i> Editează Info
+              </button>
+              <button type="button" class="btn btn-danger" (click)="deleteImage()">
+                <i class="bi bi-trash"></i> Șterge
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Card informații imagine -->
+      <div class="card shadow-sm mt-3" *ngIf="image">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-info-circle"></i> Informații Imagine
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="image-details">
+            <div class="detail-row">
+              <span class="detail-label">
+                <i class="bi bi-tag"></i> Nume:
+              </span>
+              <span class="detail-value">{{ image?.nume || 'Fără nume' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">
+                <i class="bi bi-file-earmark-medical"></i> Tip:
+              </span>
+              <span class="detail-value">{{ image?.tip || 'Necunoscut' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">
+                <i class="bi bi-calendar-event"></i> Data încărcării:
+              </span>
+              <span class="detail-value">{{ (image && image.dataIncarcare) ? (image.dataIncarcare | date:'dd/MM/yyyy HH:mm') : 'N/A' }}</span>
+            </div>
+            <div class="detail-row" *ngIf="image?.dataModificare">
+              <span class="detail-label">
+                <i class="bi bi-clock-history"></i> Ultima modificare:
+              </span>
+              <span class="detail-value">{{ (image && image.dataModificare) ? (image.dataModificare | date:'dd/MM/yyyy HH:mm') : 'N/A' }}</span>
+            </div>
+            <div class="detail-row full-width" *ngIf="image?.observatii">
+              <span class="detail-label">
+                <i class="bi bi-card-text"></i> Observații:
+              </span>
+              <div class="detail-value-box">
+                {{ image?.observatii }}
+              </div>
+            </div>
+            <div class="detail-row full-width" *ngIf="!image?.observatii">
+              <span class="text-muted">
+                <i class="bi bi-info-circle"></i> Nu există observații pentru această imagine
+              </span>
+            </div>
+          </div>
+          
+          <!-- Buton Analiză Tumoare -->
+          <div class="mt-3" *ngIf="image?.statusAnaliza !== 'in_procesare' && (image?.statusAnaliza !== 'finalizata' || image?.areTumoare === null)">
+            <button 
+              class="btn btn-warning w-100"
+              (click)="analyzeImage()"
+              [disabled]="isAnalyzing">
+              <i class="bi" [ngClass]="isAnalyzing ? 'bi-hourglass-split' : 'bi-cpu'"></i>
+              {{ isAnalyzing ? 'Se analizează...' : (image?.statusAnaliza === 'finalizata' ? 'Re-analizează Tumoare cu AI' : 'Analizează Tumoare cu AI') }}
             </button>
+            <small class="text-muted d-block mt-2 text-center">
+              <i class="bi bi-info-circle"></i> 
+              Imaginea va fi analizată pentru detectarea tumorilor cerebrale
+            </small>
+          </div>
+          
+          <div class="mt-3" *ngIf="image?.statusAnaliza === 'in_procesare'">
+            <div class="alert alert-warning mb-0">
+              <i class="bi bi-hourglass-split"></i>
+              <strong>Analiza este în curs...</strong>
+              <br>
+              <small>Te rugăm să aștepți finalizarea analizei.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Card rezultat analiză -->
+      <div class="card shadow-sm mt-3" *ngIf="image?.statusAnaliza === 'finalizata' && image?.areTumoare !== null">
+        <div class="card-header" [ngClass]="image?.areTumoare ? 'bg-danger text-white' : 'bg-success text-white'">
+          <h5 class="mb-0">
+            <i class="bi bi-clipboard-pulse"></i> Rezultat Analiză
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="analysis-result">
+            <div class="result-item">
+              <span class="result-label">Status:</span>
+              <span class="result-value" [class.text-danger]="image?.areTumoare" [class.text-success]="!image?.areTumoare">
+                <strong>{{ image?.areTumoare ? '⚠️ Tumoare detectată' : '✓ Fără tumoare' }}</strong>
+              </span>
+            </div>
+            <div class="result-item" *ngIf="image?.areTumoare && image?.tipTumoare">
+              <span class="result-label">Tip tumoare:</span>
+              <span class="result-value">{{ image?.tipTumoare }}</span>
+            </div>
+            <div class="result-item" *ngIf="image?.confidenta !== null && image?.confidenta !== undefined">
+              <span class="result-label">Încredere:</span>
+              <span class="result-value">
+                <div class="confidence-bar">
+                  <div class="confidence-fill" [style.width.%]="image?.confidenta"></div>
+                </div>
+                <span>{{ image?.confidenta }}%</span>
+              </span>
+            </div>
+            <div class="result-item" *ngIf="image?.dataAnalizei">
+              <span class="result-label">Data analizei:</span>
+              <span class="result-value">{{ (image && image.dataAnalizei) ? (image.dataAnalizei | date:'dd/MM/yyyy HH:mm') : 'N/A' }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -47,6 +169,79 @@
 
     <!-- Coloana dreaptă - Detalii pacient -->
     <div class="details-section">
+      
+
+      <!-- Adaugă imagine medicală nouă -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Adaugă Imagine Medicală</h5>
+        </div>
+        <div class="card-body text-center">
+          <button class="btn btn-lg btn-success w-100" (click)="openAddImageModal()">
+            <i class="bi bi-cloud-upload"></i> Încarcă Imagine Nouă
+          </button>
+          <small class="text-muted d-block mt-2">
+            <i class="bi bi-info-circle"></i> Adaugă imagini RMN, CT, etc.
+          </small>
+        </div>
+      
+      <!-- Alte imagini ale pacientului -->
+      <div class="card shadow-sm mb-3" *ngIf="pacient && pacient.imagini && pacient.imagini.length > 1">
+        <div class="card-header bg-secondary text-white">
+          <h5 class="mb-0"><i class="bi bi-images"></i> Toate Imaginile Pacientului ({{ pacient.imagini.length }})</h5>
+        </div>
+        <div class="card-body">
+          <div class="patient-images-grid">
+            <div *ngFor="let img of pacient.imagini" 
+                 class="patient-image-item"
+                 [class.active-image]="img.id === image?.id"
+                 (click)="selectImage(img)">
+              <img [src]="img.imageUrl" [alt]="'Imagine ' + img.id" class="thumbnail-image">
+              <div class="image-overlay" *ngIf="img.id === image?.id">
+                <i class="bi bi-check-circle-fill"></i>
+              </div>
+              <small class="image-date">{{ img.dataIncarcare ? (img.dataIncarcare | date:'dd/MM/yyyy') : 'N/A' }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Observații imagine -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="mb-0"><i class="bi bi-card-text"></i> Observații Pacient</h5>
+        </div>
+        <div class="card-body">
+          <div class="observatii-section">
+            <textarea 
+              class="form-control observatii-textarea" 
+              rows="4"
+              [(ngModel)]="observatiiEdit"
+              [disabled]="!isEditingObservatii"
+              placeholder="Adaugă observații despre această imagine..."></textarea>
+            <div class="observatii-actions mt-2">
+              <button 
+                *ngIf="!isEditingObservatii"
+                class="btn btn-primary btn-sm"
+                (click)="startEditObservatii()">
+                <i class="bi bi-pencil"></i> Editează
+              </button>
+              <div *ngIf="isEditingObservatii" class="d-flex gap-2">
+                <button class="btn btn-success btn-sm" (click)="saveObservatii()">
+                  <i class="bi bi-check-lg"></i> Salvează
+                </button>
+                <button class="btn btn-secondary btn-sm" (click)="cancelEditObservatii()">
+                  <i class="bi bi-x-lg"></i> Anulează
+                </button>
+              </div>
+            </div>
+            <small class="text-muted" *ngIf="image?.dataModificare">
+              <i class="bi bi-clock"></i> Ultima modificare: {{ image?.dataModificare | date:'dd/MM/yyyy HH:mm' }}
+            </small>
+          </div>
+        </div>
+      </div>
+      
       <div class="card shadow-sm">
         <div class="card-header bg-success text-white">
           <h5 class="mb-0"><i class="bi bi-person-lines-fill"></i> Informații Pacient</h5>
@@ -191,3 +386,247 @@
     </div>
   </div>
 </div>
+
+<!-- Modal Informații Imagine -->
+<div class="modal-overlay" *ngIf="showImageInfoModal" (click)="closeImageInfoModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h4>
+        <i class="bi bi-file-earmark-medical"></i> Informații și Analiză Imagine
+      </h4>
+      <button class="close-btn" (click)="closeImageInfoModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <form #imageForm="ngForm">
+        <!-- Informații de bază -->
+        <div class="form-section">
+          <h5><i class="bi bi-info-circle"></i> Informații de bază</h5>
+          
+          <div class="form-group">
+            <label for="numePoza">Nume imagine:</label>
+            <input 
+              type="text" 
+              id="numePoza"
+              class="form-control"
+              [(ngModel)]="imageFormData.nume"
+              name="nume"
+              placeholder="Ex: RMN creier - vedere laterală">
+          </div>
+
+          <div class="form-group">
+            <label for="tipPoza">Tip imagine:</label>
+            <select 
+              id="tipPoza"
+              class="form-control"
+              [(ngModel)]="imageFormData.tip"
+              name="tip">
+              <option value="RMN">RMN (Rezonanță Magnetică)</option>
+              <option value="CT">CT (Tomografie computerizată)</option>
+              <option value="Radiografie">Radiografie</option>
+              <option value="Ecografie">Ecografie</option>
+              <option value="PET">PET Scan</option>
+              <option value="Altele">Altele</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="observatiiPoza">Observații:</label>
+            <textarea 
+              id="observatiiPoza"
+              class="form-control"
+              [(ngModel)]="imageFormData.observatii"
+              name="observatii"
+              rows="3"
+              placeholder="Adaugă observații despre această imagine..."></textarea>
+          </div>
+        </div>
+
+        <!-- Informații analiză -->
+        <div class="form-section">
+          <h5><i class="bi bi-clipboard-pulse"></i> Status Analiză</h5>
+          
+          <div class="status-display">
+            <div class="status-item">
+              <span class="status-label">Status curent:</span>
+              <span class="status-badge" [ngClass]="getAnalysisBadgeClass()">
+                <i [class]="getAnalysisIcon()"></i>
+                {{ getAnalysisStatus() }}
+              </span>
+            </div>
+
+            <div class="status-item" *ngIf="image?.statusAnaliza === 'finalizata'">
+              <span class="status-label">Rezultat:</span>
+              <span [class]="image?.areTumoare ? 'text-danger' : 'text-success'">
+                <strong>{{ image?.areTumoare ? '⚠️ Tumoare detectată' : '✓ Fără tumoare' }}</strong>
+              </span>
+            </div>
+
+            <div class="status-item" *ngIf="image?.areTumoare && image?.tipTumoare">
+              <span class="status-label">Tip tumoare:</span>
+              <span>{{ image?.tipTumoare }}</span>
+            </div>
+
+            <div class="status-item" *ngIf="image?.confidenta !== undefined">
+              <span class="status-label">Încredere:</span>
+              <div class="confidence-display">
+                <div class="confidence-bar-small">
+                  <div class="confidence-fill" [style.width.%]="image?.confidenta"></div>
+                </div>
+                <span class="confidence-text">{{ image?.confidenta }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Buton analiză -->
+          <div class="analysis-action" *ngIf="image?.statusAnaliza !== 'in_procesare'">
+            <button 
+              type="button"
+              class="btn btn-analyze"
+              (click)="analyzeImage()"
+              [disabled]="isAnalyzing">
+              <i class="bi" [ngClass]="isAnalyzing ? 'bi-hourglass-split' : 'bi-cpu'"></i>
+              {{ isAnalyzing ? 'Se analizează...' : 'Analizează imagine cu AI' }}
+            </button>
+            <small class="text-muted">
+              <i class="bi bi-info-circle"></i> 
+              Imaginea va fi analizată pentru detectarea eventualelor tumori cerebrale
+            </small>
+          </div>
+
+          <div class="alert alert-warning" *ngIf="image?.statusAnaliza === 'in_procesare'">
+            <i class="bi bi-hourglass-split"></i>
+            Analiza este în curs de desfășurare... Te rugăm să aștepți.
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeImageInfoModal()">
+        <i class="bi bi-x-lg"></i> Închide
+      </button>
+      <button class="btn btn-primary" (click)="saveImageInfo()">
+        <i class="bi bi-check-lg"></i> Salvează modificări
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Adaugă Imagine Nouă -->
+<div class="modal-overlay" *ngIf="showAddImageModal" (click)="closeAddImageModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h4>
+        <i class="bi bi-cloud-upload"></i> Adaugă Imagine Nouă pentru {{ pacient?.numePacient }} {{ pacient?.prenumePacient }}
+      </h4>
+      <button class="close-btn" (click)="closeAddImageModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <form #newImageForm="ngForm">
+        <!-- Upload imagine -->
+        <div class="form-section">
+          <h5><i class="bi bi-image"></i> Selectează Imagine</h5>
+          
+          <div class="upload-area" 
+               [class.has-file]="newImageFile"
+               (click)="fileInput.click()"
+               (dragover)="onDragOver($event)"
+               (drop)="onDrop($event)">
+            <input 
+              type="file" 
+              #fileInput
+              accept="image/*"
+              (change)="onFileSelected($event)"
+              style="display: none;">
+            
+            <div *ngIf="!newImageFile" class="upload-prompt">
+              <i class="bi bi-cloud-arrow-up upload-icon"></i>
+              <p class="upload-text">Click sau trage imaginea aici</p>
+              <small class="text-muted">Format acceptat: JPG, PNG, DICOM</small>
+            </div>
+            
+            <div *ngIf="newImageFile" class="file-preview">
+              <img *ngIf="imagePreviewUrl" [src]="imagePreviewUrl" alt="Preview" class="preview-image">
+              <div class="file-info">
+                <i class="bi bi-file-image"></i>
+                <span>{{ newImageFile.name }}</span>
+                <small>({{ formatFileSize(newImageFile.size) }})</small>
+              </div>
+              <button type="button" class="btn btn-sm btn-danger mt-2" (click)="removeFile($event)">
+                <i class="bi bi-trash"></i> Șterge
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informații imagine -->
+        <div class="form-section">
+          <h5><i class="bi bi-info-circle"></i> Informații Imagine</h5>
+          
+          <div class="form-group">
+            <label for="numeNoua">Nume imagine: *</label>
+            <input 
+              type="text" 
+              id="numeNoua"
+              class="form-control"
+              [(ngModel)]="newImageData.nume"
+              name="numeNoua"
+              placeholder="Ex: RMN creier - vedere frontală"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="tipNoua">Tip imagine: *</label>
+            <select 
+              id="tipNoua"
+              class="form-control"
+              [(ngModel)]="newImageData.tip"
+              name="tipNoua"
+              required>
+              <option value="">-- Selectează tipul --</option>
+              <option value="RMN">RMN (Rezonanță Magnetică)</option>
+              <option value="CT">CT (Tomografie computerizată)</option>
+              <option value="Radiografie">Radiografie</option>
+              <option value="Ecografie">Ecografie</option>
+              <option value="PET">PET Scan</option>
+              <option value="Altele">Altele</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="observatiiNoua">Observații inițiale:</label>
+            <textarea 
+              id="observatiiNoua"
+              class="form-control"
+              [(ngModel)]="newImageData.observatii"
+              name="observatiiNoua"
+              rows="3"
+              placeholder="Adaugă observații despre această imagine..."></textarea>
+          </div>
+        </div>
+
+       
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeAddImageModal()">
+        <i class="bi bi-x-lg"></i> Anulează
+      </button>
+      <button 
+        class="btn btn-success" 
+        (click)="uploadNewImage()"
+        [disabled]="!newImageFile || !newImageData.nume || !newImageData.tip || isUploading">
+        <i class="bi" [ngClass]="isUploading ? 'bi-hourglass-split' : 'bi-cloud-upload'"></i>
+        {{ isUploading ? 'Se încarcă...' : 'Încarcă Imagine' }}
+      </button>
+    </div>
+  </div>
+</div>
+
