@@ -38,6 +38,27 @@ export class BrainTumorService {
     );
   }
 
+  /**
+   * Analizează o imagine folosind URL-ul de pe Cloudinary
+   * Această metodă este preferată pentru a evita trimiterea fișierului de două ori
+   */
+  predictFromUrl(imageUrl: string): Observable<PredictionResult> {
+    const body = { imageUrl: imageUrl };
+    return this.http.post<PredictionResult>(`${this.apiUrl}/predict-from-url`, body).pipe(
+      catchError(error => {
+        console.error('Eroare la analiza imaginii de pe URL:', error);
+        return of({
+          success: false,
+          prediction: '',
+          confidence: 0,
+          hasTumor: false,
+          type: '',
+          error: 'Nu s-a putut analiza imaginea de pe URL. Vă rugăm să încercați din nou.'
+        });
+      })
+    );
+  }
+
   healthCheck(): Observable<any> {
     return this.http.get(`${this.apiUrl}/health`).pipe(
       catchError(error => {
