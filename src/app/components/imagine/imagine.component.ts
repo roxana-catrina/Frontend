@@ -606,6 +606,16 @@ export class ImagineComponent implements OnInit {
 
     this.isDicomFile = isDicom;
 
+    // IMPORTANT: Setăm fișierul IMEDIAT, înainte de orice procesare
+    this.newImageFile = file;
+
+    // Verifică dimensiunea (max 50MB pentru DICOM, 10MB pentru altele)
+    const maxSize = isDicom ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert(`Fișierul este prea mare! Dimensiunea maximă este ${isDicom ? '50MB' : '10MB'}.`);
+      return;
+    }
+
     if (isDicom) {
       console.log('📋 Fișier DICOM detectat, se extrag metadatele...');
       this.extractDicomMetadata(file);
@@ -615,19 +625,8 @@ export class ImagineComponent implements OnInit {
         alert('Te rugăm să selectezi un fișier imagine valid sau DICOM!');
         return;
       }
-    }
-
-    // Verifică dimensiunea (max 50MB pentru DICOM, 10MB pentru altele)
-    const maxSize = isDicom ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
-    if (file.size > maxSize) {
-      alert(`Fișierul este prea mare! Dimensiunea maximă este ${isDicom ? '50MB' : '10MB'}.`);
-      return;
-    }
-
-    this.newImageFile = file;
-
-    // Creează preview doar pentru imagini normale
-    if (!isDicom) {
+      
+      // Creează preview doar pentru imagini normale
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.imagePreviewUrl = e.target.result;
@@ -639,21 +638,17 @@ export class ImagineComponent implements OnInit {
   }
 
   extractDicomMetadata(file: File): void {
+    // Pentru DICOM trebuie să citim întreg fișierul
+    // dar facem asta async și nu blocăm upload-ul
     const reader = new FileReader();
     
     reader.onload = (e: any) => {
       try {
         const arrayBuffer = e.target.result;
-
-        // Re-creăm fișierul din buffer pentru a fi siguri că upload-ul primește datele corecte
-        // Aceasta rezolvă problema unde FileReader ar putea "consuma" stream-ul sau referința ar fi invalidă
-        this.newImageFile = new File([arrayBuffer], file.name, { type: file.type });
-        console.log('✅ Fișier recreat din buffer pentru upload sigur. Dimensiune:', this.newImageFile.size);
-
         const byteArray = new Uint8Array(arrayBuffer);
         const dataSet = dicomParser.parseDicom(byteArray);
 
-        // Extrage metadatele DICOM
+        // Extrage doar metadatele esențiale pentru performanță
         this.dicomMetadata = {
           patientName: this.getString(dataSet, 'x00100010'),
           patientID: this.getString(dataSet, 'x00100020'),
@@ -702,18 +697,20 @@ export class ImagineComponent implements OnInit {
           this.newImageData.tip = modalityMap[this.dicomMetadata.modality] || 'Altele';
         }
 
-        // Creează un preview pentru DICOM (dacă este posibil)
-        this.createDicomPreview(dataSet, byteArray);
-
       } catch (error) {
         console.error('❌ Eroare la parsarea DICOM:', error);
-        alert('Eroare la citirea fișierului DICOM. Asigură-te că este un fișier valid.');
-        this.isDicomFile = false;
+        // Nu blocăm upload-ul dacă parsarea eșuează
+        console.warn('⚠️ Continuăm fără metadate DICOM');
         this.dicomMetadata = null;
       }
     };
 
-    // Citim fișierul complet
+    reader.onerror = () => {
+      console.error('❌ Eroare la citirea fișierului DICOM');
+      this.dicomMetadata = null;
+    };
+
+    // Citim întreg fișierul pentru a putea parsa corect DICOM
     reader.readAsArrayBuffer(file);
   }
 
@@ -854,54 +851,30 @@ export class ImagineComponent implements OnInit {
       next: (newImage: Imagine) => {
         console.log('✅ Imagine încărcată cu succes:', newImage);
         
-        // Reîncarcă datele complete ale pacientului pentru a obține lista actualizată de imagini
-        this.pacientService.getAllPacienti(userId).subscribe({
-          next: (pacienti: Pacient[]) => {
-            const updatedPacient = pacienti.find(p => p.id === this.pacient?.id);
-            if (updatedPacient) {
-              this.pacient = updatedPacient;
-              
-              // Setează noua imagine ca imagine curentă
-              const uploadedImage = updatedPacient.imagini?.find(img => img.id === newImage.id);
-              if (uploadedImage) {
-                this.image = uploadedImage;
-                this.observatiiEdit = this.image.observatii || '';
-              }
-              
-              console.log('✅ Pacient actualizat cu noua imagine:', this.pacient);
-            }
-            
-            this.isUploading = false;
-            this.closeAddImageModal();
-            
-            const message = this.isDicomFile 
-              ? 'Imaginea DICOM a fost încărcată cu succes împreună cu metadatele!\n\n'
-              : 'Imaginea a fost încărcată cu succes!\n\n';
-            
-            alert(message + 
-                  (this.autoAnalyze ? 'Analiza este în curs de desfășurare...' : 'Poți analiza imaginea mai târziu.'));
-            
-            // Dacă autoAnalyze este activat, pornește analiza
-            if (this.autoAnalyze && newImage.imageUrl) {
-              console.log('🤖 Pornire analiză automată pentru imagine nouă...');
-              this.triggerAutoAnalyze(newImage.imageUrl, newImage.id);
-            }
-          },
-          error: (reloadError) => {
-            console.error('⚠️ Eroare la reîncărcarea pacientului:', reloadError);
-            // Chiar dacă reîncărcarea eșuează, adaugă imaginea local
-            if (this.pacient && this.pacient.imagini) {
-              this.pacient.imagini.push(newImage);
-              this.image = newImage;
-              this.observatiiEdit = newImage.observatii || '';
-            }
-            
-            this.isUploading = false;
-            this.closeAddImageModal();
-            
-            alert('Imaginea a fost încărcată cu succes!');
-          }
-        });
+        // Actualizează local în loc să reîncărcăm toți pacienții
+        if (this.pacient && this.pacient.imagini) {
+          this.pacient.imagini.push(newImage);
+        }
+        
+        // Setează noua imagine ca imagine curentă
+        this.image = newImage;
+        this.observatiiEdit = newImage.observatii || '';
+        
+        this.isUploading = false;
+        this.closeAddImageModal();
+        
+        const message = this.isDicomFile 
+          ? 'Imaginea DICOM a fost încărcată cu succes împreună cu metadatele!\n\n'
+          : 'Imaginea a fost încărcată cu succes!\n\n';
+        
+        alert(message + 
+              (this.autoAnalyze ? 'Analiza este în curs de desfășurare...' : 'Poți analiza imaginea mai târziu.'));
+        
+        // Dacă autoAnalyze este activat, pornește analiza
+        if (this.autoAnalyze && newImage.imageUrl) {
+          console.log('🤖 Pornire analiză automată pentru imagine nouă...');
+          this.triggerAutoAnalyze(newImage.imageUrl, newImage.id);
+        }
       },
       error: (error: any) => {
         console.error('❌ Eroare la încărcarea imaginii:', error);

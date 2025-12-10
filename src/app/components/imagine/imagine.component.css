@@ -1368,6 +1368,112 @@ textarea.form-control {
   }
 }
 
+/* ============================================
+   DICOM PLACEHOLDER & THUMBNAILS
+   ============================================ */
+
+/* Placeholder pentru fișiere DICOM în viewer principal */
+.dicom-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-align: center;
+  min-height: 500px;
+  border-radius: 8px;
+}
+
+.dicom-placeholder i {
+  font-size: 5rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+}
+
+.dicom-placeholder h4 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.dicom-placeholder p {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  opacity: 0.9;
+}
+
+.dicom-placeholder .btn {
+  background: white;
+  color: #667eea;
+  border: none;
+  font-weight: 600;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.dicom-placeholder .btn:hover {
+  background: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.dicom-info {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+.dicom-info h6 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.dicom-info small {
+  font-size: 0.95rem;
+  opacity: 0.95;
+  line-height: 1.8;
+}
+
+/* Thumbnail DICOM în lista de imagini */
+.dicom-thumbnail {
+  width: 100%;
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 2.5rem;
+  transition: all 0.3s;
+}
+
+.dicom-thumbnail i {
+  font-size: 2.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.dicom-thumbnail small {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.patient-image-item:hover .dicom-thumbnail {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+
 
 
 
