@@ -18,11 +18,28 @@
         </div>
         <div class="card-body p-0">
           <div class="image-container" *ngIf="image?.imageUrl">
-            <img [src]="image?.imageUrl" 
+            <!-- Afișare DICOM -->
+            <div *ngIf="image?.isDicom" class="dicom-placeholder">
+              <i class="bi bi-file-earmark-medical"></i>
+              <h4>Fișier DICOM</h4>
+              <p class="text-muted">Fișierele DICOM nu pot fi afișate direct în browser</p>
+              <a [href]="image?.imageUrl" download class="btn btn-outline-primary mt-3">
+                <i class="bi bi-download"></i> Descarcă fișierul DICOM
+              </a>
+              <div class="dicom-info mt-3" *ngIf="image?.dicomMetadata">
+                <h6>Preview Metadate:</h6>
+                <small class="d-block">Modalitate: {{ image?.dicomMetadata?.modality || 'N/A' }}</small>
+                <small class="d-block">Pacient: {{ image?.dicomMetadata?.patientName || 'N/A' }}</small>
+                <small class="d-block">Data studiu: {{ image?.dicomMetadata?.studyDate || 'N/A' }}</small>
+              </div>
+            </div>
+            <!-- Afișare imagine normală -->
+            <img *ngIf="!image?.isDicom"
+                 [src]="image?.imageUrl" 
                  [alt]="'Imagine ' + image?.id" 
                  class="medical-image"
                  (click)="toggleZoom()">
-            <div class="zoom-hint">
+            <div class="zoom-hint" *ngIf="!image?.isDicom">
               <i class="bi bi-zoom-in"></i> Click pentru zoom
             </div>
             
@@ -61,6 +78,7 @@
         <div class="card-header bg-info text-white">
           <h5 class="mb-0">
             <i class="bi bi-info-circle"></i> Informații Imagine
+            <span *ngIf="image?.isDicom" class="badge bg-warning ms-2">DICOM</span>
           </h5>
         </div>
         <div class="card-body">
@@ -101,6 +119,13 @@
               <span class="text-muted">
                 <i class="bi bi-info-circle"></i> Nu există observații pentru această imagine
               </span>
+            </div>
+            
+            <!-- Buton pentru a vedea metadatele DICOM -->
+            <div class="detail-row full-width" *ngIf="image?.isDicom && image?.dicomMetadata">
+              <button class="btn btn-sm btn-outline-info w-100 mt-2" (click)="openDicomMetadataModal()">
+                <i class="bi bi-file-earmark-medical"></i> Vizualizează Metadate DICOM
+              </button>
             </div>
           </div>
           
@@ -196,7 +221,13 @@
                  class="patient-image-item"
                  [class.active-image]="img.id === image?.id"
                  (click)="selectImage(img)">
-              <img [src]="img.imageUrl" [alt]="'Imagine ' + img.id" class="thumbnail-image">
+              <!-- DICOM thumbnail -->
+              <div *ngIf="img.isDicom" class="dicom-thumbnail">
+                <i class="bi bi-file-earmark-medical"></i>
+                <small>DICOM</small>
+              </div>
+              <!-- Imagine normală -->
+              <img *ngIf="!img.isDicom" [src]="img.imageUrl" [alt]="'Imagine ' + img.id" class="thumbnail-image">
               <div class="image-overlay" *ngIf="img.id === image?.id">
                 <i class="bi bi-check-circle-fill"></i>
               </div>
@@ -541,22 +572,32 @@
             <input 
               type="file" 
               #fileInput
-              accept="image/*"
+              accept="image/*,.dcm,.dicom,application/dicom"
               (change)="onFileSelected($event)"
               style="display: none;">
             
             <div *ngIf="!newImageFile" class="upload-prompt">
               <i class="bi bi-cloud-arrow-up upload-icon"></i>
               <p class="upload-text">Click sau trage imaginea aici</p>
-              <small class="text-muted">Format acceptat: JPG, PNG, DICOM</small>
+              <small class="text-muted">Format acceptat: JPG, PNG, DICOM (.dcm)</small>
             </div>
             
             <div *ngIf="newImageFile" class="file-preview">
               <img *ngIf="imagePreviewUrl" [src]="imagePreviewUrl" alt="Preview" class="preview-image">
+              <div *ngIf="!imagePreviewUrl && isDicomFile" class="dicom-placeholder">
+                <i class="bi bi-file-earmark-medical"></i>
+                <p>Fișier DICOM</p>
+              </div>
               <div class="file-info">
-                <i class="bi bi-file-image"></i>
+                <i class="bi" [ngClass]="isDicomFile ? 'bi-file-earmark-medical' : 'bi-file-image'"></i>
                 <span>{{ newImageFile.name }}</span>
                 <small>({{ formatFileSize(newImageFile.size) }})</small>
+                <span *ngIf="isDicomFile" class="badge bg-warning ms-2">DICOM</span>
+              </div>
+              <div *ngIf="isDicomFile && dicomMetadata" class="mt-2">
+                <button type="button" class="btn btn-sm btn-info" (click)="openDicomMetadataModal()">
+                  <i class="bi bi-info-circle"></i> Vezi Metadate
+                </button>
               </div>
               <button type="button" class="btn btn-sm btn-danger mt-2" (click)="removeFile($event)">
                 <i class="bi bi-trash"></i> Șterge
@@ -630,3 +671,137 @@
   </div>
 </div>
 
+<!-- Modal Metadate DICOM -->
+<div class="modal-overlay" *ngIf="showDicomMetadataModal" (click)="closeDicomMetadataModal()">
+  <div class="modal-container large-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h4>
+        <i class="bi bi-file-earmark-medical"></i> Metadate DICOM
+      </h4>
+      <button class="close-btn" (click)="closeDicomMetadataModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="dicom-metadata-grid" *ngIf="dicomMetadata || image?.dicomMetadata">
+        <div class="metadata-section">
+          <h5><i class="bi bi-person"></i> Informații Pacient</h5>
+          <div class="metadata-item">
+            <span class="metadata-label">Nume pacient:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.patientName || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">ID pacient:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.patientID || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Data nașterii:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.patientBirthDate || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Sex:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.patientSex || 'N/A' }}</span>
+          </div>
+        </div>
+
+        <div class="metadata-section">
+          <h5><i class="bi bi-calendar"></i> Informații Studiu</h5>
+          <div class="metadata-item">
+            <span class="metadata-label">Data studiului:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.studyDate || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Ora studiului:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.studyTime || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Descriere studiu:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.studyDescription || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Descriere serie:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.seriesDescription || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Modalitate:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.modality || 'N/A' }}</span>
+          </div>
+        </div>
+
+        <div class="metadata-section">
+          <h5><i class="bi bi-hospital"></i> Informații Echipament</h5>
+          <div class="metadata-item">
+            <span class="metadata-label">Instituție:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.institutionName || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Producător:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.manufacturer || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Model:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.manufacturerModelName || 'N/A' }}</span>
+          </div>
+        </div>
+
+        <div class="metadata-section">
+          <h5><i class="bi bi-grid"></i> Parametri Imagine</h5>
+          <div class="metadata-item">
+            <span class="metadata-label">Dimensiuni:</span>
+            <span class="metadata-value">
+              {{ (dicomMetadata || image?.dicomMetadata)?.rows || 'N/A' }} × 
+              {{ (dicomMetadata || image?.dicomMetadata)?.columns || 'N/A' }} pixeli
+            </span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Grosime secțiune:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.sliceThickness || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Pixel Spacing:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.pixelSpacing || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Bits alocați:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.bitsAllocated || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Bits stocați:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.bitsStored || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Interpretare fotometrică:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.photometricInterpretation || 'N/A' }}</span>
+          </div>
+        </div>
+
+        <div class="metadata-section">
+          <h5><i class="bi bi-sliders"></i> Ferestre Vizualizare</h5>
+          <div class="metadata-item">
+            <span class="metadata-label">Window Center:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.windowCenter || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Window Width:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.windowWidth || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Rescale Intercept:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.rescaleIntercept || 'N/A' }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Rescale Slope:</span>
+            <span class="metadata-value">{{ (dicomMetadata || image?.dicomMetadata)?.rescaleSlope || 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeDicomMetadataModal()">
+        <i class="bi bi-x-lg"></i> Închide
+      </button>
+    </div>
+  </div>
+</div>

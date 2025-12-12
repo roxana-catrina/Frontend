@@ -1,3 +1,33 @@
+export interface DicomMetadata {
+  patientName?: string;
+  patientID?: string;
+  patientBirthDate?: string;
+  patientSex?: string;
+  studyDate?: string;
+  studyTime?: string;
+  studyDescription?: string;
+  seriesDescription?: string;
+  modality?: string;
+  institutionName?: string;
+  manufacturer?: string;
+  manufacturerModelName?: string;
+  sliceThickness?: string;
+  imagePosition?: string;
+  imageOrientation?: string;
+  pixelSpacing?: string;
+  rows?: number;
+  columns?: number;
+  bitsAllocated?: number;
+  bitsStored?: number;
+  samplesPerPixel?: number;
+  photometricInterpretation?: string;
+  windowCenter?: string;
+  windowWidth?: string;
+  rescaleIntercept?: string;
+  rescaleSlope?: string;
+  [key: string]: any; // Pentru alte metadate custom
+}
+
 export interface Imagine {
   id: string;
   pacientId: string; // Reference to Pacient ID
@@ -5,6 +35,10 @@ export interface Imagine {
   tip: string;
   imageUrl: string;
   cloudinaryPublicId: string;
+  
+  // DICOM metadata
+  isDicom?: boolean;
+  dicomMetadata?: DicomMetadata;
   
   // Informații despre analiză
   areTumoare?: boolean;

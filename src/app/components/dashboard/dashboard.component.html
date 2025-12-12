@@ -163,10 +163,18 @@
             <div *ngFor="let pacient of filteredPacienti; let i = index" class="patient-card" 
                  (click)="viewPacient(pacient)">
               <div class="image-wrapper">
-                <img *ngIf="pacient.imagini && pacient.imagini.length > 0" 
+                <!-- Afișare DICOM placeholder -->
+                <div *ngIf="pacient.imagini && pacient.imagini.length > 0 && pacient.imagini[0].isDicom" 
+                     class="patient-image dicom-thumbnail-dashboard">
+                  <i class="bi bi-file-earmark-medical"></i>
+                  <small>DICOM</small>
+                </div>
+                <!-- Afișare imagine normală -->
+                <img *ngIf="pacient.imagini && pacient.imagini.length > 0 && !pacient.imagini[0].isDicom" 
                      [src]="pacient.imagini[0].imageUrl" 
                      [alt]="'Prima imagine a pacientului ' + pacient.numePacient" 
                      class="patient-image" />
+                <!-- Placeholder fără imagini -->
                 <div *ngIf="!pacient.imagini || pacient.imagini.length === 0" 
                      class="patient-image no-image">
                   <i class="bi bi-person"></i>

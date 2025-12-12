@@ -1266,6 +1266,213 @@ textarea.form-control {
   gap: 1rem;
 }
 
+/* DICOM Support Styles */
+.dicom-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.dicom-placeholder i {
+  font-size: 4rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.9;
+}
+
+.dicom-placeholder p {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.large-modal .modal-container {
+  max-width: 900px;
+  width: 90vw;
+}
+
+.dicom-metadata-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.metadata-section {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+}
+
+.metadata-section h5 {
+  color: #495057;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.metadata-section h5 i {
+  color: #007bff;
+}
+
+.metadata-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.metadata-item:last-child {
+  border-bottom: none;
+}
+
+.metadata-label {
+  font-weight: 600;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.metadata-value {
+  color: #212529;
+  font-size: 0.9rem;
+  text-align: right;
+  max-width: 60%;
+  word-break: break-word;
+}
+
+/* Responsive pentru metadate DICOM */
+@media (max-width: 768px) {
+  .dicom-metadata-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .metadata-item {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .metadata-value {
+    text-align: left;
+    max-width: 100%;
+  }
+}
+
+/* ============================================
+   DICOM PLACEHOLDER & THUMBNAILS
+   ============================================ */
+
+/* Placeholder pentru fișiere DICOM în viewer principal */
+.dicom-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-align: center;
+  min-height: 500px;
+  border-radius: 8px;
+}
+
+.dicom-placeholder i {
+  font-size: 5rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+}
+
+.dicom-placeholder h4 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.dicom-placeholder p {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  opacity: 0.9;
+}
+
+.dicom-placeholder .btn {
+  background: white;
+  color: #667eea;
+  border: none;
+  font-weight: 600;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.dicom-placeholder .btn:hover {
+  background: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.dicom-info {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+.dicom-info h6 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.dicom-info small {
+  font-size: 0.95rem;
+  opacity: 0.95;
+  line-height: 1.8;
+}
+
+/* Thumbnail DICOM în lista de imagini */
+.dicom-thumbnail {
+  width: 100%;
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 2.5rem;
+  transition: all 0.3s;
+}
+
+.dicom-thumbnail i {
+  font-size: 2.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.dicom-thumbnail small {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.patient-image-item:hover .dicom-thumbnail {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
 
 
 
