@@ -462,7 +462,7 @@
       <button class="btn btn-secondary" (click)="closeProgramariZiModal()">
         <i class="bi bi-x-circle"></i> Închide
       </button>
-      <button class="btn btn-success" (click)="openCreateProgramareModal()">
+      <button *ngIf="!isSelectedDateInPast()" class="btn btn-success" (click)="openCreateProgramareModal()">
         <i class="bi bi-plus-circle"></i> Adaugă Programare
       </button>
     </div>

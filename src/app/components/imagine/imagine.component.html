@@ -64,10 +64,10 @@
             <div class="action-buttons">
               <button type="button" class="btn btn-primary me-2" (click)="openImageInfoModal()">
                 <i class="bi bi-pencil-square"></i> Editează Info
-              </button>
-              <button type="button" class="btn btn-danger" (click)="deleteImage()">
+             </button>
+            <!--   <button type="button" class="btn btn-danger" (click)="deleteImage()">
                 <i class="bi bi-trash"></i> Șterge
-              </button>
+              </button> -->
             </div>
           </div>
         </div>
@@ -78,7 +78,7 @@
         <div class="card-header bg-info text-white">
           <h5 class="mb-0">
             <i class="bi bi-info-circle"></i> Informații Imagine
-            <span *ngIf="image?.isDicom" class="badge bg-warning ms-2">DICOM</span>
+            <span *ngIf="image.isDicom" class="badge bg-warning ms-2">DICOM</span>
           </h5>
         </div>
         <div class="card-body">
@@ -87,13 +87,13 @@
               <span class="detail-label">
                 <i class="bi bi-tag"></i> Nume:
               </span>
-              <span class="detail-value">{{ image?.nume || 'Fără nume' }}</span>
+              <span class="detail-value">{{ image.nume || 'Fără nume' }}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">
                 <i class="bi bi-file-earmark-medical"></i> Tip:
               </span>
-              <span class="detail-value">{{ image?.tip || 'Necunoscut' }}</span>
+              <span class="detail-value">{{ image.tip || 'Necunoscut' }}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">
@@ -101,28 +101,28 @@
               </span>
               <span class="detail-value">{{ (image && image.dataIncarcare) ? (image.dataIncarcare | date:'dd/MM/yyyy HH:mm') : 'N/A' }}</span>
             </div>
-            <div class="detail-row" *ngIf="image?.dataModificare">
+            <div class="detail-row" *ngIf="image.dataModificare">
               <span class="detail-label">
                 <i class="bi bi-clock-history"></i> Ultima modificare:
               </span>
               <span class="detail-value">{{ (image && image.dataModificare) ? (image.dataModificare | date:'dd/MM/yyyy HH:mm') : 'N/A' }}</span>
             </div>
-            <div class="detail-row full-width" *ngIf="image?.observatii">
+            <div class="detail-row full-width" *ngIf="image.observatii">
               <span class="detail-label">
                 <i class="bi bi-card-text"></i> Observații:
               </span>
               <div class="detail-value-box">
-                {{ image?.observatii }}
+                {{ image.observatii }}
               </div>
             </div>
-            <div class="detail-row full-width" *ngIf="!image?.observatii">
+            <div class="detail-row full-width" *ngIf="!image.observatii">
               <span class="text-muted">
                 <i class="bi bi-info-circle"></i> Nu există observații pentru această imagine
               </span>
             </div>
             
             <!-- Buton pentru a vedea metadatele DICOM -->
-            <div class="detail-row full-width" *ngIf="image?.isDicom && image?.dicomMetadata">
+            <div class="detail-row full-width" *ngIf="image.isDicom && image.dicomMetadata">
               <button class="btn btn-sm btn-outline-info w-100 mt-2" (click)="openDicomMetadataModal()">
                 <i class="bi bi-file-earmark-medical"></i> Vizualizează Metadate DICOM
               </button>
@@ -130,13 +130,13 @@
           </div>
           
           <!-- Buton Analiză Tumoare -->
-          <div class="mt-3" *ngIf="image?.statusAnaliza !== 'in_procesare' && (image?.statusAnaliza !== 'finalizata' || image?.areTumoare === null)">
+          <div class="mt-3" *ngIf="image.statusAnaliza !== 'in_procesare' && (image.statusAnaliza !== 'finalizata' || image.areTumoare === null)">
             <button 
               class="btn btn-warning w-100"
               (click)="analyzeImage()"
               [disabled]="isAnalyzing">
               <i class="bi" [ngClass]="isAnalyzing ? 'bi-hourglass-split' : 'bi-cpu'"></i>
-              {{ isAnalyzing ? 'Se analizează...' : (image?.statusAnaliza === 'finalizata' ? 'Re-analizează Tumoare cu AI' : 'Analizează Tumoare cu AI') }}
+              {{ isAnalyzing ? 'Se analizează...' : (image.statusAnaliza === 'finalizata' ? 'Re-analizează Tumoare cu AI' : 'Analizează Tumoare cu AI') }}
             </button>
             <small class="text-muted d-block mt-2 text-center">
               <i class="bi bi-info-circle"></i> 
@@ -144,7 +144,7 @@
             </small>
           </div>
           
-          <div class="mt-3" *ngIf="image?.statusAnaliza === 'in_procesare'">
+          <div class="mt-3" *ngIf="image.statusAnaliza === 'in_procesare'">
             <div class="alert alert-warning mb-0">
               <i class="bi bi-hourglass-split"></i>
               <strong>Analiza este în curs...</strong>
@@ -598,8 +598,8 @@
                 <button type="button" class="btn btn-sm btn-info" (click)="openDicomMetadataModal()">
                   <i class="bi bi-info-circle"></i> Vezi Metadate
                 </button>
-              </div>
-              <button type="button" class="btn btn-sm btn-danger mt-2" (click)="removeFile($event)">
+               </div>
+            <button type="button" class="btn btn-sm btn-danger mt-2" (click)="removeFile($event)">
                 <i class="bi bi-trash"></i> Șterge
               </button>
             </div>
@@ -803,5 +803,20 @@
         <i class="bi bi-x-lg"></i> Închide
       </button>
     </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast-container" *ngIf="showToast">
+  <div class="toast" [ngClass]="'toast-' + toastType">
+    <div class="toast-icon">
+      <i class="bi" [ngClass]="toastIcon"></i>
+    </div>
+    <div class="toast-content">
+      <p class="toast-message">{{ toastMessage }}</p>
+    </div>
+    <button class="toast-close" (click)="closeToast()">
+      <i class="bi bi-x-lg"></i>
+    </button>
   </div>
 </div>

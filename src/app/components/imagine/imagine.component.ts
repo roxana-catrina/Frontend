@@ -60,6 +60,12 @@ export class ImagineComponent implements OnInit {
   dicomMetadata: DicomMetadata | null = null;
   showDicomMetadataModal: boolean = false;
 
+  // Toast notifications
+  showToast: boolean = false;
+  toastMessage: string = '';
+  toastType: 'success' | 'error' | 'info' = 'success';
+  toastIcon: string = '';
+
   // Modal poza profil pacient
   showProfilePictureModal: boolean = false;
   profilePictureFile: File | null = null;
@@ -377,11 +383,11 @@ export class ImagineComponent implements OnInit {
         console.log('✅ Informații salvate:', updated);
         this.image = updated;
         this.closeImageInfoModal();
-        alert('Informațiile au fost salvate cu succes!');
+        this.showToastMessage('Informațiile au fost salvate cu succes!', 'success');
       },
       error: (error: any) => {
-        console.error('❌ Eroare la salvarea informațiilor:', error);
-        alert('Eroare la salvarea informațiilor: ' + (error.error?.message || error.message));
+        console.error('Eroare la salvarea informațiilor:', error);
+        this.showToastMessage('Eroare la salvarea informațiilor: ' + (error.error?.message || error.message), 'error');
       }
     });
   }
@@ -612,7 +618,7 @@ export class ImagineComponent implements OnInit {
     // Verifică dimensiunea (max 50MB pentru DICOM, 10MB pentru altele)
     const maxSize = isDicom ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      alert(`Fișierul este prea mare! Dimensiunea maximă este ${isDicom ? '50MB' : '10MB'}.`);
+      this.showToastMessage(`Fișierul este prea mare! Dimensiunea maximă este ${isDicom ? '50MB' : '10MB'}.`, 'error');
       return;
     }
 
@@ -802,12 +808,12 @@ export class ImagineComponent implements OnInit {
 
   uploadNewImage(): void {
     if (!this.newImageFile || !this.pacient) {
-      alert('Te rugăm să selectezi o imagine și să completezi informațiile!');
+      this.showToastMessage('Te rugăm să selectezi o imagine și să compleți informațiile!', 'error');
       return;
     }
 
     if (!this.newImageData.nume || !this.newImageData.tip) {
-      alert('Te rugăm să completezi numele și tipul imaginii!');
+      this.showToastMessage('Te rugăm să compleți numele și tipul imaginii!', 'error');
       return;
     }
 
@@ -864,11 +870,10 @@ export class ImagineComponent implements OnInit {
         this.closeAddImageModal();
         
         const message = this.isDicomFile 
-          ? 'Imaginea DICOM a fost încărcată cu succes împreună cu metadatele!\n\n'
-          : 'Imaginea a fost încărcată cu succes!\n\n';
+          ? 'Imaginea DICOM a fost încărcată cu succes împreună cu metadatele!'
+          : 'Imaginea a fost încărcată cu succes!';
         
-        alert(message + 
-              (this.autoAnalyze ? 'Analiza este în curs de desfășurare...' : 'Poți analiza imaginea mai târziu.'));
+        this.showToastMessage(message, 'success');
         
         // Dacă autoAnalyze este activat, pornește analiza
         if (this.autoAnalyze && newImage.imageUrl) {
@@ -879,7 +884,7 @@ export class ImagineComponent implements OnInit {
       error: (error: any) => {
         console.error('❌ Eroare la încărcarea imaginii:', error);
         this.isUploading = false;
-        alert('Eroare la încărcarea imaginii: ' + (error.error?.message || error.message));
+        this.showToastMessage('Eroare la încărcarea imaginii: ' + (error.error?.message || error.message), 'error');
       }
     });
   }
@@ -944,11 +949,50 @@ export class ImagineComponent implements OnInit {
       error: (error) => {
         console.error('❌ Eroare la auto-analiză:', error);
         this.isAnalyzing = false;
-        alert('Eroare la comunicarea cu serviciul de analiză.');
+        this.showToastMessage('Eroare la comunicarea cu serviciul de analiză.', 'error');
       }
     });
   }
+
+  /**
+   * Afișează un mesaj Toast elegant
+   */
+  showToastMessage(message: string, type: 'success' | 'error' | 'info' = 'success'): void {
+    this.toastMessage = message;
+    this.toastType = type;
+    
+    // Setează iconița corespunzătoare
+    switch (type) {
+      case 'success':
+        this.toastIcon = 'bi-check-circle-fill';
+        break;
+      case 'error':
+        this.toastIcon = 'bi-exclamation-circle-fill';
+        break;
+      case 'info':
+        this.toastIcon = 'bi-info-circle-fill';
+        break;
+    }
+    
+    this.showToast = true;
+    
+    // Ascunde automat după 4 secunde
+    setTimeout(() => {
+      this.showToast = false;
+    }, 4000);
+  }
+
+  /**
+   * Închide Toast-ul manual
+   */
+  closeToast(): void {
+    this.showToast = false;
+  }
 }  
+
+
+
+
 
 
 

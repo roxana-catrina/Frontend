@@ -625,6 +625,14 @@ loadDashboardData(): void {
   selectDay(day: any) {
     if (day.otherMonth) return;
     
+    // Verifică dacă ziua selectată este în trecut
+    const selectedDate = new Date(this.currentYear, this.currentMonth, day.day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    const isPastDay = selectedDate < today;
+    
     // Resetează selecția anterioară
     this.calendarDays.forEach(d => d.selected = false);
     day.selected = true;
@@ -644,12 +652,18 @@ loadDashboardData(): void {
     });
 
     if (this.programariZiSelectata.length > 0) {
-      // Dacă există programări, arată lista
+      // Dacă există programări, arată lista (fie zi trecută, fie viitoare)
       console.log(`Ziua ${day.day} are ${this.programariZiSelectata.length} programări`);
       this.showProgramariZiModal = true;
     } else {
-      // Dacă nu există, deschide modalul pentru creare programare
-      this.showProgramareModal = true;
+      // Dacă nu există programări
+      if (isPastDay) {
+        // Zi din trecut fără programări - nu face nimic sau arată mesaj
+        this.showCustomNotification('Nu există programări în această zi din trecut.', 'warning');
+      } else {
+        // Zi viitoare fără programări - permite crearea de programare nouă
+        this.showProgramareModal = true;
+      }
     }
   }
 
@@ -722,12 +736,14 @@ loadDashboardData(): void {
         console.log('   - Date brute:', JSON.stringify(programari, null, 2));
         
         if (programari && programari.length > 0) {
-          // Sortează după dată și ia primele 5
+          const now = new Date();
+          // Filtrează doar programările viitoare (exclude cele din trecut)
           this.programariViitoare = programari
+            .filter(p => new Date(p.dataProgramare) >= now)
             .sort((a, b) => new Date(a.dataProgramare).getTime() - new Date(b.dataProgramare).getTime())
             .slice(0, 5);
           
-          console.log('   - Programări viitoare setate (top 5):', this.programariViitoare.length);
+          console.log('   📅 Programări după filtrare (doar viitoare):', this.programariViitoare.length);
           
           this.programariViitoare.forEach((prog, index) => {
             console.log(`   ${index + 1}. Pacient: ${prog.pacientNume} ${prog.pacientPrenume}`);
@@ -794,6 +810,13 @@ loadDashboardData(): void {
     const [hours, minutes] = this.programareOra.split(':');
     const dataProgramare = new Date(this.selectedDate);
     dataProgramare.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+    // Verifică dacă data programării este în trecut
+    const now = new Date();
+    if (dataProgramare < now) {
+      this.showCustomNotification('Nu poți crea programări în trecut! Te rog selectează o dată viitoare.', 'warning');
+      return;
+    }
 
     console.log('=== VERIFICARE CONFLICT PROGRAMARE ===');
     console.log('Data nouă:', dataProgramare);
@@ -1051,6 +1074,15 @@ loadDashboardData(): void {
       year: 'numeric' 
     };
     return this.selectedDate.toLocaleDateString('ro-RO', options);
+  }
+
+  isSelectedDateInPast(): boolean {
+    if (!this.selectedDate) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selected = new Date(this.selectedDate);
+    selected.setHours(0, 0, 0, 0);
+    return selected < today;
   }
 
   // Sistem de notificări personalizate
