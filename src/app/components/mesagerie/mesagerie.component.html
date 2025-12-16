@@ -240,7 +240,45 @@
               </div>
 
               <!-- Imagini -->
-              <div class="patient-images-info" *ngIf="message.pacientNumarImagini !== undefined">
+              <div class="patient-images-section" *ngIf="message.pacientImagini && getPacientImagini(message).length > 0">
+                <h6><i class="bi bi-images"></i> Imagini Medicale ({{ getPacientImagini(message).length }})</h6>
+                <div class="images-list">
+                  <div *ngFor="let imagine of getPacientImagini(message); let i = index" class="image-item">
+                    <div class="image-item-header">
+                      <span class="image-number">{{ i + 1 }}.</span>
+                      <strong>{{ imagine.nume }}</strong>
+                    </div>
+                    <div class="image-item-details">
+                      <span><i class="bi bi-file-medical"></i> {{ imagine.tip }}</span>
+                      <span><i class="bi bi-calendar"></i> {{ imagine.dataIncarcare | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    <div class="image-analysis" *ngIf="hasAnalysis(imagine)">
+                      <div class="analysis-result" [class.has-tumor]="imagine.areTumoare" [class.no-tumor]="!imagine.areTumoare">
+                        <i class="bi" [ngClass]="imagine.areTumoare ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'"></i>
+                        <span>{{ imagine.areTumoare ? '⚠️ Tumoare detectată' : '✓ Fără tumoare' }}</span>
+                        <span *ngIf="imagine.tipTumoare" class="tumor-type">({{ imagine.tipTumoare }})</span>
+                      </div>
+                      <div class="confidence-display" *ngIf="imagine.confidenta">
+                        <small>Încredere: {{ imagine.confidenta }}%</small>
+                        <div class="confidence-bar-mini">
+                          <div class="confidence-fill" [style.width.%]="imagine.confidenta"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="image-status-pending" *ngIf="!hasAnalysis(imagine) && imagine.statusAnaliza === 'in_procesare'">
+                      <i class="bi bi-hourglass-split"></i>
+                      <small>Analiză în curs...</small>
+                    </div>
+                    <div class="image-status-pending" *ngIf="!hasAnalysis(imagine) && (!imagine.statusAnaliza || imagine.statusAnaliza === 'neanalizata')">
+                      <i class="bi bi-question-circle"></i>
+                      <small>Neanalizată</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fallback dacă nu sunt imagini -->
+              <div class="patient-images-info" *ngIf="!message.pacientImagini && message.pacientNumarImagini !== undefined">
                 <i class="bi bi-images"></i>
                 <span>{{ message.pacientNumarImagini }} {{ message.pacientNumarImagini === 1 ? 'imagine medicală' : 'imagini medicale' }} disponibile</span>
               </div>

@@ -23,6 +23,7 @@ export interface Mesaj {
   pacientIstoricMedical?: string;
   pacientDetalii?: string;
   pacientNumarImagini?: number;
+  pacientImagini?: string; // JSON string cu array de imagini
 }
 
 export interface MesajRequest {
@@ -42,6 +43,19 @@ export interface MesajRequest {
   pacientIstoricMedical?: string;
   pacientDetalii?: string;
   pacientNumarImagini?: number;
+  pacientImagini?: string; // JSON string cu array de imagini
+}
+
+// Interface pentru informații imagine partajată
+export interface ImaginePartajata {
+  id: string;
+  nume: string;
+  tip: string;
+  dataIncarcare: string;
+  statusAnaliza?: string;
+  areTumoare?: boolean;
+  tipTumoare?: string;
+  confidenta?: number;
 }
 
 export interface Notificare {

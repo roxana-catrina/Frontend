@@ -1052,6 +1052,167 @@
   font-size: 1.25rem;
 }
 
+/* Secțiune imagini detaliate */
+.patient-images-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.patient-images-section h6 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.patient-images-section h6 i {
+  color: #667eea;
+  font-size: 1rem;
+}
+
+.images-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.image-item {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.2s;
+}
+
+.image-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.image-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.image-number {
+  background: #667eea;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.image-item-header strong {
+  color: #2d3748;
+  font-size: 0.9rem;
+}
+
+.image-item-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: #4a5568;
+}
+
+.image-item-details span {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.image-item-details i {
+  color: #667eea;
+  font-size: 0.9rem;
+}
+
+.image-analysis {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 6px;
+}
+
+.analysis-result {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.analysis-result.has-tumor {
+  color: #dc3545;
+}
+
+.analysis-result.no-tumor {
+  color: #28a745;
+}
+
+.analysis-result i {
+  font-size: 1rem;
+}
+
+.tumor-type {
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-weight: 400;
+}
+
+.confidence-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.confidence-display small {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.confidence-bar-mini {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.confidence-bar-mini .confidence-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transition: width 0.3s ease;
+}
+
+.image-status-pending {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #fff3cd;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #856404;
+  font-size: 0.8rem;
+}
+
+.image-status-pending i {
+  font-size: 1rem;
+}
+
 .patient-card-footer {
   padding: 0.75rem 1rem;
   background: #f7fafc;

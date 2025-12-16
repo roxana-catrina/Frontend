@@ -1081,6 +1081,18 @@ export class ImagineComponent implements OnInit {
     // Calculează numărul de imagini
     const numarImagini = this.pacient.imagini ? this.pacient.imagini.length : 0;
 
+    // Pregătește informațiile despre imagini pentru partajare
+    const imaginiPartajate = this.pacient.imagini ? this.pacient.imagini.map(img => ({
+      id: img.id,
+      nume: img.nume || 'Fără nume',
+      tip: img.tip || 'Necunoscut',
+      dataIncarcare: img.dataIncarcare,
+      statusAnaliza: img.statusAnaliza,
+      areTumoare: img.areTumoare,
+      tipTumoare: img.tipTumoare,
+      confidenta: img.confidenta
+    })) : [];
+
     const mesajRequest: MesajRequest = {
       expeditorId: currentUserId,
       destinatarId: this.selectedDoctor.id,
@@ -1095,10 +1107,12 @@ export class ImagineComponent implements OnInit {
       pacientNumarTelefon: this.pacient.numarTelefon || '',
       pacientIstoricMedical: this.pacient.istoricMedical || '',
       pacientDetalii: this.pacient.detalii || '',
-      pacientNumarImagini: numarImagini
+      pacientNumarImagini: numarImagini,
+      pacientImagini: JSON.stringify(imaginiPartajate) // Serializează array-ul de imagini
     };
 
     console.log('📤 Partajare pacient:', mesajRequest);
+    console.log('📷 Imagini partajate:', imaginiPartajate);
 
     this.mesajService.trimiteMesaj(mesajRequest).subscribe({
       next: (response) => {

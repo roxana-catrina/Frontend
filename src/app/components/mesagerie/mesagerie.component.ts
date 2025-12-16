@@ -4,7 +4,7 @@ import { MesajService } from '../../service/mesaj/mesaj.service';
 import { WebsocketService } from '../../service/websocket/websocket.service';
 import { NotificareService } from '../../service/notificare/notificare.service';
 import { Router } from '@angular/router';
-import { Mesaj, MesajRequest } from '../../models/mesaj';
+import { Mesaj, MesajRequest, ImaginePartajata } from '../../models/mesaj';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -458,6 +458,27 @@ export class MesagerieComponent implements OnInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  /**
+   * Parsează și returnează imaginile partajate dintr-un mesaj
+   */
+  getPacientImagini(message: Mesaj): ImaginePartajata[] {
+    if (!message.pacientImagini) return [];
+    
+    try {
+      return JSON.parse(message.pacientImagini);
+    } catch (error) {
+      console.error('Eroare la parsarea imaginilor pacientului:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Verifică dacă o imagine are analiză finalizată
+   */
+  hasAnalysis(imagine: ImaginePartajata): boolean {
+    return imagine.statusAnaliza === 'finalizata' && imagine.areTumoare !== null && imagine.areTumoare !== undefined;
   }
 
   // Polling pentru mesaje noi (workaround până când WebSocket funcționează)
