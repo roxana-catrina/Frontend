@@ -1078,8 +1078,8 @@ export class ImagineComponent implements OnInit {
 
     this.isSharingPatient = true;
 
-    // Calculează vârsta pacientului
-    const age = this.calculateAge(this.pacient.dataNasterii);
+    // Calculează numărul de imagini
+    const numarImagini = this.pacient.imagini ? this.pacient.imagini.length : 0;
 
     const mesajRequest: MesajRequest = {
       expeditorId: currentUserId,
@@ -1091,7 +1091,11 @@ export class ImagineComponent implements OnInit {
       pacientPrenume: this.pacient.prenumePacient,
       pacientCnp: this.pacient.cnp,
       pacientDataNasterii: this.pacient.dataNasterii,
-      pacientSex: this.pacient.sex
+      pacientSex: this.pacient.sex,
+      pacientNumarTelefon: this.pacient.numarTelefon || '',
+      pacientIstoricMedical: this.pacient.istoricMedical || '',
+      pacientDetalii: this.pacient.detalii || '',
+      pacientNumarImagini: numarImagini
     };
 
     console.log('📤 Partajare pacient:', mesajRequest);

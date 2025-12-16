@@ -44,6 +44,18 @@ public class Mesaj {
     @Column(name = "pacient_sex", length = 20)
     private String pacientSex;
     
+    @Column(name = "pacient_numar_telefon", length = 20)
+    private String pacientNumarTelefon;
+    
+    @Column(name = "pacient_istoric_medical", columnDefinition = "TEXT")
+    private String pacientIstoricMedical;
+    
+    @Column(name = "pacient_detalii", columnDefinition = "TEXT")
+    private String pacientDetalii;
+    
+    @Column(name = "pacient_numar_imagini")
+    private Integer pacientNumarImagini;
+    
     // ==================== GETTERS ȘI SETTERS ====================
     
     public String getTip() {
@@ -128,6 +140,10 @@ public class MesajRequest {
     private String pacientCnp;
     private String pacientDataNasterii;
     private String pacientSex;
+    private String pacientNumarTelefon;
+    private String pacientIstoricMedical;
+    private String pacientDetalii;
+    private Integer pacientNumarImagini;
     
     // ==================== GETTERS ȘI SETTERS ====================
     
@@ -230,10 +246,16 @@ public class MesajService {
             mesaj.setPacientCnp(mesajRequest.getPacientCnp());
             mesaj.setPacientDataNasterii(mesajRequest.getPacientDataNasterii());
             mesaj.setPacientSex(mesajRequest.getPacientSex());
+            mesaj.setPacientNumarTelefon(mesajRequest.getPacientNumarTelefon());
+            mesaj.setPacientIstoricMedical(mesajRequest.getPacientIstoricMedical());
+            mesaj.setPacientDetalii(mesajRequest.getPacientDetalii());
+            mesaj.setPacientNumarImagini(mesajRequest.getPacientNumarImagini());
             
             System.out.println("📋 Mesaj cu pacient partajat salvat:");
             System.out.println("   - Pacient: " + mesajRequest.getPacientNume() + " " + mesajRequest.getPacientPrenume());
             System.out.println("   - CNP: " + mesajRequest.getPacientCnp());
+            System.out.println("   - Istoric medical: " + (mesajRequest.getPacientIstoricMedical() != null ? "DA" : "NU"));
+            System.out.println("   - Număr imagini: " + mesajRequest.getPacientNumarImagini());
         }
         
         // Salvare în baza de date
@@ -263,6 +285,10 @@ public class MesajService {
 -- Modificare tabel mesaje pentru suport partajare pacient
 
 ALTER TABLE mesaje ADD COLUMN tip VARCHAR(50) DEFAULT 'text';
+ALTER TABLE mesaje ADD COLUMN pacient_numar_telefon VARCHAR(20);
+ALTER TABLE mesaje ADD COLUMN pacient_istoric_medical TEXT;
+ALTER TABLE mesaje ADD COLUMN pacient_detalii TEXT;
+ALTER TABLE mesaje ADD COLUMN pacient_numar_imagini INT;
 ALTER TABLE mesaje ADD COLUMN pacient_id VARCHAR(255);
 ALTER TABLE mesaje ADD COLUMN pacient_nume VARCHAR(100);
 ALTER TABLE mesaje ADD COLUMN pacient_prenume VARCHAR(100);
@@ -298,6 +324,18 @@ CREATE INDEX idx_mesaje_pacient_id ON mesaje(pacient_id);
         </column>
         <column name="pacient_data_nasterii" type="varchar(50)">
             <constraints nullable="true"/>
+        <column name="pacient_numar_telefon" type="varchar(20)">
+            <constraints nullable="true"/>
+        </column>
+        <column name="pacient_istoric_medical" type="text">
+            <constraints nullable="true"/>
+        </column>
+        <column name="pacient_detalii" type="text">
+            <constraints nullable="true"/>
+        </column>
+        <column name="pacient_numar_imagini" type="int">
+            <constraints nullable="true"/>
+        </column>
         </column>
         <column name="pacient_sex" type="varchar(20)">
             <constraints nullable="true"/>
@@ -319,7 +357,11 @@ CREATE INDEX idx_mesaje_pacient_id ON mesaje(pacient_id);
 ## 5️⃣ **Testare Endpoint**
 
 ### Test manual cu Postman/cURL:
-
+,
+  "pacientNumarTelefon": "0712345678",
+  "pacientIstoricMedical": "Hipertensiune arterială diagnosticată în 2015. Fără alergii cunoscute.",
+  "pacientDetalii": "Consultație de control trimestrial.",
+  "pacientNumarImagini": 3
 ```bash
 POST http://localhost:8083/api/mesaje/trimite
 Content-Type: application/json
@@ -338,7 +380,11 @@ Authorization: Bearer {your_token}
   "pacientSex": "MASCULIN"
 }
 ```
-
+pacientNumarTelefon": "0712345678",
+  "pacientIstoricMedical": "Hipertensiune arterială diagnosticată în 2015. Fără alergii cunoscute.",
+  "pacientDetalii": "Consultație de control trimestrial.",
+  "pacientNumarImagini": 3,
+  "
 **Răspuns așteptat:**
 
 ```json

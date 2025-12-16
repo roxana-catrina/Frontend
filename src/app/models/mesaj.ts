@@ -19,6 +19,10 @@ export interface Mesaj {
   pacientCnp?: string;
   pacientDataNasterii?: string;
   pacientSex?: string;
+  pacientNumarTelefon?: string;
+  pacientIstoricMedical?: string;
+  pacientDetalii?: string;
+  pacientNumarImagini?: number;
 }
 
 export interface MesajRequest {
@@ -34,6 +38,10 @@ export interface MesajRequest {
   pacientCnp?: string;
   pacientDataNasterii?: string;
   pacientSex?: string;
+  pacientNumarTelefon?: string;
+  pacientIstoricMedical?: string;
+  pacientDetalii?: string;
+  pacientNumarImagini?: number;
 }
 
 export interface Notificare {

@@ -218,10 +218,31 @@
             </div>
             <div class="patient-card-body">
               <h5>{{ message.pacientNume }} {{ message.pacientPrenume }}</h5>
+              
+              <!-- Informații de bază -->
               <div class="patient-details">
                 <span *ngIf="message.pacientCnp"><i class="bi bi-card-text"></i> CNP: {{ message.pacientCnp }}</span>
                 <span *ngIf="message.pacientDataNasterii"><i class="bi bi-calendar"></i> Născut: {{ message.pacientDataNasterii | date:'dd/MM/yyyy' }}</span>
                 <span *ngIf="message.pacientSex"><i class="bi bi-gender-ambiguous"></i> {{ message.pacientSex === 'MASCULIN' ? 'Masculin' : 'Feminin' }}</span>
+                <span *ngIf="message.pacientNumarTelefon"><i class="bi bi-telephone"></i> {{ message.pacientNumarTelefon }}</span>
+              </div>
+
+              <!-- Istoric medical -->
+              <div class="patient-medical-info" *ngIf="message.pacientIstoricMedical">
+                <h6><i class="bi bi-clipboard-pulse"></i> Istoric Medical</h6>
+                <p class="medical-text">{{ message.pacientIstoricMedical }}</p>
+              </div>
+
+              <!-- Detalii -->
+              <div class="patient-medical-info" *ngIf="message.pacientDetalii">
+                <h6><i class="bi bi-file-text"></i> Detalii</h6>
+                <p class="medical-text">{{ message.pacientDetalii }}</p>
+              </div>
+
+              <!-- Imagini -->
+              <div class="patient-images-info" *ngIf="message.pacientNumarImagini !== undefined">
+                <i class="bi bi-images"></i>
+                <span>{{ message.pacientNumarImagini }} {{ message.pacientNumarImagini === 1 ? 'imagine medicală' : 'imagini medicale' }} disponibile</span>
               </div>
             </div>
             <div class="patient-card-footer">
