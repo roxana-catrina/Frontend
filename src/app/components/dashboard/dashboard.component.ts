@@ -1085,6 +1085,12 @@ loadDashboardData(): void {
     return selected < today;
   }
 
+  isProgramareInPast(programare: Programare): boolean {
+    const programareDate = new Date(programare.dataProgramare);
+    const now = new Date();
+    return programareDate < now;
+  }
+
   // Sistem de notificări personalizate
   showCustomNotification(message: string, type: 'success' | 'error' | 'warning') {
     this.notificationMessage = message;
