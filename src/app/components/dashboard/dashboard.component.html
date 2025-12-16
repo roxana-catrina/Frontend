@@ -37,6 +37,22 @@
             <input type="file" (change)="onFileSelected($event)" class="form-control" accept="image/*" />
           </div>
 
+          <!-- Image Preview -->
+          <div class="mb-3" *ngIf="imagePreviewUrl">
+            <label class="form-label fw-bold">
+              <i class="bi bi-eye"></i> Previzualizare Imagine
+            </label>
+            <div class="image-preview-container">
+              <img [src]="imagePreviewUrl" alt="Preview" class="image-preview">
+              <div class="preview-info">
+                <small class="text-muted">
+                  <i class="bi bi-file-image"></i> {{ selectedFile?.name }}
+                  <span *ngIf="selectedFile"> - {{ (selectedFile.size / 1024).toFixed(2) }} KB</span>
+                </small>
+              </div>
+            </div>
+          </div>
+
           <!-- Action Buttons -->
           <div class="mb-3 d-flex gap-2">
             <button (click)="analyzeTumor()" class="btn btn-warning" [disabled]="!selectedFile || isAnalyzing">

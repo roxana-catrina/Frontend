@@ -38,6 +38,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   selectedIndex: number | null = null;
   
   selectedFile: File | null = null;
+  imagePreviewUrl: string | null = null;
   numePacient: string = '';
   prenumePacient: string = '';
   detalii: string = '';
@@ -145,6 +146,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     // Remove event listener when component is destroyed
     window.removeEventListener('imageDeleted', this.imageDeletedListener);
+    
+    // Clean up preview URL to prevent memory leaks
+    if (this.imagePreviewUrl) {
+      URL.revokeObjectURL(this.imagePreviewUrl);
+      this.imagePreviewUrl = null;
+    }
   }
 
   logout() {
@@ -161,6 +168,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
       // Reset prediction results when new file is selected
       this.predictionResult = '';
       this.predictionConfidence = 0;
+      
+      // Generate preview URL
+      if (this.selectedFile) {
+        // Clean up previous preview URL to avoid memory leaks
+        if (this.imagePreviewUrl) {
+          URL.revokeObjectURL(this.imagePreviewUrl);
+        }
+        // Create new preview URL
+        this.imagePreviewUrl = URL.createObjectURL(this.selectedFile);
+      }
+    } else {
+      // Clean up if no file selected
+      if (this.imagePreviewUrl) {
+        URL.revokeObjectURL(this.imagePreviewUrl);
+        this.imagePreviewUrl = null;
+      }
     }
   }
 
@@ -300,6 +323,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         // Reset form
         this.resetForm();
         
+        // Clean up preview
+        if (this.imagePreviewUrl) {
+          URL.revokeObjectURL(this.imagePreviewUrl);
+          this.imagePreviewUrl = null;
+        }
+        
         // Reload data
         this.loadDashboardData();
         
@@ -384,6 +413,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.istoricMedical = '';
     this.cnp = '';
     this.numarTelefon = '';
+    this.selectedFile = null;
+    this.selectedFiles = [];
+    
+    // Clean up preview
+    if (this.imagePreviewUrl) {
+      URL.revokeObjectURL(this.imagePreviewUrl);
+      this.imagePreviewUrl = null;
+    }
   }
 
 loadDashboardData(): void {
