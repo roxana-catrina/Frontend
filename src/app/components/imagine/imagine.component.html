@@ -362,14 +362,14 @@
         </div>
         <div class="card-body">
           <div class="quick-actions">
+            <button class="btn btn-outline-success btn-block mb-2" (click)="openSharePatientModal()">
+              <i class="bi bi-share"></i> Partajează Pacient
+            </button>
             <button class="btn btn-outline-primary btn-block mb-2">
               <i class="bi bi-printer"></i> Printează
             </button>
             <button class="btn btn-outline-secondary btn-block mb-2">
               <i class="bi bi-download"></i> Descarcă
-            </button>
-            <button class="btn btn-outline-warning btn-block">
-              <i class="bi bi-share"></i> Distribuie
             </button>
           </div>
         </div>
@@ -818,5 +818,87 @@
     <button class="toast-close" (click)="closeToast()">
       <i class="bi bi-x-lg"></i>
     </button>
+  </div>
+</div>
+
+<!-- Modal Partajare Pacient -->
+<div class="modal-overlay" *ngIf="showSharePatientModal" (click)="closeSharePatientModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h4>
+        <i class="bi bi-share"></i> Partajează Pacient
+      </h4>
+      <button class="close-btn" (click)="closeSharePatientModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- Info pacient -->
+      <div class="share-patient-info">
+        <div class="alert alert-info">
+          <h6><i class="bi bi-person"></i> Partajezi pacientul:</h6>
+          <p class="mb-1"><strong>{{ pacient?.numePacient }} {{ pacient?.prenumePacient }}</strong></p>
+          <small>CNP: {{ pacient?.cnp }}</small>
+        </div>
+      </div>
+
+      <!-- Căutare doctor -->
+      <div class="form-section">
+        <h5><i class="bi bi-search"></i> Selectează Destinatar</h5>
+        
+        <div class="search-box mb-3">
+          <input 
+            type="text" 
+            class="form-control" 
+            [(ngModel)]="searchDoctor"
+            (input)="searchDoctors()"
+            placeholder="Caută doctor după nume...">
+        </div>
+
+        <!-- Listă doctori -->
+        <div class="doctors-list">
+          <div 
+            *ngFor="let doctor of filteredDoctors" 
+            class="doctor-item"
+            [class.selected]="selectedDoctor?.id === doctor.id"
+            (click)="selectDoctor(doctor)">
+            <div class="doctor-avatar">
+              <img 
+                *ngIf="hasUserProfilePhoto(doctor)"
+                [src]="getUserProfilePhoto(doctor)" 
+                [alt]="doctor.prenume + ' ' + doctor.nume"
+                (error)="onDoctorImageError($event)">
+              <i *ngIf="!hasUserProfilePhoto(doctor)" class="bi bi-person-circle"></i>
+            </div>
+            <div class="doctor-info">
+              <strong>{{ doctor.prenume }} {{ doctor.nume }}</strong>
+              <small>{{ doctor.email }}</small>
+            </div>
+            <div class="selection-indicator" *ngIf="selectedDoctor?.id === doctor.id">
+              <i class="bi bi-check-circle-fill"></i>
+            </div>
+          </div>
+
+          <div *ngIf="filteredDoctors.length === 0" class="no-doctors">
+            <i class="bi bi-inbox"></i>
+            <p>Niciun utilizator găsit</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeSharePatientModal()">
+        <i class="bi bi-x-lg"></i> Anulează
+      </button>
+      <button 
+        class="btn btn-success" 
+        (click)="sharePatientToDoctor()"
+        [disabled]="!selectedDoctor || isSharingPatient">
+        <i class="bi" [ngClass]="isSharingPatient ? 'bi-hourglass-split' : 'bi-send'"></i>
+        {{ isSharingPatient ? 'Se trimite...' : 'Trimite Pacient' }}
+      </button>
+    </div>
   </div>
 </div>

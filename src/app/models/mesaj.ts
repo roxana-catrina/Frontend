@@ -10,12 +10,30 @@ export interface Mesaj {
   dataTrimitere?: Date;
   citit?: boolean;
   dataCitire?: Date;
+  
+  // Câmpuri pentru mesaje speciale
+  tip?: string; // "text", "pacient_partajat"
+  pacientId?: string;
+  pacientNume?: string;
+  pacientPrenume?: string;
+  pacientCnp?: string;
+  pacientDataNasterii?: string;
+  pacientSex?: string;
 }
 
 export interface MesajRequest {
   expeditorId: string;
   destinatarId: string;
   continut: string;
+  
+  // Câmpuri opționale pentru mesaje speciale
+  tip?: string;
+  pacientId?: string;
+  pacientNume?: string;
+  pacientPrenume?: string;
+  pacientCnp?: string;
+  pacientDataNasterii?: string;
+  pacientSex?: string;
 }
 
 export interface Notificare {

@@ -202,8 +202,34 @@
       <div *ngFor="let message of messages" 
            class="message" 
            [ngClass]="{'message-sent': getMessageSender(message) === 'me', 'message-received': getMessageSender(message) !== 'me'}">
-        <div class="message-bubble">
+        
+        <!-- Mesaj normal de text -->
+        <div class="message-bubble" *ngIf="!message.tip || message.tip === 'text'">
           <p class="message-text">{{ message.continut }}</p>
+          <span class="message-time">{{ message.dataTrimitere | date:'HH:mm' }}</span>
+        </div>
+
+        <!-- Mesaj cu pacient partajat -->
+        <div class="message-bubble patient-shared-message" *ngIf="message.tip === 'pacient_partajat'">
+          <div class="patient-card">
+            <div class="patient-card-header">
+              <i class="bi bi-person-badge"></i>
+              <span>Pacient partajat</span>
+            </div>
+            <div class="patient-card-body">
+              <h5>{{ message.pacientNume }} {{ message.pacientPrenume }}</h5>
+              <div class="patient-details">
+                <span *ngIf="message.pacientCnp"><i class="bi bi-card-text"></i> CNP: {{ message.pacientCnp }}</span>
+                <span *ngIf="message.pacientDataNasterii"><i class="bi bi-calendar"></i> Născut: {{ message.pacientDataNasterii | date:'dd/MM/yyyy' }}</span>
+                <span *ngIf="message.pacientSex"><i class="bi bi-gender-ambiguous"></i> {{ message.pacientSex === 'MASCULIN' ? 'Masculin' : 'Feminin' }}</span>
+              </div>
+            </div>
+            <div class="patient-card-footer">
+              <small class="text-muted">
+                <i class="bi bi-info-circle"></i> Informații pacient partajate (doar vizualizare)
+              </small>
+            </div>
+          </div>
           <span class="message-time">{{ message.dataTrimitere | date:'HH:mm' }}</span>
         </div>
       </div>

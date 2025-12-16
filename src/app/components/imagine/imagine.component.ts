@@ -9,6 +9,9 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { ImagineService } from '../../service/imagine/imagine.service';
 import { PacientService } from '../../service/pacient/pacient.service';
 import { BrainTumorService } from '../../service/brain-tumor/brain-tumor.service';
+import { UserService } from '../../service/user/user.service';
+import { MesajService } from '../../service/mesaj/mesaj.service';
+import { MesajRequest } from '../../models/mesaj';
 import { ConfirmDialogComponent } from '../../confirm-dialog/confirm-dialog.component';
 import * as dicomParser from 'dicom-parser';
 
@@ -72,13 +75,23 @@ export class ImagineComponent implements OnInit {
   profilePicturePreviewUrl: string | null = null;
   isUploadingProfile: boolean = false;
 
+  // Partajare pacient prin mesagerie
+  showSharePatientModal: boolean = false;
+  allDoctors: any[] = [];
+  filteredDoctors: any[] = [];
+  searchDoctor: string = '';
+  selectedDoctor: any = null;
+  isSharingPatient: boolean = false;
+
   constructor(
     private dialog: MatDialog,
     private route: ActivatedRoute,
     private router: Router,
     private imageService: ImagineService,
     private pacientService: PacientService,
-    private brainTumorService: BrainTumorService
+    private brainTumorService: BrainTumorService,
+    private userService: UserService,
+    private mesajService: MesajService
   ) {}
 
   ngOnInit() {
@@ -987,6 +1000,155 @@ export class ImagineComponent implements OnInit {
    */
   closeToast(): void {
     this.showToast = false;
+  }
+
+  /**
+   * Deschide modalul pentru partajare pacient
+   */
+  openSharePatientModal(): void {
+    if (!this.pacient) {
+      this.showToastMessage('Nu există pacient selectat pentru partajare.', 'error');
+      return;
+    }
+
+    // Încarcă lista de doctori (toți utilizatorii mai puțin utilizatorul curent)
+    this.userService.getAllUsers().subscribe({
+      next: (users) => {
+        const currentUserId = localStorage.getItem('id');
+        this.allDoctors = users.filter((user: any) => user.id !== currentUserId);
+        this.filteredDoctors = [...this.allDoctors];
+        this.showSharePatientModal = true;
+      },
+      error: (error) => {
+        console.error('Eroare la încărcarea doctorilor:', error);
+        this.showToastMessage('Eroare la încărcarea listei de utilizatori.', 'error');
+      }
+    });
+  }
+
+  /**
+   * Închide modalul de partajare
+   */
+  closeSharePatientModal(): void {
+    this.showSharePatientModal = false;
+    this.selectedDoctor = null;
+    this.searchDoctor = '';
+    this.filteredDoctors = [];
+    this.allDoctors = [];
+  }
+
+  /**
+   * Caută doctori după nume
+   */
+  searchDoctors(): void {
+    if (!this.searchDoctor.trim()) {
+      this.filteredDoctors = [...this.allDoctors];
+      return;
+    }
+
+    const searchLower = this.searchDoctor.toLowerCase().trim();
+    this.filteredDoctors = this.allDoctors.filter(doctor => {
+      const fullName = `${doctor.prenume || ''} ${doctor.nume || ''}`.toLowerCase();
+      const email = (doctor.email || '').toLowerCase();
+      return fullName.includes(searchLower) || email.includes(searchLower);
+    });
+  }
+
+  /**
+   * Selectează un doctor pentru partajare
+   */
+  selectDoctor(doctor: any): void {
+    this.selectedDoctor = doctor;
+  }
+
+  /**
+   * Trimite pacientul prin mesagerie
+   */
+  sharePatientToDoctor(): void {
+    if (!this.selectedDoctor || !this.pacient) {
+      this.showToastMessage('Te rog selectează un destinatar!', 'error');
+      return;
+    }
+
+    const currentUserId = localStorage.getItem('id');
+    if (!currentUserId) {
+      this.showToastMessage('Eroare: Utilizator neautentificat.', 'error');
+      return;
+    }
+
+    this.isSharingPatient = true;
+
+    // Calculează vârsta pacientului
+    const age = this.calculateAge(this.pacient.dataNasterii);
+
+    const mesajRequest: MesajRequest = {
+      expeditorId: currentUserId,
+      destinatarId: this.selectedDoctor.id,
+      continut: `Pacient partajat: ${this.pacient.numePacient} ${this.pacient.prenumePacient}`,
+      tip: 'pacient_partajat',
+      pacientId: this.pacient.id,
+      pacientNume: this.pacient.numePacient,
+      pacientPrenume: this.pacient.prenumePacient,
+      pacientCnp: this.pacient.cnp,
+      pacientDataNasterii: this.pacient.dataNasterii,
+      pacientSex: this.pacient.sex
+    };
+
+    console.log('📤 Partajare pacient:', mesajRequest);
+
+    this.mesajService.trimiteMesaj(mesajRequest).subscribe({
+      next: (response) => {
+        console.log('✅ Pacient partajat cu succes:', response);
+        this.showToastMessage(`Pacient partajat cu succes către ${this.selectedDoctor.prenume} ${this.selectedDoctor.nume}!`, 'success');
+        this.closeSharePatientModal();
+        this.isSharingPatient = false;
+      },
+      error: (error) => {
+        console.error('❌ Eroare la partajarea pacientului:', error);
+        this.showToastMessage('Eroare la partajarea pacientului. Încearcă din nou.', 'error');
+        this.isSharingPatient = false;
+      }
+    });
+  }
+
+  /**
+   * Calculează vârsta pe baza datei nașterii
+   */
+  private calculateAge(birthDate: string): number {
+    if (!birthDate) return 0;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  }
+
+  /**
+   * Obține URL-ul pozei de profil a unui utilizator
+   */
+  getUserProfilePhoto(user: any): string {
+    if (!user || !user.id) return '';
+    return this.userService.getProfilePhotoUrl(user.id);
+  }
+
+  /**
+   * Verifică dacă un utilizator are poză de profil
+   */
+  hasUserProfilePhoto(user: any): boolean {
+    return !!user && !!user.id;
+  }
+
+  /**
+   * Gestionează eroarea de încărcare a imaginii de profil doctor
+   */
+  onDoctorImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.style.display = 'none';
+    }
   }
 }  
 
