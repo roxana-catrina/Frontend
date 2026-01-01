@@ -10,8 +10,12 @@
         <button class="btn btn-outline-primary" [routerLink]="'/user/' + id">
           <i class="bi bi-person-gear"></i> Profil
         </button>
-        <button class="btn btn-outline-success" routerLink="/mesagerie">
+        <button class="btn btn-outline-success position-relative" routerLink="/mesagerie">
           <i class="bi bi-chat-dots"></i> Mesagerie
+          <span *ngIf="mesajeNecitite > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            {{ mesajeNecitite }}
+            <span class="visually-hidden">mesaje necitite</span>
+          </span>
         </button>
         <button (click)="logout()" class="btn btn-danger">
           <i class="bi bi-box-arrow-right"></i> Logout
@@ -35,6 +39,22 @@
           <div class="mb-3">
             <label class="form-label fw-bold">Selectare Imagine</label>
             <input type="file" (change)="onFileSelected($event)" class="form-control" accept="image/*" />
+          </div>
+
+          <!-- Image Preview -->
+          <div class="mb-3" *ngIf="imagePreviewUrl">
+            <label class="form-label fw-bold">
+              <i class="bi bi-eye"></i> Previzualizare Imagine
+            </label>
+            <div class="image-preview-container">
+              <img [src]="imagePreviewUrl" alt="Preview" class="image-preview">
+              <div class="preview-info">
+                <small class="text-muted">
+                  <i class="bi bi-file-image"></i> {{ selectedFile?.name }}
+                  <span *ngIf="selectedFile"> - {{ (selectedFile.size / 1024).toFixed(2) }} KB</span>
+                </small>
+              </div>
+            </div>
           </div>
 
           <!-- Action Buttons -->
@@ -275,7 +295,7 @@
                     <i class="bi bi-clock"></i> {{ formatProgramareInterval(programare.dataProgramare, programare.durataMinute || 30) }}
                   </small>
                 </div>
-                <button class="btn btn-sm btn-outline-danger" (click)="deleteProgramare(programare.id!)" title="Șterge programarea">
+                <button *ngIf="!isProgramareInPast(programare)" class="btn btn-sm btn-outline-danger" (click)="deleteProgramare(programare.id!)" title="Șterge programarea">
                   <i class="bi bi-trash"></i>
                 </button>
               </div>
@@ -430,7 +450,8 @@
               <i class="bi bi-clock"></i>
               <strong>{{ formatProgramareInterval(prog.dataProgramare, prog.durataMinute || 30) }}</strong>
             </div>
-            <button class="btn btn-sm btn-outline-danger" 
+            <button *ngIf="!isProgramareInPast(prog)" 
+                    class="btn btn-sm btn-outline-danger" 
                     (click)="deleteProgramare(prog.id!)"
                     title="Șterge programarea">
               <i class="bi bi-trash"></i>
@@ -462,7 +483,7 @@
       <button class="btn btn-secondary" (click)="closeProgramariZiModal()">
         <i class="bi bi-x-circle"></i> Închide
       </button>
-      <button class="btn btn-success" (click)="openCreateProgramareModal()">
+      <button *ngIf="!isSelectedDateInPast()" class="btn btn-success" (click)="openCreateProgramareModal()">
         <i class="bi bi-plus-circle"></i> Adaugă Programare
       </button>
     </div>

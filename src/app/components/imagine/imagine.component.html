@@ -19,18 +19,38 @@
         <div class="card-body p-0">
           <div class="image-container" *ngIf="image?.imageUrl">
             <!-- Afișare DICOM -->
-            <div *ngIf="image?.isDicom" class="dicom-placeholder">
-              <i class="bi bi-file-earmark-medical"></i>
-              <h4>Fișier DICOM</h4>
-              <p class="text-muted">Fișierele DICOM nu pot fi afișate direct în browser</p>
-              <a [href]="image?.imageUrl" download class="btn btn-outline-primary mt-3">
-                <i class="bi bi-download"></i> Descarcă fișierul DICOM
-              </a>
-              <div class="dicom-info mt-3" *ngIf="image?.dicomMetadata">
-                <h6>Preview Metadate:</h6>
-                <small class="d-block">Modalitate: {{ image?.dicomMetadata?.modality || 'N/A' }}</small>
-                <small class="d-block">Pacient: {{ image?.dicomMetadata?.patientName || 'N/A' }}</small>
-                <small class="d-block">Data studiu: {{ image?.dicomMetadata?.studyDate || 'N/A' }}</small>
+            <div *ngIf="image?.isDicom" class="dicom-viewer-dashboard">
+              <!-- Metadate DICOM -->
+              <div class="dicom-metadata-info" *ngIf="image?.dicomMetadata">
+                <h6><i class="bi bi-info-circle"></i> Informații DICOM</h6>
+                <div class="metadata-row">
+                  <span class="label">Pacient:</span>
+                  <span class="value">{{ image?.dicomMetadata?.patientName }}</span>
+                </div>
+                <div class="metadata-row">
+                  <span class="label">Modalitate:</span>
+                  <span class="value">{{ image?.dicomMetadata?.modality }}</span>
+                </div>
+                <div class="metadata-row">
+                  <span class="label">Data studiu:</span>
+                  <span class="value">{{ image?.dicomMetadata?.studyDate }}</span>
+                </div>
+                <div class="metadata-row" *ngIf="image?.dicomMetadata?.studyDescription">
+                  <span class="label">Descriere:</span>
+                  <span class="value">{{ image?.dicomMetadata?.studyDescription }}</span>
+                </div>
+              </div>
+              
+              <!-- Canvas DICOM -->
+              <div class="dicom-canvas-wrapper">
+                <div #dicomCanvas class="dicom-canvas-dashboard"></div>
+              </div>
+              
+              <!-- Buton download -->
+              <div class="dicom-download-section">
+                <a [href]="image?.imageUrl" download class="btn btn-primary">
+                  <i class="bi bi-download"></i> Descarcă fișierul DICOM
+                </a>
               </div>
             </div>
             <!-- Afișare imagine normală -->
@@ -64,10 +84,10 @@
             <div class="action-buttons">
               <button type="button" class="btn btn-primary me-2" (click)="openImageInfoModal()">
                 <i class="bi bi-pencil-square"></i> Editează Info
-              </button>
-              <button type="button" class="btn btn-danger" (click)="deleteImage()">
+             </button>
+            <!--   <button type="button" class="btn btn-danger" (click)="deleteImage()">
                 <i class="bi bi-trash"></i> Șterge
-              </button>
+              </button> -->
             </div>
           </div>
         </div>
@@ -78,7 +98,7 @@
         <div class="card-header bg-info text-white">
           <h5 class="mb-0">
             <i class="bi bi-info-circle"></i> Informații Imagine
-            <span *ngIf="image?.isDicom" class="badge bg-warning ms-2">DICOM</span>
+            <span *ngIf="image.isDicom" class="badge bg-warning ms-2">DICOM</span>
           </h5>
         </div>
         <div class="card-body">
@@ -87,13 +107,13 @@
               <span class="detail-label">
                 <i class="bi bi-tag"></i> Nume:
               </span>
-              <span class="detail-value">{{ image?.nume || 'Fără nume' }}</span>
+              <span class="detail-value">{{ image.nume || 'Fără nume' }}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">
                 <i class="bi bi-file-earmark-medical"></i> Tip:
               </span>
-              <span class="detail-value">{{ image?.tip || 'Necunoscut' }}</span>
+              <span class="detail-value">{{ image.tip || 'Necunoscut' }}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">
@@ -101,28 +121,28 @@
               </span>
               <span class="detail-value">{{ (image && image.dataIncarcare) ? (image.dataIncarcare | date:'dd/MM/yyyy HH:mm') : 'N/A' }}</span>
             </div>
-            <div class="detail-row" *ngIf="image?.dataModificare">
+            <div class="detail-row" *ngIf="image.dataModificare">
               <span class="detail-label">
                 <i class="bi bi-clock-history"></i> Ultima modificare:
               </span>
               <span class="detail-value">{{ (image && image.dataModificare) ? (image.dataModificare | date:'dd/MM/yyyy HH:mm') : 'N/A' }}</span>
             </div>
-            <div class="detail-row full-width" *ngIf="image?.observatii">
+            <div class="detail-row full-width" *ngIf="image.observatii">
               <span class="detail-label">
                 <i class="bi bi-card-text"></i> Observații:
               </span>
               <div class="detail-value-box">
-                {{ image?.observatii }}
+                {{ image.observatii }}
               </div>
             </div>
-            <div class="detail-row full-width" *ngIf="!image?.observatii">
+            <div class="detail-row full-width" *ngIf="!image.observatii">
               <span class="text-muted">
                 <i class="bi bi-info-circle"></i> Nu există observații pentru această imagine
               </span>
             </div>
             
             <!-- Buton pentru a vedea metadatele DICOM -->
-            <div class="detail-row full-width" *ngIf="image?.isDicom && image?.dicomMetadata">
+            <div class="detail-row full-width" *ngIf="image.isDicom && image.dicomMetadata">
               <button class="btn btn-sm btn-outline-info w-100 mt-2" (click)="openDicomMetadataModal()">
                 <i class="bi bi-file-earmark-medical"></i> Vizualizează Metadate DICOM
               </button>
@@ -130,13 +150,13 @@
           </div>
           
           <!-- Buton Analiză Tumoare -->
-          <div class="mt-3" *ngIf="image?.statusAnaliza !== 'in_procesare' && (image?.statusAnaliza !== 'finalizata' || image?.areTumoare === null)">
+          <div class="mt-3" *ngIf="image.statusAnaliza !== 'in_procesare' && (image.statusAnaliza !== 'finalizata' || image.areTumoare === null)">
             <button 
               class="btn btn-warning w-100"
               (click)="analyzeImage()"
               [disabled]="isAnalyzing">
               <i class="bi" [ngClass]="isAnalyzing ? 'bi-hourglass-split' : 'bi-cpu'"></i>
-              {{ isAnalyzing ? 'Se analizează...' : (image?.statusAnaliza === 'finalizata' ? 'Re-analizează Tumoare cu AI' : 'Analizează Tumoare cu AI') }}
+              {{ isAnalyzing ? 'Se analizează...' : (image.statusAnaliza === 'finalizata' ? 'Re-analizează Tumoare cu AI' : 'Analizează Tumoare cu AI') }}
             </button>
             <small class="text-muted d-block mt-2 text-center">
               <i class="bi bi-info-circle"></i> 
@@ -144,7 +164,7 @@
             </small>
           </div>
           
-          <div class="mt-3" *ngIf="image?.statusAnaliza === 'in_procesare'">
+          <div class="mt-3" *ngIf="image.statusAnaliza === 'in_procesare'">
             <div class="alert alert-warning mb-0">
               <i class="bi bi-hourglass-split"></i>
               <strong>Analiza este în curs...</strong>
@@ -362,14 +382,14 @@
         </div>
         <div class="card-body">
           <div class="quick-actions">
+            <button class="btn btn-outline-success btn-block mb-2" (click)="openSharePatientModal()">
+              <i class="bi bi-share"></i> Partajează Pacient
+            </button>
             <button class="btn btn-outline-primary btn-block mb-2">
               <i class="bi bi-printer"></i> Printează
             </button>
             <button class="btn btn-outline-secondary btn-block mb-2">
               <i class="bi bi-download"></i> Descarcă
-            </button>
-            <button class="btn btn-outline-warning btn-block">
-              <i class="bi bi-share"></i> Distribuie
             </button>
           </div>
         </div>
@@ -598,8 +618,8 @@
                 <button type="button" class="btn btn-sm btn-info" (click)="openDicomMetadataModal()">
                   <i class="bi bi-info-circle"></i> Vezi Metadate
                 </button>
-              </div>
-              <button type="button" class="btn btn-sm btn-danger mt-2" (click)="removeFile($event)">
+               </div>
+            <button type="button" class="btn btn-sm btn-danger mt-2" (click)="removeFile($event)">
                 <i class="bi bi-trash"></i> Șterge
               </button>
             </div>
@@ -801,6 +821,103 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" (click)="closeDicomMetadataModal()">
         <i class="bi bi-x-lg"></i> Închide
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast-container" *ngIf="showToast">
+  <div class="toast" [ngClass]="'toast-' + toastType">
+    <div class="toast-icon">
+      <i class="bi" [ngClass]="toastIcon"></i>
+    </div>
+    <div class="toast-content">
+      <p class="toast-message">{{ toastMessage }}</p>
+    </div>
+    <button class="toast-close" (click)="closeToast()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Modal Partajare Pacient -->
+<div class="modal-overlay" *ngIf="showSharePatientModal" (click)="closeSharePatientModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h4>
+        <i class="bi bi-share"></i> Partajează Pacient
+      </h4>
+      <button class="close-btn" (click)="closeSharePatientModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- Info pacient -->
+      <div class="share-patient-info">
+        <div class="alert alert-info">
+          <h6><i class="bi bi-person"></i> Partajezi pacientul:</h6>
+          <p class="mb-1"><strong>{{ pacient?.numePacient }} {{ pacient?.prenumePacient }}</strong></p>
+          <small>CNP: {{ pacient?.cnp }}</small>
+        </div>
+      </div>
+
+      <!-- Căutare doctor -->
+      <div class="form-section">
+        <h5><i class="bi bi-search"></i> Selectează Destinatar</h5>
+        
+        <div class="search-box mb-3">
+          <input 
+            type="text" 
+            class="form-control" 
+            [(ngModel)]="searchDoctor"
+            (input)="searchDoctors()"
+            placeholder="Caută doctor după nume...">
+        </div>
+
+        <!-- Listă doctori -->
+        <div class="doctors-list">
+          <div 
+            *ngFor="let doctor of filteredDoctors" 
+            class="doctor-item"
+            [class.selected]="selectedDoctor?.id === doctor.id"
+            (click)="selectDoctor(doctor)">
+            <div class="doctor-avatar">
+              <img 
+                *ngIf="hasUserProfilePhoto(doctor)"
+                [src]="getUserProfilePhoto(doctor)" 
+                [alt]="doctor.prenume + ' ' + doctor.nume"
+                (error)="onDoctorImageError($event)">
+              <i *ngIf="!hasUserProfilePhoto(doctor)" class="bi bi-person-circle"></i>
+            </div>
+            <div class="doctor-info">
+              <strong>{{ doctor.prenume }} {{ doctor.nume }}</strong>
+              <small>{{ doctor.email }}</small>
+            </div>
+            <div class="selection-indicator" *ngIf="selectedDoctor?.id === doctor.id">
+              <i class="bi bi-check-circle-fill"></i>
+            </div>
+          </div>
+
+          <div *ngIf="filteredDoctors.length === 0" class="no-doctors">
+            <i class="bi bi-inbox"></i>
+            <p>Niciun utilizator găsit</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeSharePatientModal()">
+        <i class="bi bi-x-lg"></i> Anulează
+      </button>
+      <button 
+        class="btn btn-success" 
+        (click)="sharePatientToDoctor()"
+        [disabled]="!selectedDoctor || isSharingPatient">
+        <i class="bi" [ngClass]="isSharingPatient ? 'bi-hourglass-split' : 'bi-send'"></i>
+        {{ isSharingPatient ? 'Se trimite...' : 'Trimite Pacient' }}
       </button>
     </div>
   </div>

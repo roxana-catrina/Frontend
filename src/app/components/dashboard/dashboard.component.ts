@@ -10,6 +10,7 @@ import { PacientService } from '../../service/pacient/pacient.service';
 import { ImagineService } from '../../service/imagine/imagine.service';
 import { BrainTumorService, PredictionResult } from '../../service/brain-tumor/brain-tumor.service';
 import { ProgramareService } from '../../service/programare/programare.service';
+import { MesajService } from '../../service/mesaj/mesaj.service';
 
 
 @Component({
@@ -38,6 +39,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   selectedIndex: number | null = null;
   
   selectedFile: File | null = null;
+  imagePreviewUrl: string | null = null;
   numePacient: string = '';
   prenumePacient: string = '';
   detalii: string = '';
@@ -94,6 +96,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showPacientiSuggestions: boolean = false;
   pacientiFiltrati: Pacient[] = [];
 
+  // Mesaje necitite
+  mesajeNecitite: number = 0;
+  private mesajeCheckInterval: any;
+
  // userId = 1; // ID-ul utilizatorului
 
   constructor(
@@ -102,7 +108,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private pacientService: PacientService,
     private imagineService: ImagineService,
     private brainTumorService: BrainTumorService,
-    private programareService: ProgramareService
+    private programareService: ProgramareService,
+    private mesajService: MesajService
   ) { }
   ngOnInit() {
     this.loadDashboardData();
@@ -136,15 +143,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const deletedId = event.detail.imageId;
     this.imagini = this.imagini.filter(img => img.id !== deletedId);
   });
+  
+  // Actualizează mesajele când utilizatorul revine la pagină
+  window.addEventListener('focus', () => {
+    this.loadMesajeNecitite();
+  });
 
   // Inițializare calendar
   this.generateCalendar();
   this.loadProgramari();
+  
+  // Încarcă mesaje necitite
+  this.loadMesajeNecitite();
+  // Verifică mesaje necitite la fiecare 30 secunde
+  this.mesajeCheckInterval = setInterval(() => {
+    this.loadMesajeNecitite();
+  }, 30000);
   }
 
   ngOnDestroy() {
     // Remove event listener when component is destroyed
     window.removeEventListener('imageDeleted', this.imageDeletedListener);
+    
+    // Clean up preview URL to prevent memory leaks
+    if (this.imagePreviewUrl) {
+      URL.revokeObjectURL(this.imagePreviewUrl);
+      this.imagePreviewUrl = null;
+    }
+    
+    // Oprește verificarea mesajelor
+    if (this.mesajeCheckInterval) {
+      clearInterval(this.mesajeCheckInterval);
+    }
   }
 
   logout() {
@@ -161,6 +191,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
       // Reset prediction results when new file is selected
       this.predictionResult = '';
       this.predictionConfidence = 0;
+      
+      // Generate preview URL
+      if (this.selectedFile) {
+        // Clean up previous preview URL to avoid memory leaks
+        if (this.imagePreviewUrl) {
+          URL.revokeObjectURL(this.imagePreviewUrl);
+        }
+        // Create new preview URL
+        this.imagePreviewUrl = URL.createObjectURL(this.selectedFile);
+      }
+    } else {
+      // Clean up if no file selected
+      if (this.imagePreviewUrl) {
+        URL.revokeObjectURL(this.imagePreviewUrl);
+        this.imagePreviewUrl = null;
+      }
     }
   }
 
@@ -300,6 +346,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         // Reset form
         this.resetForm();
         
+        // Clean up preview
+        if (this.imagePreviewUrl) {
+          URL.revokeObjectURL(this.imagePreviewUrl);
+          this.imagePreviewUrl = null;
+        }
+        
         // Reload data
         this.loadDashboardData();
         
@@ -384,6 +436,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.istoricMedical = '';
     this.cnp = '';
     this.numarTelefon = '';
+    this.selectedFile = null;
+    this.selectedFiles = [];
+    
+    // Clean up preview
+    if (this.imagePreviewUrl) {
+      URL.revokeObjectURL(this.imagePreviewUrl);
+      this.imagePreviewUrl = null;
+    }
   }
 
 loadDashboardData(): void {
@@ -413,6 +473,22 @@ loadDashboardData(): void {
       this.pacienti = [];
       this.imagini = [];
       this.filteredPacienti = [];
+    }
+  });
+}
+
+loadMesajeNecitite(): void {
+  let id: string | null = localStorage.getItem("id");
+  if (!id) return;
+
+  this.mesajService.countUnreadMessages(id).subscribe({
+    next: (count: number) => {
+      this.mesajeNecitite = count;
+      console.log(`Mesaje necitite: ${count}`);
+    },
+    error: (error: any) => {
+      console.error("Eroare la încărcarea mesajelor necitite:", error);
+      this.mesajeNecitite = 0;
     }
   });
 }
@@ -625,6 +701,14 @@ loadDashboardData(): void {
   selectDay(day: any) {
     if (day.otherMonth) return;
     
+    // Verifică dacă ziua selectată este în trecut
+    const selectedDate = new Date(this.currentYear, this.currentMonth, day.day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    const isPastDay = selectedDate < today;
+    
     // Resetează selecția anterioară
     this.calendarDays.forEach(d => d.selected = false);
     day.selected = true;
@@ -644,12 +728,18 @@ loadDashboardData(): void {
     });
 
     if (this.programariZiSelectata.length > 0) {
-      // Dacă există programări, arată lista
+      // Dacă există programări, arată lista (fie zi trecută, fie viitoare)
       console.log(`Ziua ${day.day} are ${this.programariZiSelectata.length} programări`);
       this.showProgramariZiModal = true;
     } else {
-      // Dacă nu există, deschide modalul pentru creare programare
-      this.showProgramareModal = true;
+      // Dacă nu există programări
+      if (isPastDay) {
+        // Zi din trecut fără programări - nu face nimic sau arată mesaj
+        this.showCustomNotification('Nu există programări în această zi din trecut.', 'warning');
+      } else {
+        // Zi viitoare fără programări - permite crearea de programare nouă
+        this.showProgramareModal = true;
+      }
     }
   }
 
@@ -722,12 +812,14 @@ loadDashboardData(): void {
         console.log('   - Date brute:', JSON.stringify(programari, null, 2));
         
         if (programari && programari.length > 0) {
-          // Sortează după dată și ia primele 5
+          const now = new Date();
+          // Filtrează doar programările viitoare (exclude cele din trecut)
           this.programariViitoare = programari
+            .filter(p => new Date(p.dataProgramare) >= now)
             .sort((a, b) => new Date(a.dataProgramare).getTime() - new Date(b.dataProgramare).getTime())
             .slice(0, 5);
           
-          console.log('   - Programări viitoare setate (top 5):', this.programariViitoare.length);
+          console.log('   📅 Programări după filtrare (doar viitoare):', this.programariViitoare.length);
           
           this.programariViitoare.forEach((prog, index) => {
             console.log(`   ${index + 1}. Pacient: ${prog.pacientNume} ${prog.pacientPrenume}`);
@@ -794,6 +886,13 @@ loadDashboardData(): void {
     const [hours, minutes] = this.programareOra.split(':');
     const dataProgramare = new Date(this.selectedDate);
     dataProgramare.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+    // Verifică dacă data programării este în trecut
+    const now = new Date();
+    if (dataProgramare < now) {
+      this.showCustomNotification('Nu poți crea programări în trecut! Te rog selectează o dată viitoare.', 'warning');
+      return;
+    }
 
     console.log('=== VERIFICARE CONFLICT PROGRAMARE ===');
     console.log('Data nouă:', dataProgramare);
@@ -1051,6 +1150,21 @@ loadDashboardData(): void {
       year: 'numeric' 
     };
     return this.selectedDate.toLocaleDateString('ro-RO', options);
+  }
+
+  isSelectedDateInPast(): boolean {
+    if (!this.selectedDate) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selected = new Date(this.selectedDate);
+    selected.setHours(0, 0, 0, 0);
+    return selected < today;
+  }
+
+  isProgramareInPast(programare: Programare): boolean {
+    const programareDate = new Date(programare.dataProgramare);
+    const now = new Date();
+    return programareDate < now;
   }
 
   // Sistem de notificări personalizate

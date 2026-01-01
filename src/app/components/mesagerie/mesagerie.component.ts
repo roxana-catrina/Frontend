@@ -1,11 +1,15 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ElementRef, ViewChild, PLATFORM_ID, Inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { UserService } from '../../service/user/user.service';
 import { MesajService } from '../../service/mesaj/mesaj.service';
 import { WebsocketService } from '../../service/websocket/websocket.service';
 import { NotificareService } from '../../service/notificare/notificare.service';
 import { Router } from '@angular/router';
-import { Mesaj, MesajRequest } from '../../models/mesaj';
+import { Mesaj, MesajRequest, ImaginePartajata } from '../../models/mesaj';
 import { Subscription } from 'rxjs';
+import { PacientService } from '../../service/pacient/pacient.service';
+import { Pacient } from '../../models/pacient';
+import { Imagine } from '../../models/imagine';
 
 @Component({
   selector: 'app-mesagerie',
@@ -39,13 +43,36 @@ export class MesagerieComponent implements OnInit, OnDestroy {
   // Polling pentru mesaje noi (workaround până când WebSocket funcționează)
   private pollingInterval: any = null;
   private lastMessageId: string | undefined = undefined;
+  
+  // Proprietăți pentru partajare imagini
+  showImageSelectorModal: boolean = false;
+  pacienti: Pacient[] = [];
+  selectedPacientForSharing: Pacient | null = null;
+  imaginiDisponibile: Imagine[] = [];
+  searchPacientTerm: string = '';
+  searchImagineTerm: string = '';
+  filteredPacientiForSharing: Pacient[] = [];
+  filteredImaginiForSharing: Imagine[] = [];
+  
+  // Proprietăți pentru viewer imagini partajate
+  showSharedImageViewer: boolean = false;
+  sharedImageUrl: string = '';
+  sharedImageName: string = '';
+  sharedImageType: string = '';
+  sharedImageIsDicom: boolean = false;
+  sharedDicomMetadata: any = null;
+  
+  // ViewChild pentru canvas DICOM
+  @ViewChild('dicomCanvas', { static: false }) dicomCanvas?: ElementRef<HTMLDivElement>;
 
   constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
     private userService: UserService,
     private mesajService: MesajService,
     private websocketService: WebsocketService,
     private notificareService: NotificareService,
-    private router: Router
+    private router: Router,
+    private pacientService: PacientService
   ) {}
 
   ngOnInit(): void {
@@ -289,10 +316,19 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     this.showChat = true;
     this.isLoading = true;
     
+    console.log('📨 Încărcare conversație între:', this.currentUserId, 'și', user.id);
+    
     // Încarcă istoricul conversației
     if (this.currentUserId) {
       this.mesajService.getConversation(this.currentUserId, user.id).subscribe({
         next: (mesaje) => {
+          console.log('✅ Mesaje primite:', mesaje.length);
+          console.log('   Primele 3 mesaje:', mesaje.slice(0, 3).map(m => ({
+            expeditor: m.expeditorId,
+            destinatar: m.destinatarId,
+            continut: m.continut?.substring(0, 30)
+          })));
+          
           this.messages = mesaje;
           this.isLoading = false;
           this.scrollToBottom();
@@ -460,6 +496,27 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     this.router.navigate(['/dashboard']);
   }
 
+  /**
+   * Parsează și returnează imaginile partajate dintr-un mesaj
+   */
+  getPacientImagini(message: Mesaj): ImaginePartajata[] {
+    if (!message.pacientImagini) return [];
+    
+    try {
+      return JSON.parse(message.pacientImagini);
+    } catch (error) {
+      console.error('Eroare la parsarea imaginilor pacientului:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Verifică dacă o imagine are analiză finalizată
+   */
+  hasAnalysis(imagine: ImaginePartajata): boolean {
+    return imagine.statusAnaliza === 'finalizata' && imagine.areTumoare !== null && imagine.areTumoare !== undefined;
+  }
+
   // Polling pentru mesaje noi (workaround până când WebSocket funcționează)
   private startPolling(): void {
     // Oprește polling-ul existent dacă există
@@ -527,4 +584,412 @@ export class MesagerieComponent implements OnInit, OnDestroy {
       }
     });
   }
+  
+  // Metode pentru partajare imagini
+  openImageSelector(): void {
+    console.log('🖼️ Deschidere selector imagini...');
+    this.showImageSelectorModal = true;
+    this.loadPacienti();
+    console.log('Modal state:', this.showImageSelectorModal);
+  }
+  
+  closeImageSelector(): void {
+    this.showImageSelectorModal = false;
+    this.selectedPacientForSharing = null;
+    this.imaginiDisponibile = [];
+    this.searchPacientTerm = '';
+    this.searchImagineTerm = '';
+  }
+  
+  loadPacienti(): void {
+    if (!this.currentUserId) return;
+    
+    console.log('📥 Încărcare pacienți pentru userId:', this.currentUserId);
+    
+    this.pacientService.getAllPacienti(this.currentUserId).subscribe({
+      next: (pacienti) => {
+        console.log('✅ Pacienți primiți:', pacienti.length);
+        this.pacienti = pacienti.filter(p => p.imagini && p.imagini.length > 0);
+        console.log('📸 Pacienți cu imagini:', this.pacienti.length);
+        this.filteredPacientiForSharing = [...this.pacienti];
+      },
+      error: (error) => {
+        console.error('❌ Eroare la încărcarea pacienților:', error);
+      }
+    });
+  }
+  
+  searchPacienti(): void {
+    if (!this.searchPacientTerm.trim()) {
+      this.filteredPacientiForSharing = [...this.pacienti];
+      return;
+    }
+    
+    const searchLower = this.searchPacientTerm.toLowerCase();
+    this.filteredPacientiForSharing = this.pacienti.filter(p => 
+      p.numePacient?.toLowerCase().includes(searchLower) ||
+      p.prenumePacient?.toLowerCase().includes(searchLower) ||
+      p.cnp?.includes(searchLower)
+    );
+  }
+  
+  selectPacientForSharing(pacient: Pacient): void {
+    this.selectedPacientForSharing = pacient;
+    this.imaginiDisponibile = pacient.imagini || [];
+    this.filteredImaginiForSharing = [...this.imaginiDisponibile];
+    this.searchImagineTerm = '';
+  }
+  
+  searchImagini(): void {
+    if (!this.searchImagineTerm.trim()) {
+      this.filteredImaginiForSharing = [...this.imaginiDisponibile];
+      return;
+    }
+    
+    const searchLower = this.searchImagineTerm.toLowerCase();
+    this.filteredImaginiForSharing = this.imaginiDisponibile.filter(img => 
+      img.nume?.toLowerCase().includes(searchLower) ||
+      img.tip?.toLowerCase().includes(searchLower)
+    );
+  }
+  
+  backToPacientList(): void {
+    this.selectedPacientForSharing = null;
+    this.imaginiDisponibile = [];
+    this.searchImagineTerm = '';
+  }
+  
+  shareImage(imagine: Imagine): void {
+    if (!this.currentUserId || !this.selectedUser) return;
+    
+    console.log('📤 Partajare imagine:', imagine);
+    
+    // Pregătește conținutul mesajului bazat pe tipul imaginii
+    const isDicom = imagine.isDicom || imagine.tip === 'application/dicom';
+    const continutMesaj = isDicom 
+      ? `📊 Fișier DICOM partajat: ${imagine.nume}`
+      : `📷 Imagine medicală partajată: ${imagine.nume}`;
+    
+    const mesajRequest = {
+      expeditorId: this.currentUserId,
+      destinatarId: this.selectedUser.id,
+      continut: continutMesaj,
+      tip: 'imagine_partajata',
+      imagineId: imagine.id,
+      imagineUrl: imagine.imageUrl,
+      imagineNume: imagine.nume,
+      imagineTip: imagine.tip,
+      imagineDataIncarcare: imagine.dataIncarcare,
+      // Adaugă metadate DICOM dacă există
+      imagineMetadata: imagine.dicomMetadata ? JSON.stringify(imagine.dicomMetadata) : undefined
+    } as MesajRequest;
+    
+    console.log('📨 Request mesaj:', mesajRequest);
+    
+    this.mesajService.trimiteMesaj(mesajRequest).subscribe({
+      next: (mesaj) => {
+        console.log('✅ Imagine partajată cu succes');
+        this.messages.push(mesaj);
+        setTimeout(() => this.scrollToBottom(), 50);
+        this.closeImageSelector();
+      },
+      error: (error) => {
+        console.error('❌ Eroare la partajarea imaginii:', error);
+        alert('Eroare la partajarea imaginii. Încearcă din nou.');
+      }
+    });
+  }
+  
+  // Deschide imaginea într-un viewer modal (pentru DICOM sau imagini normale)
+  openDicomImage(imagineId: string | undefined): void {
+    // Găsește mesajul cu această imagine
+    const mesaj = this.messages.find(m => m.imagineId === imagineId);
+    if (mesaj) {
+      this.openSharedImageViewer(mesaj);
+    }
+  }
+  
+  openImage(imagineId: string | undefined): void {
+    // Găsește mesajul cu această imagine
+    const mesaj = this.messages.find(m => m.imagineId === imagineId);
+    if (mesaj) {
+      this.openSharedImageViewer(mesaj);
+    }
+  }
+  
+  openSharedImageViewer(mesaj: Mesaj): void {
+    if (!mesaj.imagineUrl || !mesaj.imagineNume) {
+      console.warn('⚠️ Date imagine lipsă');
+      return;
+    }
+    
+    console.log('🖼️ Deschidere viewer imagine partajată:', mesaj.imagineNume);
+    console.log('📋 Date mesaj:', {
+      url: mesaj.imagineUrl,
+      nume: mesaj.imagineNume,
+      tip: mesaj.imagineTip,
+      continut: mesaj.continut
+    });
+    
+    this.sharedImageUrl = mesaj.imagineUrl;
+    this.sharedImageName = mesaj.imagineNume;
+    this.sharedImageType = mesaj.imagineTip || '';
+    
+    // Detectează DICOM în mai multe moduri:
+    // 1. Verifică imagineTip
+    // 2. Verifică dacă mesajul conține textul "DICOM" în conținut
+    // 3. Verifică dacă există metadate DICOM
+    // 4. Verifică extensia fișierului din URL
+    const isDicomFromType = mesaj.imagineTip === 'application/dicom' || mesaj.imagineTip === 'application/x-dicom';
+    const isDicomFromContent = mesaj.continut?.includes('DICOM') || mesaj.continut?.includes('📊');
+    const isDicomFromMetadata = !!mesaj.imagineMetadata;
+    const isDicomFromUrl = mesaj.imagineUrl?.toLowerCase().includes('.dcm') || 
+                           mesaj.imagineNume?.toLowerCase().includes('.dcm') ||
+                           mesaj.imagineUrl?.toLowerCase().includes('dicom');
+    
+    this.sharedImageIsDicom = isDicomFromType || isDicomFromContent || isDicomFromMetadata || isDicomFromUrl;
+    
+    console.log('🔍 Detectare DICOM:', {
+      fromType: isDicomFromType,
+      fromContent: isDicomFromContent,
+      fromMetadata: isDicomFromMetadata,
+      fromUrl: isDicomFromUrl,
+      final: this.sharedImageIsDicom
+    });
+    
+    // Parse metadate DICOM dacă există
+    if (mesaj.imagineMetadata && typeof mesaj.imagineMetadata === 'string') {
+      try {
+        this.sharedDicomMetadata = JSON.parse(mesaj.imagineMetadata);
+      } catch (e) {
+        console.error('Eroare la parsarea metadatelor DICOM:', e);
+        this.sharedDicomMetadata = null;
+      }
+    } else {
+      this.sharedDicomMetadata = mesaj.imagineMetadata || null;
+    }
+    
+    this.showSharedImageViewer = true;
+    console.log('✅ Modal setat ca vizibil, isDicom:', this.sharedImageIsDicom);
+    
+    // Dacă este DICOM, încarcă metadatele imediat dacă nu le avem deja
+    if (this.sharedImageIsDicom && !this.sharedDicomMetadata) {
+      this.loadDicomMetadata();
+    }
+    
+    // Încarcă vizualizarea DICOM după ce modal-ul s-a afișat
+    if (this.sharedImageIsDicom) {
+      setTimeout(() => this.loadDicomImage(), 100);
+    }
+  }
+  
+  loadDicomMetadata(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    
+    console.log('📋 Încărcare metadate DICOM...');
+    
+    // Import dinamic dicom-parser
+    // @ts-ignore
+    import('dicom-parser').then((dicomParserModule) => {
+      const dicomParser = dicomParserModule;
+      
+      fetch(this.sharedImageUrl)
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => {
+          const byteArray = new Uint8Array(arrayBuffer);
+          const dataSet = dicomParser.parseDicom(byteArray);
+          this.sharedDicomMetadata = this.extractDicomMetadata(dataSet);
+          console.log('✅ Metadate DICOM încărcate:', this.sharedDicomMetadata);
+        })
+        .catch(error => {
+          console.error('❌ Eroare la încărcarea metadatelor DICOM:', error);
+        });
+    }).catch(error => {
+      console.error('❌ Eroare la importul dicom-parser:', error);
+    });
+  }
+  
+  loadDicomImage(): void {
+    // Verifică dacă suntem în browser
+    if (!isPlatformBrowser(this.platformId)) {
+      console.log('⚠️ SSR detectat - DICOM va fi încărcat în browser');
+      return;
+    }
+    
+    if (!this.dicomCanvas?.nativeElement) {
+      console.error('⚠️ Canvas DICOM nu este disponibil');
+      return;
+    }
+    
+    console.log('📊 Încărcare DICOM:', this.sharedImageUrl);
+    
+    const element = this.dicomCanvas.nativeElement;
+    
+    // Import dinamic cornerstone și dicom-parser (doar în browser)
+    Promise.all([
+      // @ts-ignore
+      import('cornerstone-core'),
+      // @ts-ignore
+      import('dicom-parser')
+    ]).then(([cornerstoneModule, dicomParserModule]) => {
+      const cornerstone = cornerstoneModule;
+      const dicomParser = dicomParserModule;
+      
+      // Enable elementul pentru cornerstone
+      try {
+        cornerstone.enable(element);
+        console.log('✅ Cornerstone enabled pe element');
+      } catch (e) {
+        console.log('⚠️ Element deja enabled sau eroare:', e);
+      }
+      
+      // Încarcă imaginea DICOM
+      fetch(this.sharedImageUrl)
+        .then(response => {
+          console.log('📥 Response primit pentru DICOM');
+          return response.arrayBuffer();
+        })
+        .then(arrayBuffer => {
+          console.log('📦 ArrayBuffer size:', arrayBuffer.byteLength);
+          
+          // Parse DICOM cu dicom-parser
+          const byteArray = new Uint8Array(arrayBuffer);
+          const dataSet = dicomParser.parseDicom(byteArray);
+          
+          console.log('✅ DICOM parsat cu succes');
+          
+          // Extrage metadate DICOM dacă nu le avem deja
+          if (!this.sharedDicomMetadata) {
+            this.sharedDicomMetadata = this.extractDicomMetadata(dataSet);
+            console.log('📋 Metadate DICOM:', this.sharedDicomMetadata);
+          }
+          
+          // Obține informații despre imagine
+          const rows = dataSet.uint16('x00280010');
+          const columns = dataSet.uint16('x00280011');
+          const bitsAllocated = dataSet.uint16('x00280100');
+          const pixelRepresentation = dataSet.uint16('x00280103');
+          const samplesPerPixel = dataSet.uint16('x00280002') || 1;
+          
+          console.log('📐 Dimensiuni:', { rows, columns, bitsAllocated, samplesPerPixel });
+          
+          if (!rows || !columns) {
+            throw new Error('DICOM nu conține dimensiuni valide');
+          }
+          
+          // Obține pixel data
+          const pixelDataElement = dataSet.elements['x7fe00010'];
+          if (!pixelDataElement) {
+            throw new Error('DICOM nu conține pixel data');
+          }
+          
+          console.log('🔢 Pixel data găsit, offset:', pixelDataElement.dataOffset, 'length:', pixelDataElement.length);
+          
+          // Creează pixel array în funcție de bitsAllocated
+          let pixelData: any;
+          if (bitsAllocated === 8) {
+            pixelData = new Uint8Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length);
+          } else {
+            // 16 bit
+            if (pixelRepresentation === 0) {
+              pixelData = new Uint16Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length / 2);
+            } else {
+              pixelData = new Int16Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length / 2);
+            }
+          }
+          
+          // Calculează min/max pentru window/level
+          let minPixelValue = pixelData[0];
+          let maxPixelValue = pixelData[0];
+          for (let i = 0; i < pixelData.length; i++) {
+            if (pixelData[i] < minPixelValue) minPixelValue = pixelData[i];
+            if (pixelData[i] > maxPixelValue) maxPixelValue = pixelData[i];
+          }
+          
+          console.log('📊 Pixel range:', { min: minPixelValue, max: maxPixelValue });
+          
+          // Obține sau calculează window settings
+          let windowCenter = dataSet.floatString('x00281050');
+          let windowWidth = dataSet.floatString('x00281051');
+          
+          if (!windowCenter || !windowWidth) {
+            windowCenter = (maxPixelValue + minPixelValue) / 2;
+            windowWidth = maxPixelValue - minPixelValue;
+          }
+          
+          console.log('🪟 Window settings:', { center: windowCenter, width: windowWidth });
+          
+          // Creează image object pentru cornerstone
+          const image: any = {
+            imageId: 'dicom:' + this.sharedImageUrl,
+            minPixelValue: minPixelValue,
+            maxPixelValue: maxPixelValue,
+            slope: dataSet.floatString('x00281053') || 1,
+            intercept: dataSet.floatString('x00281052') || 0,
+            windowCenter: windowCenter,
+            windowWidth: windowWidth,
+            render: samplesPerPixel === 1 ? cornerstone.renderGrayscaleImage : cornerstone.renderColorImage,
+            getPixelData: () => pixelData,
+            rows: rows,
+            columns: columns,
+            height: rows,
+            width: columns,
+            color: samplesPerPixel > 1,
+            columnPixelSpacing: dataSet.floatString('x00280030') || 1,
+            rowPixelSpacing: dataSet.floatString('x00280030') || 1,
+            invert: false,
+            sizeInBytes: pixelData.byteLength
+          };
+          
+          console.log('🖼️ Image object creat:', {
+            rows: image.rows,
+            columns: image.columns,
+            minPixel: image.minPixelValue,
+            maxPixel: image.maxPixelValue
+          });
+          
+          // Display imaginea
+          cornerstone.displayImage(element, image);
+          
+          console.log('✅ DICOM încărcat și afișat cu succes');
+        })
+        .catch(error => {
+          console.error('❌ Eroare la încărcarea DICOM:', error);
+          alert('Nu s-a putut încărca fișierul DICOM: ' + error.message);
+        });
+    }).catch(error => {
+      console.error('❌ Eroare la importul librăriilor DICOM:', error);
+      alert('Nu s-au putut încărca librăriile pentru vizualizarea DICOM.');
+    });
+  }
+  
+  extractDicomMetadata(dataSet: any): any {
+    return {
+      patientName: dataSet.string('x00100010') || 'N/A',
+      patientId: dataSet.string('x00100020') || 'N/A',
+      studyDate: dataSet.string('x00080020') || 'N/A',
+      modality: dataSet.string('x00080060') || 'N/A',
+      studyDescription: dataSet.string('x00081030') || 'N/A',
+      seriesDescription: dataSet.string('x0008103e') || 'N/A'
+    };
+  }
+  
+  closeSharedImageViewer(): void {
+    this.showSharedImageViewer = false;
+    this.sharedImageUrl = '';
+    this.sharedImageName = '';
+    this.sharedImageType = '';
+    this.sharedImageIsDicom = false;
+    this.sharedDicomMetadata = null;
+  }
+  
+  downloadSharedImage(): void {
+    if (!this.sharedImageUrl || !this.sharedImageName) return;
+    
+    const link = document.createElement('a');
+    link.href = this.sharedImageUrl;
+    link.download = this.sharedImageName;
+    link.click();
+  }
 }
+

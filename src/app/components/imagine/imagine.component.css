@@ -1372,7 +1372,83 @@ textarea.form-control {
    DICOM PLACEHOLDER & THUMBNAILS
    ============================================ */
 
-/* Placeholder pentru fișiere DICOM în viewer principal */
+/* Viewer DICOM în dashboard */
+.dicom-viewer-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background: #000;
+  border-radius: 8px;
+}
+
+/* Metadate DICOM în dashboard */
+.dicom-metadata-info {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  padding: 1rem;
+  color: white;
+}
+
+.dicom-metadata-info h6 {
+  margin: 0 0 0.75rem 0;
+  color: #667eea;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.metadata-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.metadata-row .label {
+  color: #adb5bd;
+  min-width: 100px;
+  font-weight: 600;
+}
+
+.metadata-row .value {
+  color: #e9ecef;
+}
+
+/* Canvas DICOM */
+.dicom-canvas-wrapper {
+  width: 100%;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dicom-canvas-dashboard {
+  width: 100%;
+  height: 600px;
+  display: block;
+  cursor: crosshair;
+}
+
+/* Secțiune download */
+.dicom-download-section {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.dicom-download-section .btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Placeholder pentru fișiere DICOM în viewer principal (fallback) */
 .dicom-placeholder {
   display: flex;
   flex-direction: column;
@@ -1472,6 +1548,295 @@ textarea.form-control {
 .patient-image-item:hover .dicom-thumbnail {
   background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
 }
+
+/* ============================================
+   TOAST NOTIFICATIONS
+   ============================================ */
+
+.toast-container {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  z-index: 9999;
+  animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 350px;
+  max-width: 500px;
+  padding: 1.25rem 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 5px solid;
+  position: relative;
+  overflow: hidden;
+}
+
+.toast::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.toast-success {
+  border-left-color: #28a745;
+  color: #28a745;
+}
+
+.toast-error {
+  border-left-color: #dc3545;
+  color: #dc3545;
+}
+
+.toast-info {
+  border-left-color: #17a2b8;
+  color: #17a2b8;
+}
+
+.toast-icon {
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.toast-success .toast-icon {
+  color: #28a745;
+}
+
+.toast-error .toast-icon {
+  color: #dc3545;
+}
+
+.toast-info .toast-icon {
+  color: #17a2b8;
+}
+
+.toast-content {
+  flex: 1;
+}
+
+.toast-message {
+  margin: 0;
+  color: #212529;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.toast-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #212529;
+}
+
+/* Responsive pentru Toast */
+@media (max-width: 768px) {
+  .toast-container {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+  }
+
+  .toast {
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+  }
+}
+
+/* Modal Partajare Pacient */
+.share-patient-info {
+  margin-bottom: 1.5rem;
+}
+
+.share-patient-info .alert-info {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 1px solid #90caf9;
+  border-radius: 8px;
+}
+
+.share-patient-info h6 {
+  margin-bottom: 0.5rem;
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.share-patient-info p {
+  font-size: 1.1rem;
+  color: #212529;
+}
+
+.search-box {
+  position: relative;
+}
+
+.search-box input {
+  padding-left: 2.5rem;
+  border-radius: 8px;
+  border: 2px solid #dee2e6;
+  transition: all 0.3s;
+}
+
+.search-box input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.doctors-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.doctor-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-bottom: 1px solid #e9ecef;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.doctor-item:hover {
+  background: #f8f9fa;
+  transform: translateX(5px);
+}
+
+.doctor-item.selected {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-left: 4px solid #1976d2;
+}
+
+.doctor-item:last-child {
+  border-bottom: none;
+}
+
+.doctor-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.doctor-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.doctor-avatar i {
+  font-size: 2rem;
+  color: white;
+}
+
+.doctor-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.doctor-info strong {
+  font-size: 1rem;
+  color: #212529;
+  margin-bottom: 0.25rem;
+}
+
+.doctor-info small {
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.selection-indicator {
+  color: #28a745;
+  font-size: 1.5rem;
+  margin-left: 1rem;
+  animation: checkmark 0.3s ease;
+}
+
+@keyframes checkmark {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.no-doctors {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6c757d;
+}
+
+.no-doctors i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: block;
+  opacity: 0.5;
+}
+
+.no-doctors p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
 
 
 
