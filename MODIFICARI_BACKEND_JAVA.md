@@ -1,6 +1,6 @@
-# Modificări Backend Java - Funcționalitate Partajare Pacient
+# Modificări Backend Java - Funcționalitate Partajare Pacient și Imagini
 
-## 📋 Modificări necesare pentru implementarea funcționalității de partajare pacient prin mesagerie
+## 📋 Modificări necesare pentru implementarea funcționalității de partajare pacient și imagini prin mesagerie
 
 ---
 
@@ -24,7 +24,7 @@ public class Mesaj {
     // ==================== CÂMPURI NOI ====================
     
     @Column(name = "tip")
-    private String tip = "text"; // "text" sau "pacient_partajat"
+    private String tip = "text"; // "text", "pacient_partajat", sau "imagine_partajata"
     
     @Column(name = "pacient_id")
     private String pacientId; // ID-ul pacientului partajat (nullable)
@@ -55,6 +55,23 @@ public class Mesaj {
     
     @Column(name = "pacient_numar_imagini")
     private Integer pacientNumarImagini;
+    
+    // ==================== CÂMPURI NOI PENTRU IMAGINI ====================
+    
+    @Column(name = "imagine_id")
+    private String imagineId; // ID-ul imaginii partajate (nullable)
+    
+    @Column(name = "imagine_url", columnDefinition = "TEXT")
+    private String imagineUrl; // URL-ul imaginii
+    
+    @Column(name = "imagine_nume", length = 255)
+    private String imagineNume; // Numele imaginii
+    
+    @Column(name = "imagine_tip", length = 50)
+    private String imagineTip; // Tipul imaginii (ex: image/jpeg, image/png)
+    
+    @Column(name = "imagine_data_incarcare")
+    private String imagineDataIncarcare; // Data încărcării imaginii
     
     // ==================== GETTERS ȘI SETTERS ====================
     
@@ -97,6 +114,50 @@ public class Mesaj {
     public void setPacientCnp(String pacientCnp) {
         this.pacientCnp = pacientCnp;
     }
+    
+    // ... restul getters/setters pentru câmpurile pacient ...
+    
+    // Getters și setters pentru imagini
+    public String getImagineId() {
+        return imagineId;
+    }
+    
+    public void setImagineId(String imagineId) {
+        this.imagineId = imagineId;
+    }
+    
+    public String getImagineUrl() {
+        return imagineUrl;
+    }
+    
+    public void setImagineUrl(String imagineUrl) {
+        this.imagineUrl = imagineUrl;
+    }
+    
+    public String getImagineNume() {
+        return imagineNume;
+    }
+    
+    public void setImagineNume(String imagineNume) {
+        this.imagineNume = imagineNume;
+    }
+    
+    public String getImagineTip() {
+        return imagineTip;
+    }
+    
+    public void setImagineTip(String imagineTip) {
+        this.imagineTip = imagineTip;
+    }
+    
+    public String getImagineDataIncarcare() {
+        return imagineDataIncarcare;
+    }
+    
+    public void setImagineDataIncarcare(String imagineDataIncarcare) {
+        this.imagineDataIncarcare = imagineDataIncarcare;
+    }
+}
     
     public String getPacientDataNasterii() {
         return pacientDataNasterii;

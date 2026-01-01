@@ -12,7 +12,7 @@ export interface Mesaj {
   dataCitire?: Date;
   
   // Câmpuri pentru mesaje speciale
-  tip?: string; // "text", "pacient_partajat"
+  tip?: string; // "text", "pacient_partajat", "imagine_partajata"
   pacientId?: string;
   pacientNume?: string;
   pacientPrenume?: string;
@@ -24,6 +24,13 @@ export interface Mesaj {
   pacientDetalii?: string;
   pacientNumarImagini?: number;
   pacientImagini?: string; // JSON string cu array de imagini
+  
+  // Câmpuri pentru imagine partajată
+  imagineId?: string;
+  imagineUrl?: string;
+  imagineNume?: string;
+  imagineTip?: string;
+  imagineDataIncarcare?: string;
 }
 
 export interface MesajRequest {
@@ -44,6 +51,13 @@ export interface MesajRequest {
   pacientDetalii?: string;
   pacientNumarImagini?: number;
   pacientImagini?: string; // JSON string cu array de imagini
+  
+  // Câmpuri pentru imagine partajată
+  imagineId?: string;
+  imagineUrl?: string;
+  imagineNume?: string;
+  imagineTip?: string;
+  imagineDataIncarcare?: string;
 }
 
 // Interface pentru informații imagine partajată

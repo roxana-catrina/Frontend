@@ -6,6 +6,9 @@ import { NotificareService } from '../../service/notificare/notificare.service';
 import { Router } from '@angular/router';
 import { Mesaj, MesajRequest, ImaginePartajata } from '../../models/mesaj';
 import { Subscription } from 'rxjs';
+import { PacientService } from '../../service/pacient/pacient.service';
+import { Pacient } from '../../models/pacient';
+import { Imagine } from '../../models/imagine';
 
 @Component({
   selector: 'app-mesagerie',
@@ -39,13 +42,24 @@ export class MesagerieComponent implements OnInit, OnDestroy {
   // Polling pentru mesaje noi (workaround până când WebSocket funcționează)
   private pollingInterval: any = null;
   private lastMessageId: string | undefined = undefined;
+  
+  // Proprietăți pentru partajare imagini
+  showImageSelectorModal: boolean = false;
+  pacienti: Pacient[] = [];
+  selectedPacientForSharing: Pacient | null = null;
+  imaginiDisponibile: Imagine[] = [];
+  searchPacientTerm: string = '';
+  searchImagineTerm: string = '';
+  filteredPacientiForSharing: Pacient[] = [];
+  filteredImaginiForSharing: Imagine[] = [];
 
   constructor(
     private userService: UserService,
     private mesajService: MesajService,
     private websocketService: WebsocketService,
     private notificareService: NotificareService,
-    private router: Router
+    private router: Router,
+    private pacientService: PacientService
   ) {}
 
   ngOnInit(): void {
@@ -548,4 +562,108 @@ export class MesagerieComponent implements OnInit, OnDestroy {
       }
     });
   }
+  
+  // Metode pentru partajare imagini
+  openImageSelector(): void {
+    console.log('🖼️ Deschidere selector imagini...');
+    this.showImageSelectorModal = true;
+    this.loadPacienti();
+    console.log('Modal state:', this.showImageSelectorModal);
+  }
+  
+  closeImageSelector(): void {
+    this.showImageSelectorModal = false;
+    this.selectedPacientForSharing = null;
+    this.imaginiDisponibile = [];
+    this.searchPacientTerm = '';
+    this.searchImagineTerm = '';
+  }
+  
+  loadPacienti(): void {
+    if (!this.currentUserId) return;
+    
+    console.log('📥 Încărcare pacienți pentru userId:', this.currentUserId);
+    
+    this.pacientService.getAllPacienti(this.currentUserId).subscribe({
+      next: (pacienti) => {
+        console.log('✅ Pacienți primiți:', pacienti.length);
+        this.pacienti = pacienti.filter(p => p.imagini && p.imagini.length > 0);
+        console.log('📸 Pacienți cu imagini:', this.pacienti.length);
+        this.filteredPacientiForSharing = [...this.pacienti];
+      },
+      error: (error) => {
+        console.error('❌ Eroare la încărcarea pacienților:', error);
+      }
+    });
+  }
+  
+  searchPacienti(): void {
+    if (!this.searchPacientTerm.trim()) {
+      this.filteredPacientiForSharing = [...this.pacienti];
+      return;
+    }
+    
+    const searchLower = this.searchPacientTerm.toLowerCase();
+    this.filteredPacientiForSharing = this.pacienti.filter(p => 
+      p.numePacient?.toLowerCase().includes(searchLower) ||
+      p.prenumePacient?.toLowerCase().includes(searchLower) ||
+      p.cnp?.includes(searchLower)
+    );
+  }
+  
+  selectPacientForSharing(pacient: Pacient): void {
+    this.selectedPacientForSharing = pacient;
+    this.imaginiDisponibile = pacient.imagini || [];
+    this.filteredImaginiForSharing = [...this.imaginiDisponibile];
+    this.searchImagineTerm = '';
+  }
+  
+  searchImagini(): void {
+    if (!this.searchImagineTerm.trim()) {
+      this.filteredImaginiForSharing = [...this.imaginiDisponibile];
+      return;
+    }
+    
+    const searchLower = this.searchImagineTerm.toLowerCase();
+    this.filteredImaginiForSharing = this.imaginiDisponibile.filter(img => 
+      img.nume?.toLowerCase().includes(searchLower) ||
+      img.tip?.toLowerCase().includes(searchLower)
+    );
+  }
+  
+  backToPacientList(): void {
+    this.selectedPacientForSharing = null;
+    this.imaginiDisponibile = [];
+    this.searchImagineTerm = '';
+  }
+  
+  shareImage(imagine: Imagine): void {
+    if (!this.currentUserId || !this.selectedUser) return;
+    
+    const mesajRequest = {
+      expeditorId: this.currentUserId,
+      destinatarId: this.selectedUser.id,
+      continut: `📷 Imagine medicală partajată: ${imagine.nume}`,
+      tip: 'imagine_partajata',
+      imagineId: imagine.id,
+      imagineUrl: imagine.imageUrl,
+      imagineNume: imagine.nume,
+      imagineTip: imagine.tip,
+      imagineDataIncarcare: imagine.dataIncarcare
+    } as MesajRequest;
+    
+    this.mesajService.trimiteMesaj(mesajRequest).subscribe({
+      next: (mesaj) => {
+        console.log('✅ Imagine partajată cu succes');
+        this.messages.push(mesaj);
+        setTimeout(() => this.scrollToBottom(), 50);
+        this.closeImageSelector();
+      },
+      error: (error) => {
+        console.error('❌ Eroare la partajarea imaginii:', error);
+        alert('Eroare la partajarea imaginii. Încearcă din nou.');
+      }
+    });
+  }
 }
+

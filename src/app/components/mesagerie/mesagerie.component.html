@@ -291,12 +291,39 @@
           </div>
           <span class="message-time">{{ message.dataTrimitere | date:'HH:mm' }}</span>
         </div>
+        
+        <!-- Mesaj cu imagine partajată -->
+        <div class="message-bubble image-shared-message" *ngIf="message.tip === 'imagine_partajata'">
+          <div class="shared-image-card">
+            <div class="shared-image-header">
+              <i class="bi bi-image"></i>
+              <span>Imagine medicală</span>
+            </div>
+            <div class="shared-image-preview">
+              <img [src]="message.imagineUrl" [alt]="message.imagineNume" class="shared-image-img" />
+            </div>
+            <div class="shared-image-info">
+              <h6>{{ message.imagineNume }}</h6>
+              <div class="image-meta">
+                <span *ngIf="message.imagineTip"><i class="bi bi-file-medical"></i> {{ message.imagineTip }}</span>
+                <span *ngIf="message.imagineDataIncarcare"><i class="bi bi-calendar"></i> {{ message.imagineDataIncarcare | date:'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+          </div>
+          <span class="message-time">{{ message.dataTrimitere | date:'HH:mm' }}</span>
+        </div>
       </div>
     </div>
 
     <!-- Chat Input -->
     <div class="chat-input-container">
       <div class="chat-input-wrapper">
+        <button 
+          class="btn-attach-image" 
+          (click)="openImageSelector()"
+          title="Partajează o imagine medicală">
+          <i class="bi bi-image"></i>
+        </button>
         <textarea 
           [(ngModel)]="messageText" 
           (keypress)="onKeyPress($event)"
@@ -309,6 +336,96 @@
           [disabled]="!messageText.trim()">
           <i class="bi bi-send-fill"></i>
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal pentru selectare imagine -->
+<div *ngIf="showImageSelectorModal" class="modal-overlay" (click)="closeImageSelector()">
+  <div class="image-selector-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header-image">
+      <h5><i class="bi bi-images"></i> Partajează o imagine medicală</h5>
+      <button class="btn-close-modal" (click)="closeImageSelector()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    
+    <!-- Lista de pacienți -->
+    <div class="modal-body-image" *ngIf="!selectedPacientForSharing">
+      <div class="search-section-modal">
+        <input 
+          type="text" 
+          [(ngModel)]="searchPacientTerm" 
+          (input)="searchPacienti()"
+          class="search-input-modal" 
+          placeholder="Caută pacient după nume sau CNP..." />
+      </div>
+      
+      <div class="pacienti-list">
+        <div *ngFor="let pacient of filteredPacientiForSharing" 
+             class="pacient-item"
+             (click)="selectPacientForSharing(pacient)">
+          <div class="pacient-avatar">
+            <i class="bi bi-person-circle"></i>
+          </div>
+          <div class="pacient-info">
+            <h6>{{ pacient.numePacient }} {{ pacient.prenumePacient }}</h6>
+            <small *ngIf="pacient.cnp">CNP: {{ pacient.cnp }}</small>
+            <small class="text-muted">
+              <i class="bi bi-images"></i> {{ pacient.imagini.length || 0 }} imagini
+            </small>
+          </div>
+          <i class="bi bi-chevron-right"></i>
+        </div>
+        
+        <div *ngIf="filteredPacientiForSharing.length === 0" class="no-results-modal">
+          <i class="bi bi-info-circle"></i>
+          <p>Nu există pacienți cu imagini disponibile</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Lista de imagini -->
+    <div class="modal-body-image" *ngIf="selectedPacientForSharing">
+      <div class="back-button-section">
+        <button class="btn-back-modal" (click)="backToPacientList()">
+          <i class="bi bi-arrow-left"></i> Înapoi la pacienți
+        </button>
+      </div>
+      
+      <div class="selected-pacient-info">
+        <h6>{{ selectedPacientForSharing.numePacient }} {{ selectedPacientForSharing.prenumePacient }}</h6>
+        <small *ngIf="selectedPacientForSharing.cnp">CNP: {{ selectedPacientForSharing.cnp }}</small>
+      </div>
+      
+      <div class="search-section-modal">
+        <input 
+          type="text" 
+          [(ngModel)]="searchImagineTerm" 
+          (input)="searchImagini()"
+          class="search-input-modal" 
+          placeholder="Caută imagine..." />
+      </div>
+      
+      <div class="imagini-grid">
+        <div *ngFor="let imagine of filteredImaginiForSharing" 
+             class="imagine-item"
+             (click)="shareImage(imagine)">
+          <div class="imagine-preview">
+            <img [src]="imagine.imageUrl" [alt]="imagine.nume" />
+          </div>
+          <div class="imagine-info">
+            <h6>{{ imagine.nume }}</h6>
+            <small *ngIf="imagine.tip"><i class="bi bi-file-medical"></i> {{ imagine.tip }}</small>
+            <small *ngIf="imagine.dataIncarcare"><i class="bi bi-calendar"></i> {{ imagine.dataIncarcare | date:'dd/MM/yyyy' }}</small>
+          </div>
+        </div>
+        
+        <div *ngIf="filteredImaginiForSharing.length === 0" class="no-results-modal">
+          <i class="bi bi-info-circle"></i>
+          <p>Nu există imagini disponibile</p>
+        </div>
       </div>
     </div>
   </div>
