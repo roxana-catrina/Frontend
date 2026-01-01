@@ -10,6 +10,7 @@ import { PacientService } from '../../service/pacient/pacient.service';
 import { ImagineService } from '../../service/imagine/imagine.service';
 import { BrainTumorService, PredictionResult } from '../../service/brain-tumor/brain-tumor.service';
 import { ProgramareService } from '../../service/programare/programare.service';
+import { MesajService } from '../../service/mesaj/mesaj.service';
 
 
 @Component({
@@ -95,6 +96,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showPacientiSuggestions: boolean = false;
   pacientiFiltrati: Pacient[] = [];
 
+  // Mesaje necitite
+  mesajeNecitite: number = 0;
+  private mesajeCheckInterval: any;
+
  // userId = 1; // ID-ul utilizatorului
 
   constructor(
@@ -103,7 +108,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private pacientService: PacientService,
     private imagineService: ImagineService,
     private brainTumorService: BrainTumorService,
-    private programareService: ProgramareService
+    private programareService: ProgramareService,
+    private mesajService: MesajService
   ) { }
   ngOnInit() {
     this.loadDashboardData();
@@ -137,10 +143,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const deletedId = event.detail.imageId;
     this.imagini = this.imagini.filter(img => img.id !== deletedId);
   });
+  
+  // Actualizează mesajele când utilizatorul revine la pagină
+  window.addEventListener('focus', () => {
+    this.loadMesajeNecitite();
+  });
 
   // Inițializare calendar
   this.generateCalendar();
   this.loadProgramari();
+  
+  // Încarcă mesaje necitite
+  this.loadMesajeNecitite();
+  // Verifică mesaje necitite la fiecare 30 secunde
+  this.mesajeCheckInterval = setInterval(() => {
+    this.loadMesajeNecitite();
+  }, 30000);
   }
 
   ngOnDestroy() {
@@ -151,6 +169,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.imagePreviewUrl) {
       URL.revokeObjectURL(this.imagePreviewUrl);
       this.imagePreviewUrl = null;
+    }
+    
+    // Oprește verificarea mesajelor
+    if (this.mesajeCheckInterval) {
+      clearInterval(this.mesajeCheckInterval);
     }
   }
 
@@ -450,6 +473,22 @@ loadDashboardData(): void {
       this.pacienti = [];
       this.imagini = [];
       this.filteredPacienti = [];
+    }
+  });
+}
+
+loadMesajeNecitite(): void {
+  let id: string | null = localStorage.getItem("id");
+  if (!id) return;
+
+  this.mesajService.countUnreadMessages(id).subscribe({
+    next: (count: number) => {
+      this.mesajeNecitite = count;
+      console.log(`Mesaje necitite: ${count}`);
+    },
+    error: (error: any) => {
+      console.error("Eroare la încărcarea mesajelor necitite:", error);
+      this.mesajeNecitite = 0;
     }
   });
 }

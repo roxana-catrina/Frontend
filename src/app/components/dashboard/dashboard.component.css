@@ -9,6 +9,22 @@
   font-weight: 600;
 }
 
+/* Badge pentru mesaje necitite */
+.btn-outline-success .badge {
+  font-size: 0.65rem;
+  padding: 0.25em 0.5em;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 /* Card Styling */
 .card {
   border: none;

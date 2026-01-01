@@ -10,8 +10,12 @@
         <button class="btn btn-outline-primary" [routerLink]="'/user/' + id">
           <i class="bi bi-person-gear"></i> Profil
         </button>
-        <button class="btn btn-outline-success" routerLink="/mesagerie">
+        <button class="btn btn-outline-success position-relative" routerLink="/mesagerie">
           <i class="bi bi-chat-dots"></i> Mesagerie
+          <span *ngIf="mesajeNecitite > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            {{ mesajeNecitite }}
+            <span class="visually-hidden">mesaje necitite</span>
+          </span>
         </button>
         <button (click)="logout()" class="btn btn-danger">
           <i class="bi bi-box-arrow-right"></i> Logout
