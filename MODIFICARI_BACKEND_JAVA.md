@@ -73,6 +73,9 @@ public class Mesaj {
     @Column(name = "imagine_data_incarcare")
     private String imagineDataIncarcare; // Data încărcării imaginii
     
+    @Column(name = "imagine_metadata", columnDefinition = "TEXT")
+    private String imagineMetadata; // Metadate DICOM în format JSON
+    
     // ==================== GETTERS ȘI SETTERS ====================
     
     public String getTip() {
@@ -343,7 +346,7 @@ public class MesajService {
 ### Adaugă coloanele noi în tabelul `mesaje`:
 
 ```sql
--- Modificare tabel mesaje pentru suport partajare pacient
+-- Modificare tabel mesaje pentru suport partajare pacient și imagini
 
 ALTER TABLE mesaje ADD COLUMN tip VARCHAR(50) DEFAULT 'text';
 ALTER TABLE mesaje ADD COLUMN pacient_numar_telefon VARCHAR(20);
@@ -357,15 +360,24 @@ ALTER TABLE mesaje ADD COLUMN pacient_cnp VARCHAR(13);
 ALTER TABLE mesaje ADD COLUMN pacient_data_nasterii VARCHAR(50);
 ALTER TABLE mesaje ADD COLUMN pacient_sex VARCHAR(20);
 
+-- Coloane pentru partajare imagini
+ALTER TABLE mesaje ADD COLUMN imagine_id VARCHAR(255);
+ALTER TABLE mesaje ADD COLUMN imagine_url TEXT;
+ALTER TABLE mesaje ADD COLUMN imagine_nume VARCHAR(255);
+ALTER TABLE mesaje ADD COLUMN imagine_tip VARCHAR(50);
+ALTER TABLE mesaje ADD COLUMN imagine_data_incarcare VARCHAR(50);
+ALTER TABLE mesaje ADD COLUMN imagine_metadata TEXT;
+
 -- Index pentru căutări rapide după tip
 CREATE INDEX idx_mesaje_tip ON mesaje(tip);
 CREATE INDEX idx_mesaje_pacient_id ON mesaje(pacient_id);
+CREATE INDEX idx_mesaje_imagine_id ON mesaje(imagine_id);
 ```
 
 **SAU** dacă folosești **Liquibase/Flyway**, creează un changelog nou:
 
 ```xml
-<!-- V1.X__add_patient_sharing_to_messages.xml -->
+<!-- V1.X__add_patient_and_image_sharing_to_messages.xml -->
 <changeSet id="add-patient-sharing-columns" author="developer">
     <addColumn tableName="mesaje">
         <column name="tip" type="varchar(50)" defaultValue="text">
@@ -468,6 +480,57 @@ pacientNumarTelefon": "0712345678",
 
 ---
 
+## 🔧 **PROBLEMA CRITICĂ: Conversații duplicate între utilizatori**
+
+### **Problema:**
+Frontend-ul primește aceleași mesaje pentru toți utilizatorii. Conversația dintre User A și User B apare identică cu conversația dintre User A și User C.
+
+### **Cauză:**
+Endpoint-ul `/api/mesaje/conversatie/{user1Id}/{user2Id}` **NU FILTREAZĂ CORECT** mesajele.
+
+### **Soluție în Controller:**
+
+```java
+@GetMapping("/conversatie/{user1Id}/{user2Id}")
+public ResponseEntity<List<Mesaj>> getConversation(
+    @PathVariable String user1Id,
+    @PathVariable String user2Id) {
+    
+    try {
+        // IMPORTANT: Trebuie să returneze DOAR mesajele dintre acești 2 utilizatori
+        List<Mesaj> mesaje = mesajRepository.findConversationBetweenUsers(user1Id, user2Id);
+        
+        // Sortează după data trimiterii
+        mesaje.sort(Comparator.comparing(Mesaj::getDataTrimitere));
+        
+        return ResponseEntity.ok(mesaje);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+```
+
+### **Adaugă în MesajRepository.java:**
+
+```java
+@Query("SELECT m FROM Mesaj m WHERE " +
+       "(m.expeditorId = :user1Id AND m.destinatarId = :user2Id) OR " +
+       "(m.expeditorId = :user2Id AND m.destinatarId = :user1Id) " +
+       "ORDER BY m.dataTrimitere ASC")
+List<Mesaj> findConversationBetweenUsers(@Param("user1Id") String user1Id, 
+                                          @Param("user2Id") String user2Id);
+```
+
+### **Verificare:**
+După implementare, execută în Postman:
+```
+GET http://localhost:8083/api/mesaje/conversatie/user1-id/user2-id
+```
+
+Răspunsul trebuie să conțină **DOAR** mesajele între acești 2 utilizatori, NU toate mesajele din sistem.
+
+---
+
 ## ✅ **Checklist Implementare**
 
 - [ ] Modificat `Mesaj.java` - adăugate câmpuri noi
@@ -476,6 +539,8 @@ pacientNumarTelefon": "0712345678",
 - [ ] Adăugate getters/setters în `MesajRequest.java`
 - [ ] Actualizat `MesajService.java` - metoda `trimiteMesaj()`
 - [ ] Rulat migrare bază de date (ALTER TABLE sau Liquibase)
+- [ ] **ADĂUGAT** query `findConversationBetweenUsers` în `MesajRepository.java`
+- [ ] **VERIFICAT** că endpoint-ul `/conversatie/{user1Id}/{user2Id}` returnează mesajele corecte
 - [ ] Testat endpoint cu Postman
 - [ ] Verificat că mesajele se salvează corect în baza de date
 - [ ] Testat în frontend că mesajele apar corect
@@ -491,6 +556,8 @@ După aceste modificări, vei putea:
 3. ✅ **Trimite mesaj special** cu datele pacientului
 4. ✅ **Vizualiza în mesagerie** un card frumos cu informațiile pacientului
 5. ✅ **Mesajele rămân doar read-only** pentru destinatar (nu poate modifica pacientul)
+6. ✅ **Partaja imagini medicale** (inclusiv DICOM) prin mesagerie
+7. ✅ **Conversații separate** pentru fiecare utilizator (fără duplicate)
 
 ---
 
@@ -501,3 +568,4 @@ Dacă întâmpini probleme la implementare:
 - Asigură-te că migrarea bazei de date s-a executat cu succes
 - Verifică log-urile backend pentru erori de mapping
 - Testează endpoint-ul cu Postman înainte de a testa în frontend
+- **IMPORTANT:** Verifică că query-ul de conversație filtrează corect după cei 2 utilizatori

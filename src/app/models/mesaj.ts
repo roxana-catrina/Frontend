@@ -31,6 +31,7 @@ export interface Mesaj {
   imagineNume?: string;
   imagineTip?: string;
   imagineDataIncarcare?: string;
+  imagineMetadata?: string; // JSON string cu metadate DICOM
 }
 
 export interface MesajRequest {
@@ -58,6 +59,7 @@ export interface MesajRequest {
   imagineNume?: string;
   imagineTip?: string;
   imagineDataIncarcare?: string;
+  imagineMetadata?: string; // JSON string cu metadate DICOM
 }
 
 // Interface pentru informații imagine partajată

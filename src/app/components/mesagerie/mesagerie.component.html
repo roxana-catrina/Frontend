@@ -298,15 +298,37 @@
             <div class="shared-image-header">
               <i class="bi bi-image"></i>
               <span>Imagine medicală</span>
+              <span *ngIf="message.imagineTip === 'application/dicom'" class="dicom-badge-header">
+                <i class="bi bi-badge-3d"></i> DICOM
+              </span>
             </div>
             <div class="shared-image-preview">
-              <img [src]="message.imagineUrl" [alt]="message.imagineNume" class="shared-image-img" />
+              <!-- Preview pentru DICOM -->
+              <div *ngIf="message.imagineTip === 'application/dicom'" 
+                   class="dicom-shared-preview clickable-dicom"
+                   (click)="openDicomImage(message.imagineId)"
+                   title="Click pentru a deschide viewer-ul DICOM">
+                <i class="bi bi-file-earmark-medical"></i>
+                <span>Fișier DICOM</span>
+                <small>Click pentru vizualizare</small>
+              </div>
+              <!-- Preview pentru imagini normale -->
+              <img *ngIf="message.imagineTip !== 'application/dicom'" 
+                   [src]="message.imagineUrl" 
+                   [alt]="message.imagineNume" 
+                   class="shared-image-img"
+                   (click)="openImage(message.imagineId)"
+                   title="Click pentru detalii" />
             </div>
             <div class="shared-image-info">
               <h6>{{ message.imagineNume }}</h6>
               <div class="image-meta">
                 <span *ngIf="message.imagineTip"><i class="bi bi-file-medical"></i> {{ message.imagineTip }}</span>
                 <span *ngIf="message.imagineDataIncarcare"><i class="bi bi-calendar"></i> {{ message.imagineDataIncarcare | date:'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="image-action-hint" *ngIf="message.imagineId">
+                <i class="bi bi-eye"></i>
+                <small>Click pe imagine pentru vizualizare completă</small>
               </div>
             </div>
           </div>
@@ -413,12 +435,19 @@
              class="imagine-item"
              (click)="shareImage(imagine)">
           <div class="imagine-preview">
-            <img [src]="imagine.imageUrl" [alt]="imagine.nume" />
+            <!-- Preview pentru imagini DICOM -->
+            <div *ngIf="imagine.isDicom" class="dicom-preview-modal">
+              <i class="bi bi-file-earmark-medical"></i>
+              <span>DICOM</span>
+            </div>
+            <!-- Preview pentru imagini normale -->
+            <img *ngIf="!imagine.isDicom" [src]="imagine.imageUrl" [alt]="imagine.nume" />
           </div>
           <div class="imagine-info">
             <h6>{{ imagine.nume }}</h6>
             <small *ngIf="imagine.tip"><i class="bi bi-file-medical"></i> {{ imagine.tip }}</small>
             <small *ngIf="imagine.dataIncarcare"><i class="bi bi-calendar"></i> {{ imagine.dataIncarcare | date:'dd/MM/yyyy' }}</small>
+            <small *ngIf="imagine.isDicom" class="dicom-badge"><i class="bi bi-badge-3d"></i> DICOM</small>
           </div>
         </div>
         
@@ -427,6 +456,90 @@
           <p>Nu există imagini disponibile</p>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal pentru vizualizare imagine partajată -->
+<div *ngIf="showSharedImageViewer" class="shared-viewer-overlay" (click)="closeSharedImageViewer()">
+  <div class="shared-viewer-modal" (click)="$event.stopPropagation()">
+    <div class="shared-viewer-header">
+      <div class="viewer-title">
+        <i class="bi" [ngClass]="sharedImageIsDicom ? 'bi-file-earmark-medical' : 'bi-image'"></i>
+        <h5>{{ sharedImageName }}</h5>
+        <span *ngIf="sharedImageIsDicom" class="dicom-badge-viewer">
+          <i class="bi bi-badge-3d"></i> DICOM
+        </span>
+      </div>
+      <div class="viewer-actions">
+        <button class="btn-viewer-action" (click)="downloadSharedImage()" title="Descarcă imaginea">
+          <i class="bi bi-download"></i>
+        </button>
+        <button class="btn-viewer-close" (click)="closeSharedImageViewer()" title="Închide">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="shared-viewer-body">
+      <!-- Debug info -->
+      <div style="padding: 1rem; background: #f0f0f0; margin-bottom: 1rem; font-size: 0.8rem;">
+        <strong>Debug:</strong><br>
+        sharedImageIsDicom: {{ sharedImageIsDicom }}<br>
+        sharedImageType: {{ sharedImageType }}<br>
+        sharedImageUrl: {{ sharedImageUrl }}
+      </div>
+      
+      <!-- Preview pentru DICOM -->
+      <div *ngIf="sharedImageIsDicom" class="dicom-viewer-content">
+        <!-- Metadate DICOM -->
+        <div class="dicom-metadata-box" *ngIf="sharedDicomMetadata">
+          <h6><i class="bi bi-info-circle"></i> Informații DICOM</h6>
+          <div class="metadata-grid">
+            <div class="metadata-item">
+              <span class="metadata-label">Pacient:</span>
+              <span class="metadata-value">{{ sharedDicomMetadata.patientName }}</span>
+            </div>
+            <div class="metadata-item">
+              <span class="metadata-label">Modalitate:</span>
+              <span class="metadata-value">{{ sharedDicomMetadata.modality }}</span>
+            </div>
+            <div class="metadata-item">
+              <span class="metadata-label">Data studiu:</span>
+              <span class="metadata-value">{{ sharedDicomMetadata.studyDate }}</span>
+            </div>
+            <div class="metadata-item" *ngIf="sharedDicomMetadata.studyDescription">
+              <span class="metadata-label">Descriere:</span>
+              <span class="metadata-value">{{ sharedDicomMetadata.studyDescription }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Canvas DICOM -->
+        <div class="dicom-canvas-container">
+          <div #dicomCanvas class="dicom-canvas"></div>
+        </div>
+        
+        <!-- Acțiuni -->
+        <div class="dicom-actions">
+          <button class="btn-download-large" (click)="downloadSharedImage()">
+            <i class="bi bi-download"></i>
+            Descarcă fișierul DICOM
+          </button>
+        </div>
+      </div>
+      
+      <!-- Preview pentru imagini normale -->
+      <div *ngIf="!sharedImageIsDicom" class="normal-image-viewer">
+        <img [src]="sharedImageUrl" [alt]="sharedImageName" class="viewer-image" />
+      </div>
+    </div>
+    
+    <div class="shared-viewer-footer">
+      <small class="text-muted">
+        <i class="bi bi-info-circle"></i>
+        Imagine partajată în mesagerie
+      </small>
     </div>
   </div>
 </div>
