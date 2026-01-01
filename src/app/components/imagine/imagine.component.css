@@ -1372,7 +1372,83 @@ textarea.form-control {
    DICOM PLACEHOLDER & THUMBNAILS
    ============================================ */
 
-/* Placeholder pentru fișiere DICOM în viewer principal */
+/* Viewer DICOM în dashboard */
+.dicom-viewer-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background: #000;
+  border-radius: 8px;
+}
+
+/* Metadate DICOM în dashboard */
+.dicom-metadata-info {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  padding: 1rem;
+  color: white;
+}
+
+.dicom-metadata-info h6 {
+  margin: 0 0 0.75rem 0;
+  color: #667eea;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.metadata-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.metadata-row .label {
+  color: #adb5bd;
+  min-width: 100px;
+  font-weight: 600;
+}
+
+.metadata-row .value {
+  color: #e9ecef;
+}
+
+/* Canvas DICOM */
+.dicom-canvas-wrapper {
+  width: 100%;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dicom-canvas-dashboard {
+  width: 100%;
+  height: 600px;
+  display: block;
+  cursor: crosshair;
+}
+
+/* Secțiune download */
+.dicom-download-section {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.dicom-download-section .btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Placeholder pentru fișiere DICOM în viewer principal (fallback) */
 .dicom-placeholder {
   display: flex;
   flex-direction: column;

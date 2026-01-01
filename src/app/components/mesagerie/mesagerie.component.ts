@@ -772,10 +772,41 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     this.showSharedImageViewer = true;
     console.log('✅ Modal setat ca vizibil, isDicom:', this.sharedImageIsDicom);
     
-    // Dacă este DICOM, încarcă-l după ce modal-ul s-a afișat
+    // Dacă este DICOM, încarcă metadatele imediat dacă nu le avem deja
+    if (this.sharedImageIsDicom && !this.sharedDicomMetadata) {
+      this.loadDicomMetadata();
+    }
+    
+    // Încarcă vizualizarea DICOM după ce modal-ul s-a afișat
     if (this.sharedImageIsDicom) {
       setTimeout(() => this.loadDicomImage(), 100);
     }
+  }
+  
+  loadDicomMetadata(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    
+    console.log('📋 Încărcare metadate DICOM...');
+    
+    // Import dinamic dicom-parser
+    // @ts-ignore
+    import('dicom-parser').then((dicomParserModule) => {
+      const dicomParser = dicomParserModule;
+      
+      fetch(this.sharedImageUrl)
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => {
+          const byteArray = new Uint8Array(arrayBuffer);
+          const dataSet = dicomParser.parseDicom(byteArray);
+          this.sharedDicomMetadata = this.extractDicomMetadata(dataSet);
+          console.log('✅ Metadate DICOM încărcate:', this.sharedDicomMetadata);
+        })
+        .catch(error => {
+          console.error('❌ Eroare la încărcarea metadatelor DICOM:', error);
+        });
+    }).catch(error => {
+      console.error('❌ Eroare la importul dicom-parser:', error);
+    });
   }
   
   loadDicomImage(): void {

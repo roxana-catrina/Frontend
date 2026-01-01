@@ -19,18 +19,38 @@
         <div class="card-body p-0">
           <div class="image-container" *ngIf="image?.imageUrl">
             <!-- Afișare DICOM -->
-            <div *ngIf="image?.isDicom" class="dicom-placeholder">
-              <i class="bi bi-file-earmark-medical"></i>
-              <h4>Fișier DICOM</h4>
-              <p class="text-muted">Fișierele DICOM nu pot fi afișate direct în browser</p>
-              <a [href]="image?.imageUrl" download class="btn btn-outline-primary mt-3">
-                <i class="bi bi-download"></i> Descarcă fișierul DICOM
-              </a>
-              <div class="dicom-info mt-3" *ngIf="image?.dicomMetadata">
-                <h6>Preview Metadate:</h6>
-                <small class="d-block">Modalitate: {{ image?.dicomMetadata?.modality || 'N/A' }}</small>
-                <small class="d-block">Pacient: {{ image?.dicomMetadata?.patientName || 'N/A' }}</small>
-                <small class="d-block">Data studiu: {{ image?.dicomMetadata?.studyDate || 'N/A' }}</small>
+            <div *ngIf="image?.isDicom" class="dicom-viewer-dashboard">
+              <!-- Metadate DICOM -->
+              <div class="dicom-metadata-info" *ngIf="image?.dicomMetadata">
+                <h6><i class="bi bi-info-circle"></i> Informații DICOM</h6>
+                <div class="metadata-row">
+                  <span class="label">Pacient:</span>
+                  <span class="value">{{ image?.dicomMetadata?.patientName }}</span>
+                </div>
+                <div class="metadata-row">
+                  <span class="label">Modalitate:</span>
+                  <span class="value">{{ image?.dicomMetadata?.modality }}</span>
+                </div>
+                <div class="metadata-row">
+                  <span class="label">Data studiu:</span>
+                  <span class="value">{{ image?.dicomMetadata?.studyDate }}</span>
+                </div>
+                <div class="metadata-row" *ngIf="image?.dicomMetadata?.studyDescription">
+                  <span class="label">Descriere:</span>
+                  <span class="value">{{ image?.dicomMetadata?.studyDescription }}</span>
+                </div>
+              </div>
+              
+              <!-- Canvas DICOM -->
+              <div class="dicom-canvas-wrapper">
+                <div #dicomCanvas class="dicom-canvas-dashboard"></div>
+              </div>
+              
+              <!-- Buton download -->
+              <div class="dicom-download-section">
+                <a [href]="image?.imageUrl" download class="btn btn-primary">
+                  <i class="bi bi-download"></i> Descarcă fișierul DICOM
+                </a>
               </div>
             </div>
             <!-- Afișare imagine normală -->

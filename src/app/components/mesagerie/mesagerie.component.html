@@ -482,14 +482,6 @@
     </div>
     
     <div class="shared-viewer-body">
-      <!-- Debug info -->
-      <div style="padding: 1rem; background: #f0f0f0; margin-bottom: 1rem; font-size: 0.8rem;">
-        <strong>Debug:</strong><br>
-        sharedImageIsDicom: {{ sharedImageIsDicom }}<br>
-        sharedImageType: {{ sharedImageType }}<br>
-        sharedImageUrl: {{ sharedImageUrl }}
-      </div>
-      
       <!-- Preview pentru DICOM -->
       <div *ngIf="sharedImageIsDicom" class="dicom-viewer-content">
         <!-- Metadate DICOM -->

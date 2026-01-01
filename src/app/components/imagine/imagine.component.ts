@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, PLATFORM_ID, Inject, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Imagine, DicomMetadata } from '../../models/imagine';
 import { Pacient } from '../../models/pacient';
@@ -82,8 +83,12 @@ export class ImagineComponent implements OnInit {
   searchDoctor: string = '';
   selectedDoctor: any = null;
   isSharingPatient: boolean = false;
+  
+  // ViewChild pentru canvas DICOM
+  @ViewChild('dicomCanvas', { static: false }) dicomCanvas?: ElementRef<HTMLDivElement>;
 
   constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
     private dialog: MatDialog,
     private route: ActivatedRoute,
     private router: Router,
@@ -159,6 +164,12 @@ export class ImagineComponent implements OnInit {
             this.resetZoom();
             
             console.log('Image and patient loaded:', this.image, this.pacient);
+            
+            // Dacă este DICOM, încarcă-l în canvas
+            if (this.image.isDicom) {
+              setTimeout(() => this.loadDicomImage(), 300);
+            }
+            
             return;
           }
         }
@@ -1167,6 +1178,169 @@ export class ImagineComponent implements OnInit {
     if (img) {
       img.style.display = 'none';
     }
+  }
+  
+  /**
+   * Încarcă și afișează imaginea DICOM folosind cornerstone
+   */
+  loadDicomImage(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      console.log('⚠️ SSR detectat - DICOM va fi încărcat în browser');
+      return;
+    }
+    
+    if (!this.dicomCanvas?.nativeElement || !this.image) {
+      console.error('⚠️ Canvas DICOM sau imagine nu este disponibil');
+      return;
+    }
+    
+    console.log('📊 Încărcare DICOM în dashboard:', this.image.imageUrl);
+    
+    const element = this.dicomCanvas.nativeElement;
+    
+    // Import dinamic cornerstone și dicom-parser (doar în browser)
+    Promise.all([
+      // @ts-ignore
+      import('cornerstone-core'),
+      // @ts-ignore
+      import('dicom-parser')
+    ]).then(([cornerstoneModule, dicomParserModule]) => {
+      const cornerstone = cornerstoneModule;
+      const dicomParser = dicomParserModule;
+      
+      // Enable elementul pentru cornerstone
+      try {
+        cornerstone.enable(element);
+        console.log('✅ Cornerstone enabled pe element');
+      } catch (e) {
+        console.log('⚠️ Element deja enabled sau eroare:', e);
+      }
+      
+      // Încarcă imaginea DICOM
+      fetch(this.image!.imageUrl)
+        .then(response => {
+          console.log('📥 Response primit pentru DICOM');
+          return response.arrayBuffer();
+        })
+        .then(arrayBuffer => {
+          console.log('📦 ArrayBuffer size:', arrayBuffer.byteLength);
+          
+          // Parse DICOM cu dicom-parser
+          const byteArray = new Uint8Array(arrayBuffer);
+          const dataSet = dicomParser.parseDicom(byteArray);
+          
+          console.log('✅ DICOM parsat cu succes');
+          
+          // Extrage metadate DICOM
+          if (!this.image!.dicomMetadata) {
+            this.image!.dicomMetadata = this.extractDicomMetadataFromDataSet(dataSet);
+            console.log('📋 Metadate DICOM:', this.image!.dicomMetadata);
+          }
+          
+          // Obține informații despre imagine
+          const rows = dataSet.uint16('x00280010');
+          const columns = dataSet.uint16('x00280011');
+          const bitsAllocated = dataSet.uint16('x00280100');
+          const pixelRepresentation = dataSet.uint16('x00280103');
+          const samplesPerPixel = dataSet.uint16('x00280002') || 1;
+          
+          console.log('📐 Dimensiuni:', { rows, columns, bitsAllocated, samplesPerPixel });
+          
+          if (!rows || !columns) {
+            throw new Error('DICOM nu conține dimensiuni valide');
+          }
+          
+          // Obține pixel data
+          const pixelDataElement = dataSet.elements['x7fe00010'];
+          if (!pixelDataElement) {
+            throw new Error('DICOM nu conține pixel data');
+          }
+          
+          console.log('🔢 Pixel data găsit');
+          
+          // Creează pixel array în funcție de bitsAllocated
+          let pixelData: any;
+          if (bitsAllocated === 8) {
+            pixelData = new Uint8Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length);
+          } else {
+            // 16 bit
+            if (pixelRepresentation === 0) {
+              pixelData = new Uint16Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length / 2);
+            } else {
+              pixelData = new Int16Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length / 2);
+            }
+          }
+          
+          // Calculează min/max pentru window/level
+          let minPixelValue = pixelData[0];
+          let maxPixelValue = pixelData[0];
+          for (let i = 0; i < pixelData.length; i++) {
+            if (pixelData[i] < minPixelValue) minPixelValue = pixelData[i];
+            if (pixelData[i] > maxPixelValue) maxPixelValue = pixelData[i];
+          }
+          
+          console.log('📊 Pixel range:', { min: minPixelValue, max: maxPixelValue });
+          
+          // Obține sau calculează window settings
+          let windowCenter = dataSet.floatString('x00281050');
+          let windowWidth = dataSet.floatString('x00281051');
+          
+          if (!windowCenter || !windowWidth) {
+            windowCenter = (maxPixelValue + minPixelValue) / 2;
+            windowWidth = maxPixelValue - minPixelValue;
+          }
+          
+          console.log('🪟 Window settings:', { center: windowCenter, width: windowWidth });
+          
+          // Creează image object pentru cornerstone
+          const image: any = {
+            imageId: 'dicom:' + this.image!.imageUrl,
+            minPixelValue: minPixelValue,
+            maxPixelValue: maxPixelValue,
+            slope: dataSet.floatString('x00281053') || 1,
+            intercept: dataSet.floatString('x00281052') || 0,
+            windowCenter: windowCenter,
+            windowWidth: windowWidth,
+            render: samplesPerPixel === 1 ? cornerstone.renderGrayscaleImage : cornerstone.renderColorImage,
+            getPixelData: () => pixelData,
+            rows: rows,
+            columns: columns,
+            height: rows,
+            width: columns,
+            color: samplesPerPixel > 1,
+            columnPixelSpacing: dataSet.floatString('x00280030') || 1,
+            rowPixelSpacing: dataSet.floatString('x00280030') || 1,
+            invert: false,
+            sizeInBytes: pixelData.byteLength
+          };
+          
+          console.log('🖼️ Image object creat');
+          
+          // Display imaginea
+          cornerstone.displayImage(element, image);
+          
+          console.log('✅ DICOM încărcat și afișat cu succes în dashboard');
+        })
+        .catch(error => {
+          console.error('❌ Eroare la încărcarea DICOM:', error);
+        });
+    }).catch(error => {
+      console.error('❌ Eroare la importul librăriilor DICOM:', error);
+    });
+  }
+  
+  /**
+   * Extrage metadatele DICOM dintr-un dataSet
+   */
+  extractDicomMetadataFromDataSet(dataSet: any): DicomMetadata {
+    return {
+      patientName: dataSet.string('x00100010') || 'N/A',
+      patientId: dataSet.string('x00100020') || 'N/A',
+      studyDate: dataSet.string('x00080020') || 'N/A',
+      modality: dataSet.string('x00080060') || 'N/A',
+      studyDescription: dataSet.string('x00081030') || 'N/A',
+      seriesDescription: dataSet.string('x0008103e') || 'N/A'
+    };
   }
 }  
 
