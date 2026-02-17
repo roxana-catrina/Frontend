@@ -517,6 +517,20 @@
         <!-- Canvas DICOM -->
         <div class="dicom-canvas-container">
           <div #dicomCanvas class="dicom-canvas"></div>
+          
+          <!-- Controale zoom peste canvas -->
+          <div class="dicom-zoom-controls">
+            <button class="zoom-btn" (click)="zoomIn()" title="Zoom In">
+              <i class="bi bi-zoom-in"></i>
+            </button>
+            <button class="zoom-btn" (click)="zoomOut()" title="Zoom Out">
+              <i class="bi bi-zoom-out"></i>
+            </button>
+            <button class="zoom-btn" (click)="resetZoom()" title="Reset Zoom">
+              <i class="bi bi-arrows-angle-contract"></i>
+            </button>
+            <div class="zoom-level">{{ currentZoom }}%</div>
+          </div>
         </div>
         
         <!-- Acțiuni -->
@@ -530,7 +544,33 @@
       
       <!-- Preview pentru imagini normale -->
       <div *ngIf="!sharedImageIsDicom" class="normal-image-viewer">
-        <img [src]="sharedImageUrl" [alt]="sharedImageName" class="viewer-image" />
+        <div class="image-container-with-zoom">
+          <img 
+            [src]="sharedImageUrl" 
+            [alt]="sharedImageName" 
+            class="viewer-image zoomable-image"
+            [style.transform]="getImageTransform()"
+            [style.cursor]="getImageCursor()"
+            (mousedown)="onImageMouseDown($event)"
+            (mousemove)="onImageMouseMove($event)"
+            (mouseup)="onImageMouseUp($event)"
+            (mouseleave)="onImageMouseLeave($event)"
+            (wheel)="onImageWheel($event)" />
+          
+          <!-- Controale zoom pentru imagini normale -->
+          <div class="image-zoom-controls">
+            <button class="zoom-btn" (click)="zoomIn()" title="Zoom In">
+              <i class="bi bi-zoom-in"></i>
+            </button>
+            <button class="zoom-btn" (click)="zoomOut()" title="Zoom Out">
+              <i class="bi bi-zoom-out"></i>
+            </button>
+            <button class="zoom-btn" (click)="resetZoom()" title="Reset Zoom">
+              <i class="bi bi-arrows-angle-contract"></i>
+            </button>
+            <div class="zoom-level">{{ normalImageZoom }}%</div>
+          </div>
+        </div>
       </div>
     </div>
     
