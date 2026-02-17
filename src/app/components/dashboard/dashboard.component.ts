@@ -570,12 +570,11 @@ loadMesajeNecitite(): void {
   }
 
   // Metodă pentru filtrarea pacienților după nume sau CNP
+
+
   searchPacienti() {
     const term = this.searchTerm.toLowerCase().trim();
-    
-    console.log("Căutare pacienți pentru:", term);
-    console.log("Total pacienți disponibili:", this.pacienti.length);
-    
+
     if (!term) {
       this.filteredPacienti = [...this.pacienti];
       console.log("Căutare goală - afișez toți pacienții:", this.filteredPacienti.length);

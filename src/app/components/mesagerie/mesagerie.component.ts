@@ -991,5 +991,39 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     link.download = this.sharedImageName;
     link.click();
   }
+  
+  // Helper pentru a verifica dacă un mesaj conține un fișier DICOM
+  isDicomMessage(mesaj: Mesaj): boolean {
+    if (!mesaj) return false;
+    
+    // Verifică în mai multe moduri:
+    const isDicomFromType = mesaj.imagineTip === 'application/dicom' || 
+                           mesaj.imagineTip === 'application/x-dicom';
+    const isDicomFromContent = !!(mesaj.continut?.includes('DICOM') || 
+                               mesaj.continut?.includes('📊'));
+    const isDicomFromMetadata = !!mesaj.imagineMetadata;
+    const isDicomFromUrl = !!(mesaj.imagineUrl?.toLowerCase().includes('.dcm') || 
+                          mesaj.imagineNume?.toLowerCase().includes('.dcm') ||
+                          mesaj.imagineUrl?.toLowerCase().includes('dicom'));
+    const isDicomFromName = !!(mesaj.imagineNume?.toLowerCase().endsWith('.dcm'));
+    
+    const result = isDicomFromType || isDicomFromContent || isDicomFromMetadata || isDicomFromUrl || isDicomFromName;
+    
+    // Log pentru debugging
+    if (mesaj.tip === 'imagine_partajata') {
+      console.log('🔍 Verificare DICOM pentru mesaj:', {
+        nume: mesaj.imagineNume,
+        tip: mesaj.imagineTip,
+        continut: mesaj.continut,
+        fromType: isDicomFromType,
+        fromContent: isDicomFromContent,
+        fromMetadata: isDicomFromMetadata,
+        fromUrl: isDicomFromUrl,
+        fromName: isDicomFromName,
+        rezultat: result
+      });
+    }
+    
+    return result;
+  }
 }
-
