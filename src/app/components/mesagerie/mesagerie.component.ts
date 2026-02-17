@@ -62,6 +62,18 @@ export class MesagerieComponent implements OnInit, OnDestroy {
   sharedImageIsDicom: boolean = false;
   sharedDicomMetadata: any = null;
   
+  // Proprietăți pentru zoom
+  currentZoom: number = 100;
+  private cornerstoneElement: any = null;
+  
+  // Proprietăți pentru zoom și pan imagini normale
+  normalImageZoom: number = 100;
+  normalImagePanX: number = 0;
+  normalImagePanY: number = 0;
+  private isDragging: boolean = false;
+  private dragStartX: number = 0;
+  private dragStartY: number = 0;
+  
   // ViewChild pentru canvas DICOM
   @ViewChild('dicomCanvas', { static: false }) dicomCanvas?: ElementRef<HTMLDivElement>;
 
@@ -838,7 +850,62 @@ export class MesagerieComponent implements OnInit, OnDestroy {
       // Enable elementul pentru cornerstone
       try {
         cornerstone.enable(element);
+        this.cornerstoneElement = element; // Salvează referința pentru zoom
+        this.currentZoom = 100; // Reset zoom la 100%
         console.log('✅ Cornerstone enabled pe element');
+        
+        // Adaugă event listener pentru mouse wheel zoom
+        element.addEventListener('wheel', (event: WheelEvent) => {
+          event.preventDefault();
+          const delta = event.deltaY > 0 ? -0.1 : 0.1; // Scroll down = zoom out, scroll up = zoom in
+          this.adjustZoom(delta);
+        });
+        
+        // Adaugă event listeners pentru pan (drag) cu mouse
+        let isPanning = false;
+        let startX = 0;
+        let startY = 0;
+        let lastX = 0;
+        let lastY = 0;
+        
+        element.addEventListener('mousedown', (event: MouseEvent) => {
+          isPanning = true;
+          startX = event.clientX;
+          startY = event.clientY;
+          const viewport = cornerstone.getViewport(element);
+          if (viewport) {
+            lastX = viewport.translation.x;
+            lastY = viewport.translation.y;
+          }
+          element.style.cursor = 'grabbing';
+        });
+        
+        element.addEventListener('mousemove', (event: MouseEvent) => {
+          if (!isPanning) return;
+          
+          const deltaX = event.clientX - startX;
+          const deltaY = event.clientY - startY;
+          
+          const viewport = cornerstone.getViewport(element);
+          if (viewport) {
+            viewport.translation.x = lastX + deltaX;
+            viewport.translation.y = lastY + deltaY;
+            cornerstone.setViewport(element, viewport);
+          }
+        });
+        
+        element.addEventListener('mouseup', () => {
+          isPanning = false;
+          element.style.cursor = 'grab';
+        });
+        
+        element.addEventListener('mouseleave', () => {
+          isPanning = false;
+          element.style.cursor = 'grab';
+        });
+        
+        element.style.cursor = 'grab';
+        
       } catch (e) {
         console.log('⚠️ Element deja enabled sau eroare:', e);
       }
@@ -981,6 +1048,14 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     this.sharedImageType = '';
     this.sharedImageIsDicom = false;
     this.sharedDicomMetadata = null;
+    this.cornerstoneElement = null;
+    this.currentZoom = 100;
+    
+    // Reset zoom și pan pentru imagini normale
+    this.normalImageZoom = 100;
+    this.normalImagePanX = 0;
+    this.normalImagePanY = 0;
+    this.isDragging = false;
   }
   
   downloadSharedImage(): void {
@@ -991,5 +1066,197 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     link.download = this.sharedImageName;
     link.click();
   }
+  
+  // Funcții pentru zoom pe imagini (DICOM și normale)
+  zoomIn(): void {
+    if (this.sharedImageIsDicom) {
+      this.zoomInDicom();
+    } else {
+      this.zoomInNormal();
+    }
+  }
+  
+  zoomOut(): void {
+    if (this.sharedImageIsDicom) {
+      this.zoomOutDicom();
+    } else {
+      this.zoomOutNormal();
+    }
+  }
+  
+  resetZoom(): void {
+    if (this.sharedImageIsDicom) {
+      this.resetZoomDicom();
+    } else {
+      this.resetZoomNormal();
+    }
+  }
+  
+  // Funcții pentru zoom DICOM
+  private zoomInDicom(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.adjustZoom(0.2); // Crește zoom-ul cu 20%
+  }
+  
+  private zoomOutDicom(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.adjustZoom(-0.2); // Scade zoom-ul cu 20%
+  }
+  
+  private resetZoomDicom(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    this.setZoom(1.0); // Reset la 100%
+  }
+  
+  private adjustZoom(delta: number): void {
+    if (!this.cornerstoneElement) return;
+    
+    // @ts-ignore
+    import('cornerstone-core').then((cornerstoneModule) => {
+      const cornerstone = cornerstoneModule;
+      
+      try {
+        const viewport = cornerstone.getViewport(this.cornerstoneElement);
+        if (viewport) {
+          viewport.scale += delta;
+          // Limitează zoom-ul între 10% și 500%
+          viewport.scale = Math.max(0.1, Math.min(5.0, viewport.scale));
+          cornerstone.setViewport(this.cornerstoneElement, viewport);
+          
+          this.currentZoom = Math.round(viewport.scale * 100);
+          console.log('🔍 Zoom ajustat:', this.currentZoom + '%');
+        }
+      } catch (error) {
+        console.error('❌ Eroare la ajustarea zoom-ului:', error);
+      }
+    }).catch(error => {
+      console.error('❌ Eroare la importul Cornerstone pentru zoom:', error);
+    });
+  }
+  
+  private setZoom(scale: number): void {
+    if (!this.cornerstoneElement) return;
+    
+    // @ts-ignore
+    import('cornerstone-core').then((cornerstoneModule) => {
+      const cornerstone = cornerstoneModule;
+      
+      try {
+        const viewport = cornerstone.getViewport(this.cornerstoneElement);
+        if (viewport) {
+          viewport.scale = scale;
+          cornerstone.setViewport(this.cornerstoneElement, viewport);
+          
+          this.currentZoom = Math.round(scale * 100);
+          console.log('🔍 Zoom setat la:', this.currentZoom + '%');
+        }
+      } catch (error) {
+        console.error('❌ Eroare la setarea zoom-ului:', error);
+      }
+    }).catch(error => {
+      console.error('❌ Eroare la importul Cornerstone pentru zoom:', error);
+    });
+  }
+  
+  // Funcții pentru zoom imagini normale
+  private zoomInNormal(): void {
+    this.normalImageZoom += 20;
+    if (this.normalImageZoom > 500) this.normalImageZoom = 500; // Max 500%
+    console.log('🔍 Zoom imagine normală:', this.normalImageZoom + '%');
+  }
+  
+  private zoomOutNormal(): void {
+    this.normalImageZoom -= 20;
+    if (this.normalImageZoom < 10) this.normalImageZoom = 10; // Min 10%
+    console.log('🔍 Zoom imagine normală:', this.normalImageZoom + '%');
+  }
+  
+  private resetZoomNormal(): void {
+    this.normalImageZoom = 100;
+    this.normalImagePanX = 0;
+    this.normalImagePanY = 0;
+    console.log('🔍 Zoom resetat la 100%');
+  }
+  
+  // Funcții pentru pan (drag) imagini normale
+  onImageMouseDown(event: MouseEvent): void {
+    if (this.normalImageZoom <= 100) return; // Pan doar dacă e zoom in
+    
+    this.isDragging = true;
+    this.dragStartX = event.clientX - this.normalImagePanX;
+    this.dragStartY = event.clientY - this.normalImagePanY;
+    event.preventDefault();
+  }
+  
+  onImageMouseMove(event: MouseEvent): void {
+    if (!this.isDragging) return;
+    
+    this.normalImagePanX = event.clientX - this.dragStartX;
+    this.normalImagePanY = event.clientY - this.dragStartY;
+    event.preventDefault();
+  }
+  
+  onImageMouseUp(event: MouseEvent): void {
+    this.isDragging = false;
+  }
+  
+  onImageMouseLeave(event: MouseEvent): void {
+    this.isDragging = false;
+  }
+  
+  onImageWheel(event: WheelEvent): void {
+    event.preventDefault();
+    if (event.deltaY < 0) {
+      this.zoomInNormal();
+    } else {
+      this.zoomOutNormal();
+    }
+  }
+  
+  getImageTransform(): string {
+    const scale = this.normalImageZoom / 100;
+    return `translate(${this.normalImagePanX}px, ${this.normalImagePanY}px) scale(${scale})`;
+  }
+  
+  getImageCursor(): string {
+    if (this.normalImageZoom > 100) {
+      return this.isDragging ? 'grabbing' : 'grab';
+    }
+    return 'default';
+  }
+  
+  // Helper pentru a verifica dacă un mesaj conține un fișier DICOM
+  isDicomMessage(mesaj: Mesaj): boolean {
+    if (!mesaj) return false;
+    
+    // Verifică în mai multe moduri:
+    const isDicomFromType = mesaj.imagineTip === 'application/dicom' || 
+                           mesaj.imagineTip === 'application/x-dicom';
+    const isDicomFromContent = !!(mesaj.continut?.includes('DICOM') || 
+                               mesaj.continut?.includes('📊'));
+    const isDicomFromMetadata = !!mesaj.imagineMetadata;
+    const isDicomFromUrl = !!(mesaj.imagineUrl?.toLowerCase().includes('.dcm') || 
+                          mesaj.imagineNume?.toLowerCase().includes('.dcm') ||
+                          mesaj.imagineUrl?.toLowerCase().includes('dicom'));
+    const isDicomFromName = !!(mesaj.imagineNume?.toLowerCase().endsWith('.dcm'));
+    
+    const result = isDicomFromType || isDicomFromContent || isDicomFromMetadata || isDicomFromUrl || isDicomFromName;
+    
+    // Log pentru debugging
+    if (mesaj.tip === 'imagine_partajata') {
+      console.log('🔍 Verificare DICOM pentru mesaj:', {
+        nume: mesaj.imagineNume,
+        tip: mesaj.imagineTip,
+        continut: mesaj.continut,
+        fromType: isDicomFromType,
+        fromContent: isDicomFromContent,
+        fromMetadata: isDicomFromMetadata,
+        fromUrl: isDicomFromUrl,
+        fromName: isDicomFromName,
+        rezultat: result
+      });
+    }
+    
+    return result;
+  }
 }
-

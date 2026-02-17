@@ -1816,7 +1816,62 @@
   width: 100%;
   height: 500px;
   display: block;
-  cursor: crosshair;
+  cursor: grab;
+}
+
+.dicom-canvas:active {
+  cursor: grabbing;
+}
+
+/* Controale zoom pentru DICOM */
+.dicom-zoom-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.zoom-btn {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #667eea;
+  color: #667eea;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.zoom-btn:hover {
+  background: #667eea;
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.zoom-btn:active {
+  transform: scale(0.95);
+}
+
+.zoom-level {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #667eea;
+  color: #667eea;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  min-width: 60px;
 }
 
 /* Acțiuni DICOM */
@@ -1915,6 +1970,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.image-container-with-zoom {
+  width: 100%;
+  max-width: 900px;
+  height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  background: #000;
+  border-radius: 8px;
 }
 
 .viewer-image {
@@ -1923,6 +1993,22 @@
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.zoomable-image {
+  transition: transform 0.1s ease-out;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.image-zoom-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
 }
 
 .shared-viewer-footer {
@@ -1986,6 +2072,97 @@
   transition: all 0.3s ease;
 }
 
+/* Nou: Card pentru DICOM cu mai multe detalii */
+.dicom-shared-preview-card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  gap: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dicom-shared-preview-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.dicom-icon-container {
+  position: relative;
+  z-index: 1;
+}
+
+.dicom-icon-container i {
+  font-size: 5rem;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.dicom-info-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.dicom-file-label {
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dicom-file-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  opacity: 0.95;
+  max-width: 90%;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.dicom-click-hint {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.dicom-click-hint i {
+  font-size: 1rem;
+}
+
 .clickable-dicom {
   cursor: pointer;
 }
@@ -1993,6 +2170,10 @@
 .clickable-dicom:hover {
   background: linear-gradient(135deg, #7e8efc 0%, #8b5cb8 100%);
   transform: scale(1.02);
+}
+
+.clickable-dicom:hover .dicom-icon-container i {
+  transform: scale(1.1);
 }
 
 .clickable-dicom:active {
@@ -2023,4 +2204,51 @@
   align-items: center;
   gap: 0.3rem;
   margin-left: auto;
+}
+/* Stil special pentru imaginile DICOM în preview */
+.dicom-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  background: #000;
+}
+
+.dicom-preview-img:hover {
+  transform: scale(1.05);
+}
+
+/* Placeholder pentru erori DICOM */
+.dicom-error-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dicom-error-placeholder:hover {
+  background: linear-gradient(135deg, #7e8efc 0%, #8b5cb8 100%);
+  transform: scale(1.02);
+}
+
+.dicom-error-placeholder i {
+  font-size: 4rem;
+}
+
+.dicom-error-placeholder span {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.dicom-error-placeholder small {
+  font-size: 0.85rem;
+  opacity: 0.9;
 }

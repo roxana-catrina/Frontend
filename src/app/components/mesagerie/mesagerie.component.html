@@ -298,22 +298,29 @@
             <div class="shared-image-header">
               <i class="bi bi-image"></i>
               <span>Imagine medicală</span>
-              <span *ngIf="message.imagineTip === 'application/dicom'" class="dicom-badge-header">
+              <span *ngIf="isDicomMessage(message)" class="dicom-badge-header">
                 <i class="bi bi-badge-3d"></i> DICOM
               </span>
             </div>
             <div class="shared-image-preview">
-              <!-- Preview pentru DICOM -->
-              <div *ngIf="message.imagineTip === 'application/dicom'" 
-                   class="dicom-shared-preview clickable-dicom"
+              <!-- Preview pentru DICOM - placeholder interactiv -->
+              <div *ngIf="isDicomMessage(message)" 
+                   class="dicom-shared-preview-card clickable-dicom"
                    (click)="openDicomImage(message.imagineId)"
-                   title="Click pentru a deschide viewer-ul DICOM">
-                <i class="bi bi-file-earmark-medical"></i>
-                <span>Fișier DICOM</span>
-                <small>Click pentru vizualizare</small>
+                   title="Click pentru vizualizare completă">
+                <div class="dicom-icon-container">
+                  <i class="bi bi-file-earmark-medical"></i>
+                </div>
+                <div class="dicom-info-text">
+                  <span class="dicom-file-label">Fișier Medical DICOM</span>
+                  <span class="dicom-file-name">{{ message.imagineNume }}</span>
+                  <small class="dicom-click-hint">
+                    <i class="bi bi-eye"></i> Click pentru vizualizare interactivă
+                  </small>
+                </div>
               </div>
               <!-- Preview pentru imagini normale -->
-              <img *ngIf="message.imagineTip !== 'application/dicom'" 
+              <img *ngIf="!isDicomMessage(message)" 
                    [src]="message.imagineUrl" 
                    [alt]="message.imagineNume" 
                    class="shared-image-img"
@@ -510,6 +517,20 @@
         <!-- Canvas DICOM -->
         <div class="dicom-canvas-container">
           <div #dicomCanvas class="dicom-canvas"></div>
+          
+          <!-- Controale zoom peste canvas -->
+          <div class="dicom-zoom-controls">
+            <button class="zoom-btn" (click)="zoomIn()" title="Zoom In">
+              <i class="bi bi-zoom-in"></i>
+            </button>
+            <button class="zoom-btn" (click)="zoomOut()" title="Zoom Out">
+              <i class="bi bi-zoom-out"></i>
+            </button>
+            <button class="zoom-btn" (click)="resetZoom()" title="Reset Zoom">
+              <i class="bi bi-arrows-angle-contract"></i>
+            </button>
+            <div class="zoom-level">{{ currentZoom }}%</div>
+          </div>
         </div>
         
         <!-- Acțiuni -->
@@ -523,7 +544,33 @@
       
       <!-- Preview pentru imagini normale -->
       <div *ngIf="!sharedImageIsDicom" class="normal-image-viewer">
-        <img [src]="sharedImageUrl" [alt]="sharedImageName" class="viewer-image" />
+        <div class="image-container-with-zoom">
+          <img 
+            [src]="sharedImageUrl" 
+            [alt]="sharedImageName" 
+            class="viewer-image zoomable-image"
+            [style.transform]="getImageTransform()"
+            [style.cursor]="getImageCursor()"
+            (mousedown)="onImageMouseDown($event)"
+            (mousemove)="onImageMouseMove($event)"
+            (mouseup)="onImageMouseUp($event)"
+            (mouseleave)="onImageMouseLeave($event)"
+            (wheel)="onImageWheel($event)" />
+          
+          <!-- Controale zoom pentru imagini normale -->
+          <div class="image-zoom-controls">
+            <button class="zoom-btn" (click)="zoomIn()" title="Zoom In">
+              <i class="bi bi-zoom-in"></i>
+            </button>
+            <button class="zoom-btn" (click)="zoomOut()" title="Zoom Out">
+              <i class="bi bi-zoom-out"></i>
+            </button>
+            <button class="zoom-btn" (click)="resetZoom()" title="Reset Zoom">
+              <i class="bi bi-arrows-angle-contract"></i>
+            </button>
+            <div class="zoom-level">{{ normalImageZoom }}%</div>
+          </div>
+        </div>
       </div>
     </div>
     

@@ -1013,16 +1013,12 @@ export class ImagineComponent implements OnInit {
     this.showToast = false;
   }
 
-  /**
-   * Deschide modalul pentru partajare pacient
-   */
+  
   openSharePatientModal(): void {
     if (!this.pacient) {
       this.showToastMessage('Nu există pacient selectat pentru partajare.', 'error');
       return;
     }
-
-    // Încarcă lista de doctori (toți utilizatorii mai puțin utilizatorul curent)
     this.userService.getAllUsers().subscribe({
       next: (users) => {
         const currentUserId = localStorage.getItem('id');
@@ -1072,27 +1068,19 @@ export class ImagineComponent implements OnInit {
     this.selectedDoctor = doctor;
   }
 
-  /**
-   * Trimite pacientul prin mesagerie
-   */
+
   sharePatientToDoctor(): void {
     if (!this.selectedDoctor || !this.pacient) {
       this.showToastMessage('Te rog selectează un destinatar!', 'error');
       return;
     }
-
     const currentUserId = localStorage.getItem('id');
     if (!currentUserId) {
       this.showToastMessage('Eroare: Utilizator neautentificat.', 'error');
       return;
     }
-
     this.isSharingPatient = true;
-
-    // Calculează numărul de imagini
     const numarImagini = this.pacient.imagini ? this.pacient.imagini.length : 0;
-
-    // Pregătește informațiile despre imagini pentru partajare
     const imaginiPartajate = this.pacient.imagini ? this.pacient.imagini.map(img => ({
       id: img.id,
       nume: img.nume || 'Fără nume',
@@ -1121,10 +1109,6 @@ export class ImagineComponent implements OnInit {
       pacientNumarImagini: numarImagini,
       pacientImagini: JSON.stringify(imaginiPartajate) // Serializează array-ul de imagini
     };
-
-    console.log('📤 Partajare pacient:', mesajRequest);
-    console.log('📷 Imagini partajate:', imaginiPartajate);
-
     this.mesajService.trimiteMesaj(mesajRequest).subscribe({
       next: (response) => {
         console.log('✅ Pacient partajat cu succes:', response);
