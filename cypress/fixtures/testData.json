@@ -1,0 +1,29 @@
+{
+  "users": {
+    "admin": {
+      "email": "ionn@gmail.com",
+      "password": "1"
+    },
+    "doctor": {
+      "email": "ionn@gmail.com",
+      "password": "1"
+    },
+    "invalidUser": {
+      "email": "invalid@test.com",
+      "password": "wrongpassword"
+    }
+  },
+  "pacient": {
+    "nume": "Popescu",
+    "prenume": "Ion",
+    "cnp": "1234567890123",
+    "telefon": "0712345678",
+    "email": "ion.popescu@test.com",
+    "adresa": "Str. Test, Nr. 1",
+    "dataNasterii": "1990-01-01"
+  },
+  "mesaj": {
+    "continut": "Acesta este un mesaj de test pentru aplicație",
+    "subiect": "Test Mesaj"
+  }
+}
