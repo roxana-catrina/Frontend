@@ -3,99 +3,91 @@ describe('User Management Tests', () => {
     // Login ca administrator
     cy.fixture('testData').then((data) => {
       cy.visit('/authenticate');
-      cy.get('input[name="email"], input[type="email"]').type(data.users.admin.email);
-      cy.get('input[name="password"], input[type="password"]').type(data.users.admin.password);
+      cy.get('input[type="email"]').type(data.users.admin.email);
+      cy.get('input[type="password"]').type(data.users.admin.password);
       cy.get('button[type="submit"]').click();
       cy.wait(1000);
     });
   });
 
-  // Test 24: Verifică încărcarea paginii de utilizatori
-  it('24. Should load users list page', () => {
+  // Test 27: Verifică încărcarea paginii de creare utilizator
+  it('27. Should load user creation page', () => {
     cy.visit('/user');
     cy.url().should('include', '/user');
-    cy.get('h1, h2, .page-title').should('be.visible');
+    cy.get('h2.page-title').should('be.visible');
   });
 
-  // Test 25: Verifică afișarea tabelului cu utilizatori
-  it('25. Should display users table', () => {
+  // Test 28: Verifică afișarea formularului de creare utilizator
+  it('28. Should display user creation form', () => {
     cy.visit('/user');
-    cy.get('table, mat-table, .users-table').should('be.visible');
-    cy.get('tr, mat-row').should('have.length.greaterThan', 1);
+    cy.get('form').should('be.visible');
+    cy.get('input[formControlName="nume"]').should('be.visible');
+    cy.get('input[formControlName="email"]').should('be.visible');
   });
 
-  // Test 26: Verifică navigarea la formularul de adăugare utilizator
-  it('26. Should navigate to add user form', () => {
+  // Test 29: Verifică validarea câmpurilor obligatorii
+  it('29. Should validate required fields', () => {
     cy.visit('/user');
-    cy.contains('button', /add|adauga|nou/i).click();
-    cy.url().should('include', '/user');
+    cy.get('button[type="submit"]').should('be.disabled');
+    cy.get('input[formControlName="nume"]').type('Test').blur();
+    cy.get('input[formControlName="prenume"]').focus().blur();
+    cy.get('.invalid-feedback').should('be.visible');
   });
 
-  // Test 27: Verifică crearea unui utilizator nou
-  it('27. Should create a new user', () => {
+  // Test 30: Verifică validarea formatului email
+  it('30. Should validate email format', () => {
     cy.visit('/user');
-    const randomEmail = `test${Date.now()}@test.com`;
-    
-    cy.get('input[name="email"], [formControlName="email"]').type(randomEmail);
-    cy.get('input[name="password"], [formControlName="password"]').type('Test123!');
-    cy.get('input[name="firstName"], [formControlName="firstName"]').type('Test');
-    cy.get('input[name="lastName"], [formControlName="lastName"]').type('User');
-    cy.get('button[type="submit"]').click();
-    
-    cy.contains('success|succes', { matchCase: false, timeout: 10000 }).should('be.visible');
+    cy.get('input[formControlName="email"]').type('invalid-email').blur();
+    cy.get('.invalid-feedback').should('contain', 'Format email invalid');
   });
 
-  // Test 28: Verifică validarea formularului de utilizator
-  it('28. Should validate user form fields', () => {
+  // Test 31: Verifică validarea datei de naștere
+  it('31. Should validate birth date', () => {
     cy.visit('/user');
-    cy.get('button[type="submit"]').click();
-    cy.get('mat-error, .error-message').should('have.length.greaterThan', 0);
+    cy.get('input[formControlName="data_nasterii"]').type('2030-01-01').blur();
+    cy.get('.invalid-feedback').should('contain', 'viitor');
   });
 
-  // Test 29: Verifică editarea unui utilizator
-  it('29. Should edit an existing user', () => {
+  // Test 32: Verifică că butonul submit este dezactivat când formularul este invalid
+  it('32. Should disable submit button when form is invalid', () => {
     cy.visit('/user');
-    cy.get('button, mat-icon').contains(/edit|modifica/i).first().click();
-    cy.url().should('include', '/user');
-    
-    cy.get('input[name="firstName"], [formControlName="firstName"]')
-      .clear()
-      .type('Updated Name');
-    cy.get('button[type="submit"]').click();
-    
-    cy.contains('success|succes', { matchCase: false }).should('be.visible');
+    cy.get('button[type="submit"]').should('be.disabled');
+    cy.get('input[formControlName="nume"]').type('Test');
+    cy.get('button[type="submit"]').should('be.disabled');
   });
 
-  // Test 30: Verifică căutarea utilizatorilor
-  it('30. Should search for users', () => {
+  // Test 33: Verifică că toți câmpii obligatorii sunt marcați
+  it('33. Should mark all required fields', () => {
     cy.visit('/user');
-    cy.get('input[type="search"], input[placeholder*="search"]').type('test');
-    cy.wait(500);
-    cy.get('tr, mat-row').should('have.length.greaterThan', 0);
+    cy.get('span.text-danger').should('have.length.greaterThan', 5);
   });
 
-  // Test 31: Verifică sortarea tabelului de utilizatori
-  it('31. Should sort users table', () => {
+  // Test 34: Verifică dropdown-ul pentru sex
+  it('34. Should display sex dropdown options', () => {
     cy.visit('/user');
-    cy.get('th, mat-header-cell').contains(/name|nume/i).click();
-    cy.wait(500);
-    cy.get('tr, mat-row').should('have.length.greaterThan', 1);
+    cy.get('select[formControlName="sex"]').should('be.visible');
+    cy.get('select[formControlName="sex"] option').should('have.length.greaterThan', 1);
   });
 
-  // Test 32: Verifică filtrarea utilizatorilor
-  it('32. Should filter users by role', () => {
+  // Test 35: Verifică completarea câmpului telefon
+  it('35. Should allow phone number input', () => {
     cy.visit('/user');
-    cy.get('select, mat-select').contains(/role|rol/i).click();
-    cy.contains('mat-option, option', /admin/i).click();
-    cy.wait(500);
-    cy.get('tr, mat-row').should('exist');
+    cy.get('input[formControlName="numar_telefon"]').type('0712345678');
+    cy.get('input[formControlName="numar_telefon"]').should('have.value', '0712345678');
   });
 
-  // Test 33: Verifică ștergerea unui utilizator
-  it('33. Should delete a user', () => {
+  // Test 36: Verifică afișarea secțiunilor formularului
+  it('36. Should display form sections', () => {
     cy.visit('/user');
-    cy.get('button, mat-icon').contains(/delete|sterge/i).last().click();
-    cy.contains('button', /confirm|da/i).click();
-    cy.contains('deleted|sters', { matchCase: false }).should('be.visible');
+    cy.get('.section-title').should('have.length.greaterThan', 1);
+    cy.contains('Informații Personale').should('be.visible');
+    cy.contains('Informații Cont').should('be.visible');
+  });
+
+  // Test 37: Verifică navigarea către login
+  it('37. Should have link to login page', () => {
+    cy.visit('/user');
+    cy.contains('Conectează-te aici').should('be.visible').click();
+    cy.url().should('include', '/authenticate');
   });
 });
