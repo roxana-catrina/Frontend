@@ -734,42 +734,16 @@ export class MesagerieComponent implements OnInit, OnDestroy {
       console.warn('⚠️ Date imagine lipsă');
       return;
     }
-    
-    console.log('🖼️ Deschidere viewer imagine partajată:', mesaj.imagineNume);
-    console.log('📋 Date mesaj:', {
-      url: mesaj.imagineUrl,
-      nume: mesaj.imagineNume,
-      tip: mesaj.imagineTip,
-      continut: mesaj.continut
-    });
-    
     this.sharedImageUrl = mesaj.imagineUrl;
     this.sharedImageName = mesaj.imagineNume;
     this.sharedImageType = mesaj.imagineTip || '';
-    
-    // Detectează DICOM în mai multe moduri:
-    // 1. Verifică imagineTip
-    // 2. Verifică dacă mesajul conține textul "DICOM" în conținut
-    // 3. Verifică dacă există metadate DICOM
-    // 4. Verifică extensia fișierului din URL
     const isDicomFromType = mesaj.imagineTip === 'application/dicom' || mesaj.imagineTip === 'application/x-dicom';
     const isDicomFromContent = mesaj.continut?.includes('DICOM') || mesaj.continut?.includes('📊');
     const isDicomFromMetadata = !!mesaj.imagineMetadata;
     const isDicomFromUrl = mesaj.imagineUrl?.toLowerCase().includes('.dcm') || 
                            mesaj.imagineNume?.toLowerCase().includes('.dcm') ||
                            mesaj.imagineUrl?.toLowerCase().includes('dicom');
-    
     this.sharedImageIsDicom = isDicomFromType || isDicomFromContent || isDicomFromMetadata || isDicomFromUrl;
-    
-    console.log('🔍 Detectare DICOM:', {
-      fromType: isDicomFromType,
-      fromContent: isDicomFromContent,
-      fromMetadata: isDicomFromMetadata,
-      fromUrl: isDicomFromUrl,
-      final: this.sharedImageIsDicom
-    });
-    
-    // Parse metadate DICOM dacă există
     if (mesaj.imagineMetadata && typeof mesaj.imagineMetadata === 'string') {
       try {
         this.sharedDicomMetadata = JSON.parse(mesaj.imagineMetadata);
@@ -780,16 +754,12 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     } else {
       this.sharedDicomMetadata = mesaj.imagineMetadata || null;
     }
-    
     this.showSharedImageViewer = true;
-    console.log('✅ Modal setat ca vizibil, isDicom:', this.sharedImageIsDicom);
     
-    // Dacă este DICOM, încarcă metadatele imediat dacă nu le avem deja
     if (this.sharedImageIsDicom && !this.sharedDicomMetadata) {
       this.loadDicomMetadata();
     }
-    
-    // Încarcă vizualizarea DICOM după ce modal-ul s-a afișat
+
     if (this.sharedImageIsDicom) {
       setTimeout(() => this.loadDicomImage(), 100);
     }
