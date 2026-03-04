@@ -1,11 +1,11 @@
 {
   "users": {
     "admin": {
-      "email": "roxanaelena111111@gmail.com",
+      "email": "ionn@gmail.com",
       "password": "1"
     },
     "doctor": {
-      "email": "roxanaelena111111@gmail.com",
+      "email": "ionn@gmail.com",
       "password": "1"
     },
     "invalidUser": {
