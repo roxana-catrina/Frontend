@@ -1,5 +1,11 @@
 describe('User Management Tests', () => {
   beforeEach(() => {
+    // Interceptează request-urile către backend
+    cy.intercept('GET', '**/api/user/*/pacienti', { statusCode: 200, body: [] }).as('getPacienti');
+    cy.intercept('GET', '**/api/programari/user/*/month*', { statusCode: 200, body: [] }).as('getProgramariMonth');
+    cy.intercept('GET', '**/api/programari/user/*/upcoming', { statusCode: 200, body: [] }).as('getProgramariUpcoming');
+    cy.intercept('GET', '**/api/mesaje/necitite/*', { statusCode: 200, body: 0 }).as('getMesajeNecitite');
+    
     // Login ca administrator
     cy.fixture('testData').then((data) => {
       cy.visit('/authenticate');

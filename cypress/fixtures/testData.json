@@ -5,7 +5,7 @@
       "password": "1"
     },
     "doctor": {
-      "email": "roxanaelena111111@gmail.com",
+      "email": "ionn@gmail.com",
       "password": "1"
     },
     "invalidUser": {
@@ -15,12 +15,11 @@
   },
   "pacient": {
     "nume": "Popescu",
-    "prenume": "Ion",
-    "cnp": "1234567890123",
-    "telefon": "0712345678",
-    "email": "ion.popescu@test.com",
-    "adresa": "Str. Test, Nr. 1",
-    "dataNasterii": "1990-01-01"
+    "prenume": "Mihai",
+    "cnp": "1750105127656",
+    "telefon": "0754327654",
+    
+    "dataNasterii": "1975-01-04"
   },
   "mesaj": {
     "continut": "Acesta este un mesaj de test pentru aplicație",

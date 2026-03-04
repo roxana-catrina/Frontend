@@ -1,5 +1,14 @@
 describe('Mesagerie Tests', () => {
   beforeEach(() => {
+    // Interceptează request-urile către backend
+    cy.intercept('GET', '**/api/user/*/pacienti', { statusCode: 200, body: [] }).as('getPacienti');
+    cy.intercept('GET', '**/api/programari/user/*/month*', { statusCode: 200, body: [] }).as('getProgramariMonth');
+    cy.intercept('GET', '**/api/programari/user/*/upcoming', { statusCode: 200, body: [] }).as('getProgramariUpcoming');
+    cy.intercept('GET', '**/api/mesaje/necitite/*', { statusCode: 200, body: 0 }).as('getMesajeNecitite');
+    cy.intercept('GET', '**/api/mesaje/recente/*', { statusCode: 200, body: [] }).as('getMesajeRecente');
+    cy.intercept('GET', '**/api/users', { statusCode: 200, body: [{ id: '1', prenume: 'Test', nume: 'User', email: 'test@test.com' }] }).as('getUsers');
+    cy.intercept('GET', '**/ws/info*', { statusCode: 200, body: {} }).as('getWsInfo');
+    
     // Login înainte de fiecare test
     cy.fixture('testData').then((data) => {
       cy.visit('/authenticate');
