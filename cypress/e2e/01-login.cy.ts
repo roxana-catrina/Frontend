@@ -48,7 +48,6 @@ describe('Login Tests', () => {
     cy.get('button[type="submit"]').should('be.disabled');
   });
 
-  // Test 7: Login cu credențiale greșite
   it('7. Should show error for wrong credentials', () => {
     cy.fixture('testData').then((data) => {
       cy.get('input[type="email"]').type(data.users.invalidUser.email);
