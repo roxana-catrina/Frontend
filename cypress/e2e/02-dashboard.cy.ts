@@ -35,7 +35,8 @@ describe('Dashboard Tests', () => {
       pacientNume: 'Popescu',
       pacientPrenume: 'Mihai',
       pacientCnp: '1750105127656',
-      dataProgramare: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+      dataProgramare: new Date(Date.now() + 2 * 24 * 60
+       * 60 * 1000).toISOString(),
       durataMinute: 30,
       tipConsultatie: 'Consultație generală',
       status: 'PROGRAMAT',
@@ -50,7 +51,8 @@ describe('Dashboard Tests', () => {
       pacientNume: 'Popescu',
       pacientPrenume: 'Mihai',
       pacientCnp: '1750105127656',
-      dataProgramare: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+      dataProgramare: new Date(Date.now() + 2 * 24 * 60 
+      * 60 * 1000).toISOString(),
       durataMinute: 30,
       tipConsultatie: 'Consultație generală',
       status: 'PROGRAMAT',
@@ -62,7 +64,8 @@ describe('Dashboard Tests', () => {
       pacientNume: 'Ionescu',
       pacientPrenume: 'Maria',
       pacientCnp: '2900615123456',
-      dataProgramare: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+      dataProgramare: new Date(Date.now() + 5 * 24 * 60 *
+       60 * 1000).toISOString(),
       durataMinute: 45,
       tipConsultatie: 'Evaluare imagistică',
       status: 'CONFIRMAT',
@@ -71,12 +74,16 @@ describe('Dashboard Tests', () => {
   ];
 
   beforeEach(() => {
-    // Interceptează request-urile către backend cu date reale
-    cy.intercept('GET', '**/api/user/*/pacienti', { statusCode: 200, body: mockPacienti }).as('getPacienti');
-    cy.intercept('GET', '**/api/programari/user/*/month*', { statusCode: 200, body: mockProgramariMonth }).as('getProgramariMonth');
-    cy.intercept('GET', '**/api/programari/user/*/upcoming', { statusCode: 200, body: mockProgramariUpcoming }).as('getProgramariUpcoming');
-    cy.intercept('GET', '**/api/mesaje/necitite/*', { statusCode: 200, body: 3 }).as('getMesajeNecitite');
-    cy.intercept('GET', '**/api/mesaje/recente/*', { statusCode: 200, body: [] }).as('getMesajeRecente');
+    cy.intercept('GET', '**/api/user/*/pacienti', 
+      { statusCode: 200, body: mockPacienti }).as('getPacienti');
+    cy.intercept('GET', '**/api/programari/user/*/month*',
+       { statusCode: 200, body: mockProgramariMonth }).as('getProgramariMonth');
+    cy.intercept('GET', '**/api/programari/user/*/upcoming', 
+      { statusCode: 200, body: mockProgramariUpcoming }).as('getProgramariUpcoming');
+    cy.intercept('GET', '**/api/mesaje/necitite/*',
+       { statusCode: 200, body: 3 }).as('getMesajeNecitite');
+    cy.intercept('GET', '**/api/mesaje/recente/*',
+       { statusCode: 200, body: [] }).as('getMesajeRecente');
     
     // Login înainte de fiecare test
     cy.fixture('testData').then((data) => {
@@ -95,13 +102,11 @@ describe('Dashboard Tests', () => {
     cy.get('h1, h2, .dashboard-title').should('be.visible');
   });
 
-  // Test 12: Verifică elementele principale din dashboard
   it('12. Should display main dashboard components', () => {
     cy.visit('/dashboard');
     cy.wait('@getPacienti');
     cy.get('.card').should('have.length.greaterThan', 0);
     cy.get('.dashboard-header').should('be.visible');
-    // Verifică că pacienții sunt afișați
     cy.get('.patient-card').should('have.length', 2);
   });
 

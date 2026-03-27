@@ -71,7 +71,6 @@ describe('Login Tests', () => {
     cy.get('button[type="submit"]').should('be.disabled');
   });
 
-  // Test 10: Verifică validarea în timp real
   it('10. Should validate email format in real-time', () => {
     cy.get('input[type="email"]').type('invalidemail').blur();
     cy.get('.error-message').should('be.visible').and('contain', 'Format email invalid');

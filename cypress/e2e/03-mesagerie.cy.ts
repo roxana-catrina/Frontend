@@ -1,21 +1,35 @@
 describe('Mesagerie Tests', () => {
+  const mockCurrentUserId = 'current-user-id';
+  const mockUsers = [
+    { id: 'user-2', prenume: 'Roxana', nume: 'Popescu', email: 'roxana@test.com' },
+    { id: 'user-3', prenume: 'Andrei', nume: 'Ionescu', email: 'andrei@test.com' }
+  ];
+
   beforeEach(() => {
-    // Interceptează request-urile către backend
+    cy.intercept('POST', '**/api/authenticate', {
+      statusCode: 200,
+      body: { id: mockCurrentUserId, jwt: 'fake-jwt-token', nume: 'Ion Test' }
+    }).as('authenticate');
     cy.intercept('GET', '**/api/user/*/pacienti', { statusCode: 200, body: [] }).as('getPacienti');
     cy.intercept('GET', '**/api/programari/user/*/month*', { statusCode: 200, body: [] }).as('getProgramariMonth');
     cy.intercept('GET', '**/api/programari/user/*/upcoming', { statusCode: 200, body: [] }).as('getProgramariUpcoming');
     cy.intercept('GET', '**/api/mesaje/necitite/*', { statusCode: 200, body: 0 }).as('getMesajeNecitite');
     cy.intercept('GET', '**/api/mesaje/recente/*', { statusCode: 200, body: [] }).as('getMesajeRecente');
-    cy.intercept('GET', '**/api/users', { statusCode: 200, body: [{ id: '1', prenume: 'Test', nume: 'User', email: 'test@test.com' }] }).as('getUsers');
+    cy.intercept('GET', '**/api/users', { statusCode: 200, body: [
+      { id: mockCurrentUserId, prenume: 'Ion', nume: 'Test', email: 'ionn@gmail.com' },
+      ...mockUsers
+    ]}).as('getUsers');
     cy.intercept('GET', '**/ws/info*', { statusCode: 200, body: {} }).as('getWsInfo');
+    cy.intercept('GET', '**/api/mesaje/conversatie/**', { statusCode: 200, body: [] }).as('getConversatie');
     
-    // Login înainte de fiecare test
+    // Login cu mock
     cy.fixture('testData').then((data) => {
       cy.visit('/authenticate');
       cy.get('input[type="email"]').type(data.users.admin.email);
       cy.get('input[type="password"]').type(data.users.admin.password);
       cy.get('button[type="submit"]').click();
-      cy.wait(1000);
+      cy.wait('@authenticate');
+      cy.url().should('include', '/dashboard');
     });
   });
 
@@ -29,25 +43,39 @@ describe('Mesagerie Tests', () => {
   // Test 17: Verifică afișarea listei de utilizatori
   it('17. Should display users list', () => {
     cy.visit('/mesagerie');
+    cy.wait(['@getUsers', '@getMesajeRecente']);
     cy.get('.users-list').should('be.visible');
-    cy.get('.user-card').should('exist');
+    cy.get('.user-card').should('have.length.greaterThan', 0);
   });
 
   // Test 18: Verifică selectarea unui utilizator și deschiderea chat-ului
   it('18. Should open chat window when selecting a user', () => {
     cy.visit('/mesagerie');
+    cy.wait(['@getUsers', '@getMesajeRecente']);
     cy.get('.user-card').first().click();
     cy.get('.chat-window').should('be.visible');
     cy.get('.chat-messages').should('be.visible');
   });
 
-  // Test 19: Verifică trimiterea unui mesaj
+
   it('19. Should send a message to selected user', () => {
+    cy.intercept('POST', '**/api/mesaje/trimite', (req) => {
+      req.reply({ statusCode: 200, body: {
+        id: 'msg-1',
+        expeditorId: mockCurrentUserId,
+        destinatarId: 'user-2',
+        continut: req.body.continut,
+        dataTrimitere: new Date().toISOString(),
+        citit: false
+      }});
+    }).as('sendMessage');
     cy.visit('/mesagerie');
+    cy.wait(['@getUsers', '@getMesajeRecente']);
     cy.fixture('testData').then((data) => {
       cy.get('.user-card').first().click();
       cy.get('.chat-input').type(data.mesaj.continut);
       cy.get('.btn-send').click();
+      cy.wait('@sendMessage');
       cy.get('.message').should('contain', data.mesaj.continut);
     });
   });
@@ -55,6 +83,7 @@ describe('Mesagerie Tests', () => {
   // Test 20: Verifică că butonul de trimitere este dezactivat pentru mesaj gol
   it('20. Should disable send button for empty message', () => {
     cy.visit('/mesagerie');
+    cy.wait(['@getUsers', '@getMesajeRecente']);
     cy.get('.user-card').first().click();
     cy.get('.btn-send').should('be.disabled');
     cy.get('.chat-input').type('Test');
@@ -64,13 +93,16 @@ describe('Mesagerie Tests', () => {
   // Test 21: Verifică funcționalitatea de căutare utilizatori
   it('21. Should search through users', () => {
     cy.visit('/mesagerie');
-    cy.get('.search-input').type('roxana');
-    cy.get('.user-card').should('exist');
+    cy.wait(['@getUsers', '@getMesajeRecente']);
+    cy.get('.search-input').type('Roxana');
+    cy.get('.user-card').should('have.length.greaterThan', 0);
+    cy.get('.user-card').first().should('contain', 'Roxana');
   });
 
   // Test 22: Verifică închiderea ferestrei de chat
   it('22. Should close chat window', () => {
     cy.visit('/mesagerie');
+    cy.wait(['@getUsers', '@getMesajeRecente']);
     cy.get('.user-card').first().click();
     cy.get('.chat-window').should('be.visible');
     cy.get('.btn-close-chat').click();
@@ -87,9 +119,8 @@ describe('Mesagerie Tests', () => {
   // Test 24: Verifică highlight-ul utilizatorilor cu mesaje necitite
   it('24. Should highlight users with unread messages', () => {
     cy.visit('/mesagerie');
-    cy.get('.user-card').should('exist');
-    // Verifică că există cel puțin un utilizator cu mesaje necitite sau că lista se încarcă corect
-    cy.get('.user-card.has-unread, .user-card').should('have.length.greaterThan', 0);
+    cy.wait(['@getUsers', '@getMesajeRecente']);
+    cy.get('.user-card').should('have.length.greaterThan', 0);
   });
 
   // Test 25: Verifică clear search functionality
@@ -103,6 +134,7 @@ describe('Mesagerie Tests', () => {
   // Test 26: Verifică afișarea butonului de partajare imagine
   it('26. Should display image sharing button in chat', () => {
     cy.visit('/mesagerie');
+    cy.wait(['@getUsers', '@getMesajeRecente']);
     cy.get('.user-card').first().click();
     cy.get('.btn-attach-image').should('be.visible');
   });
