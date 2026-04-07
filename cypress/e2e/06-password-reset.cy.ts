@@ -1,4 +1,25 @@
 describe('Password Reset Tests', () => {
+  const openResetPasswordFlow = (email: string) => {
+    cy.visit('/forgot-password');
+    cy.get('input[type="email"]').type(email);
+    cy.get('button[type="submit"]').click();
+    cy.url().should('include', '/reset-password');
+  };
+
+  const getLatestResetCode = (email: string) => {
+    return cy
+      .request({
+        method: 'GET',
+        url: `http://localhost:8083/api/test/password-reset-code/${encodeURIComponent(email)}`,
+        failOnStatusCode: false
+      })
+      .then((response) => {
+        expect(response.status).to.eq(200);
+        expect(response.body.code).to.match(/^\d{6}$/);
+        return response.body.code as string;
+      });
+  };
+
   // Test 48: Verifică încărcarea paginii "Forgot Password"
   it('48. Should load forgot password page', () => {
     cy.visit('/forgot-password');
@@ -64,11 +85,17 @@ describe('Password Reset Tests', () => {
 
   // Test 56: Verifică validarea parolelor care nu coincid
   it('56. Should show error for mismatched passwords', () => {
-    cy.visit('/reset-password?email=test@test.com');
-    cy.get('input[formControlName="code"]').type('123456');
-    cy.get('input[formControlName="newPassword"]').type('NewPassword123').blur();
-    cy.get('input[formControlName="confirmPassword"]').type('DifferentPassword').blur();
-    cy.get('.invalid-feedback').should('contain', 'nu coincid');
+    cy.fixture('testData').then((data) => {
+      const testEmail = data.users.admin.email;
+      openResetPasswordFlow(testEmail);
+
+      getLatestResetCode(testEmail).then((verificationCode) => {
+        cy.get('input[formControlName="code"]').type(verificationCode);
+        cy.get('input[formControlName="newPassword"]').type('NewPassword123').blur();
+        cy.get('input[formControlName="confirmPassword"]').type('DifferentPassword').blur();
+        cy.get('.invalid-feedback').should('contain', 'nu coincid');
+      });
+    });
   });
 
   // Test 57: Verifică butonul de toggle password visibility
@@ -93,74 +120,57 @@ describe('Password Reset Tests', () => {
 
   // Test 60: Verifică că butonul submit este dezactivat când formularul este invalid
   it('60. Should disable submit when form is invalid', () => {
-    cy.visit('/reset-password?email=test@test.com');
-    cy.get('button[type="submit"]').should('be.disabled');
-    cy.get('input[formControlName="code"]').type('123456');
-    cy.get('input[formControlName="newPassword"]').type('test123');
-    cy.get('button[type="submit"]').should('be.disabled');
+    cy.fixture('testData').then((data) => {
+      const testEmail = data.users.admin.email;
+      openResetPasswordFlow(testEmail);
+
+      getLatestResetCode(testEmail).then((verificationCode) => {
+        cy.get('button[type="submit"]').should('be.disabled');
+        cy.get('input[formControlName="code"]').type(verificationCode);
+        cy.get('input[formControlName="newPassword"]').type('test123');
+        cy.get('button[type="submit"]').should('be.disabled');
+      });
+    });
   });
 
   // Test 61: Verifică resetarea completă cu cod real din backend
   it('61. Should complete password reset with real verification code', () => {
     cy.fixture('testData').then((data) => {
       const testEmail = data.users.admin.email;
-      
-      // Pasul 1: Trimite request pentru cod
-      cy.visit('/forgot-password');
-      cy.get('input[type="email"]').type(testEmail);
-      cy.get('button[type="submit"]').click();
-      
-      // Pasul 2: Așteaptă redirecționarea
-      cy.url().should('include', '/reset-password');
-      
-      // Pasul 3: Obține codul real de la backend
-      cy.request({
-        method: 'GET',
-        url: `http://localhost:8083/api/test/password-reset-code/${encodeURIComponent(testEmail)}`,
-        failOnStatusCode: false
-      }).then(function(response) {
-          if (response.status === 200) {
-            const verificationCode = response.body.code;
-            
-            // Pasul 4: Completează formularul de resetare
-            cy.get('input[formControlName="code"]').type(verificationCode);
-            cy.get('input[formControlName="newPassword"]').type('NewPassword123');
-            cy.get('input[formControlName="confirmPassword"]').type('NewPassword123');
-            
-            // Pasul 5: Trimite formularul
-            cy.intercept('POST', '**/api/password-reset/verify-and-reset').as('resetPassword');
-            cy.get('button[type="submit"]').click();
-            
-            // Pasul 6: Verifică success
-            cy.wait('@resetPassword');
-            cy.get('.alert-success').should('be.visible');
-          } else {
-            // Dacă endpoint-ul returnează 403, skip verificarea
-            cy.log('Test endpoint returned 403 - Security config needs update');
-            this["skip"]();
-          }
-        });
+      openResetPasswordFlow(testEmail);
+
+      getLatestResetCode(testEmail).then((verificationCode) => {
+        cy.get('input[formControlName="code"]').type(verificationCode);
+        cy.get('input[formControlName="newPassword"]').type('NewPassword123');
+        cy.get('input[formControlName="confirmPassword"]').type('NewPassword123');
+
+        cy.intercept('POST', '**/api/password-reset/verify-and-reset').as('resetPassword');
+        cy.get('button[type="submit"]').click();
+
+        cy.wait('@resetPassword');
+        cy.get('.alert-success').should('be.visible');
+      });
     });
   });
 
   // Test 62: Verifică că un cod invalid este respins
   it('62. Should reject invalid verification code', () => {
     cy.fixture('testData').then((data) => {
-      cy.visit('/forgot-password');
-      cy.get('input[type="email"]').type(data.users.admin.email);
-      cy.get('button[type="submit"]').click();
-      
-      cy.url().should('include', '/reset-password');
-      
-      // Folosește un cod greșit
-      cy.get('input[formControlName="code"]').type('999999');
-      cy.get('input[formControlName="newPassword"]').type('NewPassword123');
-      cy.get('input[formControlName="confirmPassword"]').type('NewPassword123');
-      
-      cy.get('button[type="submit"]').click();
-      
-      // Verifică că apare eroare (backend va returna 400)
-      cy.get('.alert-danger', { timeout: 10000 }).should('be.visible');
+      const testEmail = data.users.admin.email;
+      openResetPasswordFlow(testEmail);
+
+      getLatestResetCode(testEmail).then((verificationCode) => {
+        const invalidCode = `${(Number(verificationCode[0]) + 1) % 10}${verificationCode.slice(1)}`;
+
+        cy.get('input[formControlName="code"]').type(invalidCode);
+        cy.get('input[formControlName="newPassword"]').type('NewPassword123');
+        cy.get('input[formControlName="confirmPassword"]').type('NewPassword123');
+
+        cy.get('button[type="submit"]').click();
+
+        // Verifică că apare eroare (backend va returna 400)
+        cy.get('.alert-danger', { timeout: 10000 }).should('be.visible');
+      });
     });
   });
 });
