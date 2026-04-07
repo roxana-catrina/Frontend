@@ -1016,7 +1016,6 @@ export class ImagineComponent implements OnInit {
   
   openSharePatientModal(): void {
     if (!this.pacient) {
-      this.showToastMessage('Nu există pacient selectat pentru partajare.', 'error');
       return;
     }
     this.userService.getAllUsers().subscribe({
@@ -1027,8 +1026,7 @@ export class ImagineComponent implements OnInit {
         this.showSharePatientModal = true;
       },
       error: (error) => {
-        console.error('Eroare la încărcarea doctorilor:', error);
-        this.showToastMessage('Eroare la încărcarea listei de utilizatori.', 'error');
+        this.showToastMessage('Eroare la incarcarea listei.', 'error');
       }
     });
   }

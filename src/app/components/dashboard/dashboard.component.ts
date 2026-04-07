@@ -577,10 +577,8 @@ loadMesajeNecitite(): void {
 
     if (!term) {
       this.filteredPacienti = [...this.pacienti];
-      console.log("Căutare goală - afișez toți pacienții:", this.filteredPacienti.length);
       return;
     }
-
     this.filteredPacienti = this.pacienti.filter(pacient => {
       const numePacient = (pacient.numePacient || '').toLowerCase();
       const prenumePacient = (pacient.prenumePacient || '').toLowerCase();
@@ -592,8 +590,6 @@ loadMesajeNecitite(): void {
              numeComplet.includes(term) ||
              cnp.includes(term);
     });
-    
-    console.log("Pacienți găsiți:", this.filteredPacienti.length);
   }
 
   // Helper method to get patient by image ID
@@ -845,9 +841,6 @@ loadMesajeNecitite(): void {
   }
 
   markCalendarDaysWithAppointments() {
-    console.log('📅 Marcare zile cu programări...');
-    console.log('Total programări:', this.programari.length);
-    
     let markedDays = 0;
     this.calendarDays.forEach(day => {
       if (!day.otherMonth) {
@@ -859,14 +852,13 @@ loadMesajeNecitite(): void {
                  progDate.getFullYear() === this.currentYear;
           
           if (match) {
-            console.log(`Zi ${day.day} - Programare găsită:`, prog);
             markedDays++;
           }
           return match;
         });
       }
     });
-    console.log(`✅ ${markedDays} zile marcate cu programări`);
+   
   }
 
   createProgramare() {

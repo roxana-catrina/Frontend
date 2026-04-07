@@ -731,19 +731,17 @@ export class MesagerieComponent implements OnInit, OnDestroy {
   
   openSharedImageViewer(mesaj: Mesaj): void {
     if (!mesaj.imagineUrl || !mesaj.imagineNume) {
-      console.warn('⚠️ Date imagine lipsă');
       return;
     }
     this.sharedImageUrl = mesaj.imagineUrl;
     this.sharedImageName = mesaj.imagineNume;
     this.sharedImageType = mesaj.imagineTip || '';
     const isDicomFromType = mesaj.imagineTip === 'application/dicom' || mesaj.imagineTip === 'application/x-dicom';
-    const isDicomFromContent = mesaj.continut?.includes('DICOM') || mesaj.continut?.includes('📊');
     const isDicomFromMetadata = !!mesaj.imagineMetadata;
     const isDicomFromUrl = mesaj.imagineUrl?.toLowerCase().includes('.dcm') || 
                            mesaj.imagineNume?.toLowerCase().includes('.dcm') ||
                            mesaj.imagineUrl?.toLowerCase().includes('dicom');
-    this.sharedImageIsDicom = isDicomFromType || isDicomFromContent || isDicomFromMetadata || isDicomFromUrl;
+    this.sharedImageIsDicom = isDicomFromType || isDicomFromMetadata || isDicomFromUrl;
     if (mesaj.imagineMetadata && typeof mesaj.imagineMetadata === 'string') {
       try {
         this.sharedDicomMetadata = JSON.parse(mesaj.imagineMetadata);
