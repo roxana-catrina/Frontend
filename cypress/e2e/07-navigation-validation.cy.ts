@@ -1,5 +1,14 @@
 describe('Navigation and Validation Tests', () => {
   beforeEach(() => {
+    cy.intercept('POST', '**/api/authenticate', {
+      statusCode: 200,
+      body: {
+        id: 'test-user-id',
+        jwt: 'test-jwt-token',
+        nume: 'Test User'
+      }
+    }).as('authenticate');
+
     // Interceptează request-urile către backend
     cy.intercept('GET', '**/api/user/*/pacienti', { statusCode: 200, body: [] }).as('getPacienti');
     cy.intercept('GET', '**/api/programari/user/*/month*', { statusCode: 200, body: [] }).as('getProgramariMonth');
@@ -11,7 +20,8 @@ describe('Navigation and Validation Tests', () => {
       cy.get('input[type="email"]').type(data.users.admin.email);
       cy.get('input[type="password"]').type(data.users.admin.password);
       cy.get('button[type="submit"]').click();
-      cy.wait(1000);
+      cy.wait('@authenticate');
+      cy.url().should('include', '/dashboard');
     });
   });
 
