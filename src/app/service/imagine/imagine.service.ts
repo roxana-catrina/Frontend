@@ -50,5 +50,18 @@ export class ImagineService {
       .set('Content-Type', 'application/json');
     return this.http.put<Imagine>(`${BASIC_URL}/api/user/${userId}/pacient/${pacientId}/imagine/${imageId}`, imagine, { headers });
   }
+
+  // Salvează imaginea cu adnotări (trimite base64 la backend pentru re-upload pe Cloudinary)
+  saveAnnotatedImage(userId: string, pacientId: string, imageId: string, base64Image: string): Observable<Imagine> {
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders()
+      .set('Authorization', `Bearer ${token}`)
+      .set('Content-Type', 'application/json');
+    return this.http.post<Imagine>(
+      `${BASIC_URL}/api/user/${userId}/pacient/${pacientId}/imagine/${imageId}/annotate`,
+      { annotatedImage: base64Image },
+      { headers }
+    );
+  }
 }
 

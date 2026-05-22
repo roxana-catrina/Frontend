@@ -1,4 +1,4 @@
-import { Component, OnInit, PLATFORM_ID, Inject, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewChecked, PLATFORM_ID, Inject, ViewChild, ElementRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Imagine, DicomMetadata } from '../../models/imagine';
@@ -23,7 +23,7 @@ import * as dicomParser from 'dicom-parser';
   standalone: true,
   imports: [CommonModule, FormsModule]
 })
-export class ImagineComponent implements OnInit {
+export class ImagineComponent implements OnInit, AfterViewChecked {
   image: Imagine | null = null;
   pacient: Pacient | null = null;
   isZoomed: boolean = false;
@@ -87,6 +87,23 @@ export class ImagineComponent implements OnInit {
   // ViewChild pentru canvas DICOM
   @ViewChild('dicomCanvas', { static: false }) dicomCanvas?: ElementRef<HTMLDivElement>;
 
+  // Adnotare imagine
+  isAnnotating: boolean = false;
+  annotationTool: 'text' | 'pen' | 'eraser' = 'pen';
+  annotationColor: string = '#FF0000';
+  annotationFontSize: number = 20;
+  annotationText: string = '';
+  eraserSize: number = 20;
+  isSavingAnnotation: boolean = false;
+  private isDrawingOnCanvas: boolean = false;
+  private drawStartX: number = 0;
+  private drawStartY: number = 0;
+  private ctx: CanvasRenderingContext2D | null = null;
+  private canvasInitialized: boolean = false;
+
+  @ViewChild('annotationCanvas', { static: false }) annotationCanvas?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('baseImage', { static: false }) baseImage?: ElementRef<HTMLImageElement>;
+
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private dialog: MatDialog,
@@ -99,8 +116,14 @@ export class ImagineComponent implements OnInit {
     private mesajService: MesajService
   ) {}
 
+  ngAfterViewChecked(): void {
+    // Inițializează canvas-ul de adnotare când devine disponibil
+    if (this.isAnnotating && this.annotationCanvas && this.baseImage && !this.canvasInitialized) {
+      this.initAnnotationCanvas();
+    }
+  }
+
   ngOnInit() {
-    // Subscribe to route param changes to handle image/patient switching
     this.route.paramMap.subscribe(params => {
       const imageId = params.get('id');
       const pacientId = params.get('pacientId');
@@ -208,6 +231,9 @@ export class ImagineComponent implements OnInit {
 
   closeZoom() {
     this.isZoomed = false;
+    this.isAnnotating = false;
+    this.canvasInitialized = false;
+    this.ctx = null;
     this.resetZoom();
   }
 
@@ -240,7 +266,8 @@ export class ImagineComponent implements OnInit {
   }
 
   onMouseDown(event: MouseEvent) {
-    if (this.zoomLevel > 1) {
+    // Drag doar când nu desenăm și zoom > 1
+    if (!this.isAnnotating && this.zoomLevel > 1) {
       this.isDragging = true;
       this.startX = event.clientX - this.translateX;
       this.startY = event.clientY - this.translateY;
@@ -266,6 +293,196 @@ export class ImagineComponent implements OnInit {
 
   
   
+  // ===================== ADNOTARE IMAGINE =====================
+
+  toggleAnnotationMode(): void {
+    this.isAnnotating = !this.isAnnotating;
+    this.canvasInitialized = false;
+    this.ctx = null;
+  }
+
+  private initAnnotationCanvas(): void {
+    const canvas = this.annotationCanvas?.nativeElement;
+    const img = this.baseImage?.nativeElement;
+    if (!canvas || !img) return;
+
+    // Canvas dimensionat la dimensiunile NATURALE ale imaginii
+    // Desenăm în spațiul imaginii originale — zoom-ul CSS nu afectează coordonatele
+    canvas.width = img.naturalWidth || img.offsetWidth;
+    canvas.height = img.naturalHeight || img.offsetHeight;
+
+    this.ctx = canvas.getContext('2d');
+    this.canvasInitialized = true;
+  }
+
+  /**
+   * Convertește coordonatele mouse în coordonate ale imaginii naturale.
+   * getBoundingClientRect() returnează rect-ul DUPĂ transformarea CSS (zoom),
+   * deci împărțind la scaleX/scaleY obținem coordonatele în spațiul natural.
+   */
+  private getCanvasPos(event: MouseEvent): { x: number; y: number } {
+    const img = this.baseImage?.nativeElement;
+    if (!img) return { x: 0, y: 0 };
+
+    const imgRect = img.getBoundingClientRect();
+    // scaleX = naturalWidth / lățimea afișată după zoom
+    const scaleX = img.naturalWidth / imgRect.width;
+    const scaleY = img.naturalHeight / imgRect.height;
+
+    return {
+      x: (event.clientX - imgRect.left) * scaleX,
+      y: (event.clientY - imgRect.top) * scaleY
+    };
+  }
+
+  onCanvasMouseDown(event: MouseEvent): void {
+    if (!this.isAnnotating || !this.ctx) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.isDrawingOnCanvas = true;
+    const pos = this.getCanvasPos(event);
+
+    if (this.annotationTool === 'pen') {
+      this.ctx.globalCompositeOperation = 'source-over';
+      this.ctx.beginPath();
+      this.ctx.moveTo(pos.x, pos.y);
+    } else if (this.annotationTool === 'eraser') {
+      this.ctx.globalCompositeOperation = 'destination-out';
+      this.ctx.beginPath();
+      this.ctx.moveTo(pos.x, pos.y);
+    }
+  }
+
+  onCanvasMouseMove(event: MouseEvent): void {
+    if (!this.isDrawingOnCanvas || !this.ctx) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const pos = this.getCanvasPos(event);
+
+    if (this.annotationTool === 'pen') {
+      this.ctx.globalCompositeOperation = 'source-over';
+      this.ctx.strokeStyle = this.annotationColor;
+      // lineWidth în spațiul natural — arată constant indiferent de zoom
+      this.ctx.lineWidth = 3 / this.zoomLevel;
+      this.ctx.lineCap = 'round';
+      this.ctx.lineJoin = 'round';
+      this.ctx.lineTo(pos.x, pos.y);
+      this.ctx.stroke();
+    } else if (this.annotationTool === 'eraser') {
+      this.ctx.globalCompositeOperation = 'destination-out';
+      this.ctx.lineWidth = this.eraserSize / this.zoomLevel;
+      this.ctx.lineCap = 'round';
+      this.ctx.lineJoin = 'round';
+      this.ctx.lineTo(pos.x, pos.y);
+      this.ctx.stroke();
+    }
+  }
+
+  onCanvasMouseUp(event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDrawingOnCanvas = false;
+    if (this.ctx) {
+      this.ctx.globalCompositeOperation = 'source-over';
+    }
+  }
+
+  onCanvasClick(event: MouseEvent): void {
+    if (!this.isAnnotating || this.annotationTool !== 'text' || !this.ctx) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const text = this.annotationText.trim();
+    if (!text) return;
+
+    const pos = this.getCanvasPos(event);
+    this.ctx.globalCompositeOperation = 'source-over';
+    this.ctx.fillStyle = this.annotationColor;
+    // Font în spațiul natural — arată constant indiferent de zoom
+    this.ctx.font = `bold ${this.annotationFontSize / this.zoomLevel}px Arial`;
+    this.ctx.fillText(text, pos.x, pos.y);
+  }
+
+  onCanvasWheel(event: WheelEvent): void {
+    // Scroll pe canvas → zoom (nu desenăm cu scroll)
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.deltaY < 0) {
+      this.zoomIn();
+    } else {
+      this.zoomOut();
+    }
+  }
+
+  clearAnnotations(): void {
+    if (!this.ctx || !this.annotationCanvas) return;
+    const canvas = this.annotationCanvas.nativeElement;
+    this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  saveAnnotatedImage(): void {
+    if (!this.image || !this.pacient || !this.annotationCanvas || !this.baseImage) return;
+
+    this.isSavingAnnotation = true;
+    const imgEl = this.baseImage.nativeElement;
+    const annotCanvas = this.annotationCanvas.nativeElement;
+
+    // Canvas final = dimensiunile naturale ale imaginii
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = imgEl.naturalWidth;
+    finalCanvas.height = imgEl.naturalHeight;
+    const finalCtx = finalCanvas.getContext('2d')!;
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      // Imaginea originală
+      finalCtx.drawImage(img, 0, 0, imgEl.naturalWidth, imgEl.naturalHeight);
+      // Adnotările — canvas-ul are deja dimensiunile naturale, deci 1:1
+      finalCtx.drawImage(annotCanvas, 0, 0);
+
+      const base64 = finalCanvas.toDataURL('image/jpeg', 0.92);
+      this.uploadAnnotatedImage(base64);
+    };
+
+    img.onerror = () => {
+      this.isSavingAnnotation = false;
+      this.showToastMessage('Eroare la procesarea imaginii. Verificați CORS-ul pe Cloudinary.', 'error');
+    };
+
+    img.src = this.image.imageUrl;
+  }
+
+  private uploadAnnotatedImage(base64: string): void {
+    const userId = localStorage.getItem('id');
+    if (!userId || !this.image || !this.pacient) return;
+
+    this.imageService.saveAnnotatedImage(userId, this.pacient.id, this.image.id, base64).subscribe({
+      next: (updated: Imagine) => {
+        this.image = updated;
+        if (this.pacient?.imagini) {
+          const idx = this.pacient.imagini.findIndex(i => i.id === updated.id);
+          if (idx !== -1) this.pacient.imagini[idx] = updated;
+        }
+        this.isSavingAnnotation = false;
+        this.isAnnotating = false;
+        this.canvasInitialized = false;
+        this.ctx = null;
+        this.showToastMessage('Imaginea adnotată a fost salvată cu succes!', 'success');
+      },
+      error: (error: any) => {
+        console.error('❌ Eroare la salvarea imaginii adnotate:', error);
+        this.isSavingAnnotation = false;
+        this.showToastMessage('Eroare la salvarea imaginii adnotate: ' + (error.error?.message || error.message), 'error');
+      }
+    });
+  }
+
+  // ===================== SFÂRŞIT ADNOTARE =====================
+
   deleteImage(): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: { message: 'Ești sigur că vrei să ștergi această imagine?' }

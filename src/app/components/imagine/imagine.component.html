@@ -400,25 +400,147 @@
 
 <!-- Modal Zoom -->
 <div class="zoom-modal" *ngIf="isZoomed" (click)="closeZoom()">
-  <div class="zoom-modal-content" 
+  <div class="zoom-modal-content"
        (click)="$event.stopPropagation()"
        (wheel)="onWheel($event)"
-       (mousedown)="onMouseDown($event)"
-       (mousemove)="onMouseMove($event)"
-       (mouseup)="onMouseUp()"
-       (mouseleave)="onMouseUp()">
-    
+       (mousedown)="!isAnnotating && onMouseDown($event)"
+       (mousemove)="!isAnnotating && onMouseMove($event)"
+       (mouseup)="!isAnnotating && onMouseUp()"
+       (mouseleave)="!isAnnotating && onMouseUp()">
+
     <button class="zoom-close-btn" (click)="closeZoom()">
       <i class="bi bi-x-lg"></i>
     </button>
-    
-    <img [src]="image?.imageUrl" 
-         [alt]="'Imagine ' + image?.id" 
-         class="zoomed-image"
-         [style.transform]="getImageTransform()"
-         [style.cursor]="zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'">
-    
-    <div class="zoom-controls">
+
+    <!-- Toolbar adnotare — pointer-events proprii, nu blochează restul -->
+    <div class="annotation-toolbar" (click)="$event.stopPropagation()" (mousedown)="$event.stopPropagation()">
+      <button class="annotation-toggle-btn"
+              [class.active]="isAnnotating"
+              (click)="toggleAnnotationMode()"
+              [title]="isAnnotating ? 'Dezactivează desen' : 'Activează desen'">
+        <i class="bi" [ngClass]="isAnnotating ? 'bi-pencil-fill' : 'bi-pencil'"></i>
+        {{ isAnnotating ? 'Oprește desen' : 'Desenează' }}
+      </button>
+
+      <ng-container *ngIf="isAnnotating">
+        <div class="annotation-separator"></div>
+
+        <!-- Instrumente -->
+        <div class="annotation-tool-group">
+          <button class="annotation-tool-btn"
+                  [class.active]="annotationTool === 'pen'"
+                  (click)="annotationTool = 'pen'"
+                  title="Creion liber">
+            <i class="bi bi-brush"></i>
+          </button>
+          <button class="annotation-tool-btn"
+                  [class.active]="annotationTool === 'text'"
+                  (click)="annotationTool = 'text'"
+                  title="Text — scrie în câmp, apoi click pe imagine">
+            <i class="bi bi-fonts"></i>
+          </button>
+          <button class="annotation-tool-btn"
+                  [class.active]="annotationTool === 'eraser'"
+                  (click)="annotationTool = 'eraser'"
+                  title="Gumă de șters">
+            <i class="bi bi-eraser"></i>
+          </button>
+        </div>
+
+        <div class="annotation-separator"></div>
+
+        <!-- Culoare (ascunsă pentru gumă) -->
+        <div class="annotation-color-group" *ngIf="annotationTool !== 'eraser'">
+          <label class="annotation-label">Culoare:</label>
+          <input type="color"
+                 [(ngModel)]="annotationColor"
+                 class="annotation-color-picker"
+                 title="Alege culoarea">
+          <button *ngFor="let c of ['#FF0000','#FFFF00','#00FF00','#00BFFF','#FFFFFF']"
+                  class="quick-color-btn"
+                  [style.background]="c"
+                  [class.selected]="annotationColor === c"
+                  (click)="annotationColor = c"
+                  [title]="c">
+          </button>
+        </div>
+
+        <!-- Mărime gumă -->
+        <div class="annotation-font-group" *ngIf="annotationTool === 'eraser'">
+          <label class="annotation-label">Mărime gumă:</label>
+          <input type="range" min="5" max="60" step="5"
+                 [(ngModel)]="eraserSize"
+                 class="annotation-range"
+                 title="Mărime gumă">
+          <span class="annotation-size-label">{{ eraserSize }}px</span>
+        </div>
+
+        <div class="annotation-separator" *ngIf="annotationTool !== 'eraser'"></div>
+
+        <!-- Mărime font -->
+        <div class="annotation-font-group" *ngIf="annotationTool === 'text'">
+          <label class="annotation-label">Mărime:</label>
+          <input type="range" min="12" max="60" step="2"
+                 [(ngModel)]="annotationFontSize"
+                 class="annotation-range"
+                 title="Mărime text">
+          <span class="annotation-size-label">{{ annotationFontSize }}px</span>
+        </div>
+
+        <!-- Text de scris -->
+        <div class="annotation-text-group" *ngIf="annotationTool === 'text'">
+          <input type="text"
+                 [(ngModel)]="annotationText"
+                 class="annotation-text-input"
+                 placeholder="Scrie text, apoi click pe imagine..."
+                 maxlength="100">
+        </div>
+
+        <div class="annotation-separator"></div>
+
+        <button class="annotation-action-btn clear-btn"
+                (click)="clearAnnotations()"
+                title="Șterge toate adnotările">
+          <i class="bi bi-trash"></i> Șterge tot
+        </button>
+
+        <button class="annotation-action-btn save-btn"
+                (click)="saveAnnotatedImage()"
+                [disabled]="isSavingAnnotation"
+                title="Salvează imaginea cu adnotări">
+          <i class="bi" [ngClass]="isSavingAnnotation ? 'bi-hourglass-split' : 'bi-save'"></i>
+          {{ isSavingAnnotation ? 'Se salvează...' : 'Salvează' }}
+        </button>
+      </ng-container>
+    </div>
+
+    <!-- Wrapper imagine + canvas suprapus — se transformă cu zoom -->
+    <div class="image-annotation-wrapper"
+         [style.transform]="getImageTransform()">
+      <img #baseImage
+           [src]="image?.imageUrl"
+           [alt]="'Imagine ' + image?.id"
+           class="zoomed-image"
+           draggable="false"
+           [style.cursor]="isAnnotating ? 'none' : (zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default')">
+
+      <!-- Canvas suprapus — activ doar în modul desen -->
+      <!-- Dimensiuni CSS = 100% din imagine; dimensiuni interne = naturalWidth/Height -->
+      <canvas #annotationCanvas
+              class="annotation-canvas"
+              (mousedown)="onCanvasMouseDown($event)"
+              (mousemove)="onCanvasMouseMove($event)"
+              (mouseup)="onCanvasMouseUp($event)"
+              (mouseleave)="onCanvasMouseUp($event)"
+              (click)="onCanvasClick($event)"
+              (wheel)="onCanvasWheel($event)"
+              [style.display]="isAnnotating ? 'block' : 'none'"
+              [style.cursor]="annotationTool === 'eraser' ? 'cell' : (annotationTool === 'text' ? 'text' : 'crosshair')">
+      </canvas>
+    </div>
+
+    <!-- Controale zoom — mereu vizibile -->
+    <div class="zoom-controls" (click)="$event.stopPropagation()" (mousedown)="$event.stopPropagation()">
       <div class="zoom-buttons">
         <button class="zoom-btn" (click)="zoomOut()" [disabled]="zoomLevel <= 0.5">
           <i class="bi bi-dash-lg"></i>
@@ -432,7 +554,11 @@
         </button>
       </div>
       <span class="zoom-hint-text">
-        <i class="bi bi-info-circle"></i> Scroll pentru zoom | Drag pentru mișcare
+        <i class="bi bi-info-circle"></i>
+        <ng-container *ngIf="!isAnnotating">Scroll pentru zoom | Drag pentru mișcare</ng-container>
+        <ng-container *ngIf="isAnnotating && annotationTool === 'pen'">Desenează pe imagine | Scroll pentru zoom</ng-container>
+        <ng-container *ngIf="isAnnotating && annotationTool === 'text'">Scrie textul sus → click pe imagine | Scroll pentru zoom</ng-container>
+        <ng-container *ngIf="isAnnotating && annotationTool === 'eraser'">Șterge pe imagine | Scroll pentru zoom</ng-container>
       </span>
     </div>
   </div>

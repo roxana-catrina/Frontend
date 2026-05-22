@@ -503,6 +503,254 @@
   }
 }
 
+/* ===================== ADNOTARE IMAGINE ===================== */
+
+/* Wrapper imagine + canvas suprapus */
+.image-annotation-wrapper {
+  position: relative;
+  display: inline-block;
+  transition: transform 0.1s ease-out;
+}
+
+.image-annotation-wrapper .zoomed-image {
+  display: block;
+}
+
+/* Canvas transparent suprapus pe imagine */
+.annotation-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  /* pointer-events active doar când e vizibil (display:block) */
+}
+
+/* Toolbar adnotare */
+.annotation-toolbar {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10001;
+  background: rgba(20, 20, 30, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 40px;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  max-width: 95vw;
+}
+
+.annotation-toggle-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.annotation-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.annotation-toggle-btn.active {
+  background: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.annotation-separator {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0 0.25rem;
+}
+
+/* Butoane instrumente */
+.annotation-tool-group {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.annotation-tool-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.annotation-tool-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.annotation-tool-btn.active {
+  background: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* Culori */
+.annotation-color-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.annotation-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.annotation-color-picker {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 2px;
+  background: transparent;
+}
+
+.quick-color-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.quick-color-btn:hover,
+.quick-color-btn.selected {
+  border-color: #fff;
+  transform: scale(1.2);
+}
+
+/* Font size */
+.annotation-font-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.annotation-range {
+  width: 70px;
+  accent-color: #0d6efd;
+}
+
+.annotation-size-label {
+  color: #fff;
+  font-size: 0.78rem;
+  min-width: 30px;
+}
+
+/* Input text */
+.annotation-text-group {
+  display: flex;
+  align-items: center;
+}
+
+.annotation-text-input {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+  width: 200px;
+  outline: none;
+}
+
+.annotation-text-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.annotation-text-input:focus {
+  border-color: #0d6efd;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Butoane acțiuni */
+.annotation-action-btn {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.clear-btn {
+  background: rgba(220, 53, 69, 0.25);
+  color: #ff6b7a;
+  border: 1px solid rgba(220, 53, 69, 0.4);
+}
+
+.clear-btn:hover {
+  background: rgba(220, 53, 69, 0.45);
+}
+
+.save-btn {
+  background: #198754;
+  color: #fff;
+  border: 1px solid #198754;
+}
+
+.save-btn:hover:not(:disabled) {
+  background: #157347;
+}
+
+.save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Hint de jos */
+.annotation-hint {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  padding: 0.6rem 1.2rem;
+  border-radius: 25px;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ===================== SFÂRŞIT ADNOTARE ===================== */
+
 @keyframes zoomIn {
   from {
     opacity: 0;
