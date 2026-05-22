@@ -2,6 +2,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
 import { WebsocketService } from '../websocket/websocket.service';
+import { MesajService } from '../mesaj/mesaj.service';
 
 export type CallStatus = 'idle' | 'calling' | 'incoming' | 'connected' | 'ended';
 
@@ -38,7 +39,7 @@ export class VideoCallService implements OnDestroy {
     ]
   };
 
-  constructor(private websocketService: WebsocketService) {}
+  constructor(private websocketService: WebsocketService, private mesajService: MesajService) {}
 
   // ── Initialization ─────────────────────────────────────────────────────────
 
@@ -142,12 +143,17 @@ export class VideoCallService implements OnDestroy {
   private onCallRejected(signal: any): void {
     const name = this.remoteParticipant$.value?.name || 'Utilizatorul';
     console.log('📹 Apel respins de:', name);
+    // Salvează apel respins în istoricul expeditorului
+    this.saveCallRecord('respins', 0);
     alert(`${name} a respins apelul.`);
     this.resetState();
   }
 
   private onCallEnded(): void {
     console.log('📹 Apel încheiat de cealaltă parte');
+    // Dacă apelul era conectat, durata e în callDuration$
+    // Dacă nu era conectat (calling), e apel pierdut pentru cealaltă parte
+    // Nu salvăm nimic aici — endCall() se ocupă
     this.resetState();
   }
 
@@ -245,18 +251,30 @@ export class VideoCallService implements OnDestroy {
         fromUserId: this.currentUserId,
         toUserId: caller.id
       });
+      // Destinatarul respinge → apel pierdut pentru apelant, respins pentru destinatar
+      this.saveCallRecord('respins', 0);
     }
     this.resetState();
   }
 
   endCall(): void {
     const remote = this.remoteParticipant$.value;
+    const durata = this.callDuration$.value;
+    const wasConnected = this.callStatus$.value === 'connected';
+
     if (remote && this.currentUserId) {
       this.websocketService.sendVideoCallSignal({
         type: 'call-ended',
         fromUserId: this.currentUserId,
         toUserId: remote.id
       });
+      // Salvează apelul în istoricul ambilor participanți
+      if (wasConnected) {
+        this.saveCallRecord('primit', durata);
+      } else {
+        // Apelantul a închis înainte ca celălalt să răspundă → apel pierdut
+        this.saveCallRecord('pierdut', 0);
+      }
     }
     this.resetState();
   }
@@ -347,6 +365,55 @@ export class VideoCallService implements OnDestroy {
     this.callStatus$.next('idle');
     console.log('🔄 VideoCallService: state resetat');
   }
+
+  // ── Call record ────────────────────────────────────────────────────────────
+
+  /**
+   * Salvează un apel video în istoricul conversației.
+   * status: 'primit' = apel efectuat și răspuns
+   *         'pierdut' = apelantul a închis înainte de răspuns
+   *         'respins' = destinatarul a respins explicit
+   */
+  private saveCallRecord(status: 'primit' | 'pierdut' | 'respins', durata: number): void {
+    const remote = this.remoteParticipant$.value;
+    if (!remote || !this.currentUserId) return;
+
+    const continut = this.buildCallContinut(status, durata);
+
+    const request = {
+      expeditorId: this.currentUserId,
+      destinatarId: remote.id,
+      continut,
+      tip: 'apel_video',
+      apelStatus: status,
+      apelDurata: durata
+    };
+
+    this.mesajService.trimiteMesaj(request).subscribe({
+      next: (msg) => console.log('✅ Apel salvat în conversație:', msg.id),
+      error: (err) => console.error('❌ Eroare la salvarea apelului:', err)
+    });
+  }
+
+  private buildCallContinut(status: 'primit' | 'pierdut' | 'respins', durata: number): string {
+    switch (status) {
+      case 'primit':
+        return `Apel video • ${this.formatDurata(durata)}`;
+      case 'pierdut':
+        return 'Apel video pierdut';
+      case 'respins':
+        return 'Apel video respins';
+    }
+  }
+
+  formatDurata(secunde: number): string {
+    if (secunde < 60) return `${secunde}s`;
+    const m = Math.floor(secunde / 60);
+    const s = secunde % 60;
+    return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  }
+
+  // ── Destroy ────────────────────────────────────────────────────────────────
 
   ngOnDestroy(): void {
     this.videoCallSubscription?.unsubscribe();

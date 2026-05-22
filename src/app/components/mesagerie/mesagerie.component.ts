@@ -1209,6 +1209,10 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     });
   }
 
+  formatCallDuration(secunde: number): string {
+    return this.videoCallService.formatDurata(secunde);
+  }
+
   // ===================== END VIDEO CALL =====================
 
   // Helper pentru a verifica dacă un mesaj conține un fișier DICOM
