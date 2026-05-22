@@ -1,0 +1,356 @@
+/* ── Overlay ─────────────────────────────────────────────────────────────── */
+.vc-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  animation: vcFadeIn 0.25s ease;
+  backdrop-filter: blur(6px);
+}
+
+@keyframes vcFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.vc-modal {
+  width: 100%;
+  max-width: 860px;
+  height: 88vh;
+  max-height: 680px;
+  border-radius: 22px;
+  overflow: hidden;
+  position: relative;
+  background: #0d0d1a;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.8);
+  animation: vcSlideUp 0.3s ease;
+}
+
+@keyframes vcSlideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── INCOMING CALL ───────────────────────────────────────────────────────── */
+.vc-incoming {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1.25rem;
+  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: white;
+  padding: 2rem;
+}
+
+/* Animație cercuri pulsante */
+.vc-ring-anim {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.vc-ring-circle {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(102, 126, 234, 0.5);
+  animation: ringPulse 2s ease-out infinite;
+}
+
+.ring1 { width: 130px; height: 130px; animation-delay: 0s; }
+.ring2 { width: 100px; height: 100px; animation-delay: 0.4s; }
+.ring3 { width: 70px;  height: 70px;  animation-delay: 0.8s; }
+
+@keyframes ringPulse {
+  0%   { transform: scale(0.9); opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.vc-avatar-icon {
+  position: relative;
+  z-index: 2;
+  font-size: 4.5rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1;
+}
+
+.vc-caller-name {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  text-align: center;
+}
+
+.vc-incoming-label {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.vc-incoming-actions {
+  display: flex;
+  gap: 4rem;
+  margin-top: 1.5rem;
+}
+
+.vc-action-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.vc-btn-label {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+.vc-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: none;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  color: white;
+}
+
+.vc-btn-reject {
+  background: #ef4444;
+  box-shadow: 0 6px 24px rgba(239, 68, 68, 0.55);
+}
+
+.vc-btn-reject:hover {
+  background: #dc2626;
+  transform: scale(1.12);
+}
+
+.vc-btn-accept {
+  background: #22c55e;
+  box-shadow: 0 6px 24px rgba(34, 197, 94, 0.55);
+}
+
+.vc-btn-accept:hover {
+  background: #16a34a;
+  transform: scale(1.12);
+}
+
+/* ── CALL SCREEN ─────────────────────────────────────────────────────────── */
+.vc-call-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+.vc-remote-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.vc-remote-video.vc-hidden {
+  display: none;
+}
+
+/* Placeholder "Se apelează" */
+.vc-calling-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: white;
+  gap: 1rem;
+}
+
+.vc-calling-avatar {
+  font-size: 7rem;
+  color: rgba(255, 255, 255, 0.7);
+  animation: avatarBreath 2.5s ease-in-out infinite;
+}
+
+@keyframes avatarBreath {
+  0%, 100% { opacity: 0.65; transform: scale(1); }
+  50%       { opacity: 1;    transform: scale(1.06); }
+}
+
+.vc-calling-placeholder h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.vc-calling-dots {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.dots::after {
+  content: '';
+  animation: dotAnim 1.6s steps(4, end) infinite;
+}
+
+@keyframes dotAnim {
+  0%   { content: ''; }
+  25%  { content: '.'; }
+  50%  { content: '..'; }
+  75%  { content: '...'; }
+  100% { content: ''; }
+}
+
+/* Video local (colț dreapta jos) */
+.vc-local-video {
+  position: absolute;
+  bottom: 90px;
+  right: 18px;
+  width: 160px;
+  height: 115px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+  z-index: 10;
+  background: #222;
+}
+
+/* Header apel */
+.vc-call-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.72), transparent);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  z-index: 10;
+}
+
+.vc-call-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.vc-timer {
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 0.2rem 0.7rem;
+  border-radius: 20px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+/* Controale apel */
+.vc-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.25rem 1.5rem 1.5rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.78), transparent);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  z-index: 10;
+}
+
+.vc-ctrl-btn {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  color: white;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(4px);
+}
+
+.vc-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.32);
+  transform: scale(1.1);
+}
+
+.vc-ctrl-btn.vc-ctrl-active {
+  background: rgba(239, 68, 68, 0.65);
+}
+
+.vc-ctrl-btn.vc-ctrl-active:hover {
+  background: rgba(239, 68, 68, 0.85);
+}
+
+.vc-ctrl-end {
+  width: 62px;
+  height: 62px;
+  font-size: 1.4rem;
+  background: #ef4444 !important;
+  box-shadow: 0 5px 20px rgba(239, 68, 68, 0.5);
+}
+
+.vc-ctrl-end:hover {
+  background: #dc2626 !important;
+  transform: scale(1.12);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .vc-modal {
+    max-width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .vc-local-video {
+    width: 110px;
+    height: 82px;
+    bottom: 82px;
+    right: 10px;
+  }
+
+  .vc-caller-name {
+    font-size: 1.6rem;
+  }
+
+  .vc-incoming-actions {
+    gap: 3rem;
+  }
+
+  .vc-btn {
+    width: 62px;
+    height: 62px;
+    font-size: 1.5rem;
+  }
+}

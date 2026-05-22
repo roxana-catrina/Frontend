@@ -4,6 +4,7 @@ import { UserService } from '../../service/user/user.service';
 import { MesajService } from '../../service/mesaj/mesaj.service';
 import { WebsocketService } from '../../service/websocket/websocket.service';
 import { NotificareService } from '../../service/notificare/notificare.service';
+import { VideoCallService } from '../../service/video-call/video-call.service';
 import { Router } from '@angular/router';
 import { Mesaj, MesajRequest, ImaginePartajata } from '../../models/mesaj';
 import { Subscription } from 'rxjs';
@@ -39,7 +40,6 @@ export class MesagerieComponent implements OnInit, OnDestroy {
   private messageSubscription?: Subscription;
   private notificationSubscription?: Subscription;
   private connectionSubscription?: Subscription;
-  
   // Polling pentru mesaje noi (workaround până când WebSocket funcționează)
   private pollingInterval: any = null;
   private lastMessageId: string | undefined = undefined;
@@ -83,6 +83,7 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     private mesajService: MesajService,
     private websocketService: WebsocketService,
     private notificareService: NotificareService,
+    private videoCallService: VideoCallService,
     private router: Router,
     private pacientService: PacientService
   ) {}
@@ -115,7 +116,7 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     if (this.connectionSubscription) {
       this.connectionSubscription.unsubscribe();
     }
-    this.websocketService.disconnect();
+    // NU deconectăm WebSocket-ul global - e gestionat de VideoCallService/AppComponent
     
     // Oprește polling-ul
     this.stopPolling();
@@ -1193,6 +1194,23 @@ export class MesagerieComponent implements OnInit, OnDestroy {
     return 'default';
   }
   
+  // ===================== VIDEO CALL =====================
+  // Logica de video call este gestionată global de VideoCallService + VideoCallComponent.
+  // Mesagerie doar inițiază apelul.
+
+  startVideoCall(): void {
+    if (!this.selectedUser || !this.currentUserId) return;
+
+    this.videoCallService.startCall({
+      id: this.selectedUser.id,
+      name: `${this.selectedUser.prenume} ${this.selectedUser.nume}`.trim()
+    }).catch(() => {
+      alert('Nu s-a putut accesa camera/microfonul. Verifică permisiunile browserului.');
+    });
+  }
+
+  // ===================== END VIDEO CALL =====================
+
   // Helper pentru a verifica dacă un mesaj conține un fișier DICOM
   isDicomMessage(mesaj: Mesaj): boolean {
     if (!mesaj) return false;

@@ -180,9 +180,14 @@
           <p class="online-status"><i class="bi bi-circle-fill"></i> Online</p>
         </div>
       </div>
-      <button class="btn-close-chat" (click)="closeChat()">
-        <i class="bi bi-x-lg"></i>
-      </button>
+      <div class="chat-header-actions">
+        <button class="btn-video-call" (click)="startVideoCall()" title="Apel video">
+          <i class="bi bi-camera-video-fill"></i>
+        </button>
+        <button class="btn-close-chat" (click)="closeChat()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
     </div>
 
     <!-- Chat Messages -->

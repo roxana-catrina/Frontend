@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { User } from '../../models/user';
 import { AuthService } from '../../service/serviceAuth/auth.service';
 import { StorageService } from '../../service/storage/storage.service';
+import { VideoCallService } from '../../service/video-call/video-call.service';
 
 @Component({
   selector: 'app-login',
@@ -25,8 +26,7 @@ export class LoginComponent {
     private fb: FormBuilder,
     private router: Router,
     private authService: AuthService,
-
-
+    private videoCallService: VideoCallService,
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -61,6 +61,12 @@ export class LoginComponent {
           StorageService.saveToken(res.jwt);
 
           if (StorageService.isUserLoggedIn()) {
+            // Inițializează serviciul de video call imediat după login
+            const prenume = localStorage.getItem('prenume') || '';
+            const nume = localStorage.getItem('nume') || '';
+            const userName = `${prenume} ${nume}`.trim() || res.nume;
+            this.videoCallService.initialize(res.id, userName);
+
             this.router.navigate(['/dashboard']);
           }
         }
@@ -84,9 +90,5 @@ export class LoginComponent {
         }, 5000);
       }
     });
-
-
   }
-
-
 }

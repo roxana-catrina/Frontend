@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Client, StompSubscription } from '@stomp/stompjs';
+import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
 import { Mesaj } from '../../models/mesaj';
 
 @Injectable({
@@ -9,113 +10,177 @@ import { Mesaj } from '../../models/mesaj';
 })
 export class WebsocketService {
   private stompClient: Client | null = null;
-  private connected = new BehaviorSubject<boolean>(false);
-  private messageSubject = new BehaviorSubject<Mesaj | null>(null);
-  private notificationSubject = new BehaviorSubject<any>(null);
-  private typingSubject = new BehaviorSubject<any>(null);
-  private readReceiptSubject = new BehaviorSubject<any>(null);
+  private currentUserId: string | null = null;
 
-  constructor() { }
+  private connected = new BehaviorSubject<boolean>(false);
+  private messageSubject    = new BehaviorSubject<Mesaj | null>(null);
+  private notificationSubject = new BehaviorSubject<any>(null);
+  private typingSubject     = new BehaviorSubject<any>(null);
+  private readReceiptSubject = new BehaviorSubject<any>(null);
+  private videoCallSubject  = new BehaviorSubject<any>(null);
+
+  constructor() {}
+
+  // ── Connection ─────────────────────────────────────────────────────────────
 
   connect(userId: string): void {
-    if (this.stompClient && this.stompClient.connected) {
-      console.log('Already connected to WebSocket');
+    // Dacă suntem deja conectați cu același userId, nu facem nimic
+    if (this.stompClient?.connected && this.currentUserId === userId) {
+      console.log('✅ WebSocket deja conectat pentru userId:', userId);
       return;
     }
+
+    // Dacă există un client vechi (alt userId sau deconectat), îl oprim
+    if (this.stompClient) {
+      console.log('🔄 WebSocket: deactivez clientul vechi...');
+      this.stompClient.deactivate();
+      this.stompClient = null;
+      this.connected.next(false);
+    }
+
+    this.currentUserId = userId;
+    console.log('🔌 WebSocket: conectare pentru userId:', userId);
 
     this.stompClient = new Client({
       webSocketFactory: () => new SockJS('http://localhost:8083/ws') as any,
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
-      debug: (str) => {
-        console.log('STOMP: ' + str);
-      }
+      // ← Trimite userId în header-ul CONNECT pentru ca backend-ul să seteze Principal
+      connectHeaders: {
+        userId: userId
+      },
+      debug: (str) => console.log('STOMP: ' + str)
     });
 
     this.stompClient.onConnect = (frame) => {
-      console.log('Connected to WebSocket: ' + frame);
+      console.log('✅ WebSocket conectat:', frame);
       this.connected.next(true);
+      this.subscribeToQueues(userId);
+    };
 
-      // Subscribe to personal message queue
-      this.stompClient!.subscribe(`/user/${userId}/queue/messages`, (message) => {
-        console.log('🎯 WebSocket: Mesaj primit pe queue /user/' + userId + '/queue/messages');
-        console.log('📦 Message body:', message.body);
-        const mesaj: Mesaj = JSON.parse(message.body);
-        console.log('📨 Mesaj parsed:', mesaj);
-        this.messageSubject.next(mesaj);
-        console.log('✅ Mesaj trimis către subscribers');
-      });
-
-      // Subscribe to notifications
-      this.stompClient!.subscribe(`/user/${userId}/queue/notifications`, (message) => {
-        console.log('📢 WebSocket: Notification message received on queue');
-        console.log('📢 Message body:', message.body);
-        const notification = JSON.parse(message.body);
-        console.log('📢 Parsed notification:', notification);
-        this.notificationSubject.next(notification);
-        console.log('📢 Notification sent to subscribers');
-      });
-
-      // Subscribe to typing indicators
-      this.stompClient!.subscribe(`/user/${userId}/queue/typing`, (message) => {
-        const typing = JSON.parse(message.body);
-        this.typingSubject.next(typing);
-      });
-
-      // Subscribe to read receipts
-      this.stompClient!.subscribe(`/user/${userId}/queue/read-receipts`, (message) => {
-        const receipt = JSON.parse(message.body);
-        this.readReceiptSubject.next(receipt);
-      });
+    this.stompClient.onDisconnect = () => {
+      console.log('🔌 WebSocket deconectat');
+      this.connected.next(false);
     };
 
     this.stompClient.onStompError = (frame) => {
-      console.error('Broker reported error: ' + frame.headers['message']);
-      console.error('Additional details: ' + frame.body);
+      console.error('❌ STOMP error:', frame.headers['message'], frame.body);
       this.connected.next(false);
     };
 
     this.stompClient.onWebSocketClose = () => {
-      console.log('WebSocket connection closed');
+      console.log('🔌 WebSocket închis');
       this.connected.next(false);
     };
 
     this.stompClient.activate();
   }
 
+  private subscribeToQueues(userId: string): void {
+    if (!this.stompClient) return;
+
+    // Mesaje chat
+    this.stompClient.subscribe(`/user/${userId}/queue/messages`, (msg) => {
+      console.log('📨 Mesaj primit:', msg.body);
+      this.messageSubject.next(JSON.parse(msg.body));
+    });
+
+    // Notificări
+    this.stompClient.subscribe(`/user/${userId}/queue/notifications`, (msg) => {
+      console.log('📢 Notificare primită:', msg.body);
+      this.notificationSubject.next(JSON.parse(msg.body));
+    });
+
+    // Typing indicators
+    this.stompClient.subscribe(`/user/${userId}/queue/typing`, (msg) => {
+      this.typingSubject.next(JSON.parse(msg.body));
+    });
+
+    // Read receipts
+    this.stompClient.subscribe(`/user/${userId}/queue/read-receipts`, (msg) => {
+      this.readReceiptSubject.next(JSON.parse(msg.body));
+    });
+
+    // Video call signaling
+    this.stompClient.subscribe(`/user/${userId}/queue/video-call`, (msg) => {
+      const signal = JSON.parse(msg.body);
+      console.log('📹 Video call signal primit:', signal.type, 'de la:', signal.fromUserId);
+      this.videoCallSubject.next(signal);
+    });
+
+    console.log('✅ Subscripții WebSocket active pentru userId:', userId);
+  }
+
   disconnect(): void {
     if (this.stompClient) {
       this.stompClient.deactivate();
+      this.stompClient = null;
+      this.currentUserId = null;
       this.connected.next(false);
-      console.log('Disconnected from WebSocket');
+      console.log('🔌 WebSocket deconectat manual');
     }
   }
 
+  // ── Send methods ───────────────────────────────────────────────────────────
+
   sendMessage(mesaj: any): void {
-    if (this.stompClient && this.stompClient.connected) {
-      console.log('📤 WebSocket: Trimite mesaj la /app/chat.send');
-      console.log('   Mesaj:', mesaj);
-      this.stompClient.publish({
-        destination: '/app/chat.send',
-        body: JSON.stringify(mesaj)
-      });
-      console.log('✅ Mesaj trimis prin WebSocket');
-    } else {
-      console.error('❌ Cannot send message: WebSocket not connected');
-      console.error('   stompClient exists:', !!this.stompClient);
-      console.error('   stompClient.connected:', this.stompClient?.connected);
-    }
+    this.publishWhenReady('/app/chat.send', mesaj);
   }
 
   sendTypingIndicator(data: any): void {
-    if (this.stompClient && this.stompClient.connected) {
+    this.publishWhenReady('/app/chat.typing', data);
+  }
+
+  /**
+   * Trimite un semnal de video call.
+   * Dacă WebSocket-ul nu e conectat încă, așteaptă conexiunea (max 5s).
+   */
+  sendVideoCallSignal(signal: any): void {
+    console.log('📹 Trimitere semnal video call:', signal.type, '→', signal.toUserId);
+
+    if (this.stompClient?.connected) {
       this.stompClient.publish({
-        destination: '/app/chat.typing',
-        body: JSON.stringify(data)
+        destination: '/app/video-call.signal',
+        body: JSON.stringify(signal)
       });
+      console.log('✅ Semnal video call trimis');
+    } else {
+      console.warn('⚠️ WebSocket nu e conectat, aștept conexiunea...');
+      // Așteptăm până la 5 secunde pentru conexiune
+      this.connected.pipe(
+        filter(isConnected => isConnected),
+        take(1)
+      ).subscribe(() => {
+        if (this.stompClient?.connected) {
+          this.stompClient.publish({
+            destination: '/app/video-call.signal',
+            body: JSON.stringify(signal)
+          });
+          console.log('✅ Semnal video call trimis după reconectare');
+        } else {
+          console.error('❌ Nu s-a putut trimite semnalul video call - WebSocket indisponibil');
+        }
+      });
+
+      // Timeout de siguranță - dacă nu se conectează în 5s, logăm eroarea
+      setTimeout(() => {
+        if (!this.stompClient?.connected) {
+          console.error('❌ Timeout: WebSocket nu s-a conectat în 5s, semnal pierdut:', signal.type);
+        }
+      }, 5000);
     }
   }
+
+  private publishWhenReady(destination: string, body: any): void {
+    if (this.stompClient?.connected) {
+      this.stompClient.publish({ destination, body: JSON.stringify(body) });
+    } else {
+      console.error('❌ WebSocket nu e conectat, nu pot trimite la:', destination);
+    }
+  }
+
+  // ── Observables ────────────────────────────────────────────────────────────
 
   onMessage(): Observable<Mesaj | null> {
     return this.messageSubject.asObservable();
@@ -133,7 +198,15 @@ export class WebsocketService {
     return this.readReceiptSubject.asObservable();
   }
 
+  onVideoCallSignal(): Observable<any> {
+    return this.videoCallSubject.asObservable();
+  }
+
   isConnected(): Observable<boolean> {
     return this.connected.asObservable();
+  }
+
+  isCurrentlyConnected(): boolean {
+    return this.stompClient?.connected ?? false;
   }
 }
