@@ -21,6 +21,7 @@ export class VideoCallComponent implements OnInit, OnDestroy, AfterViewChecked {
   callDuration: number = 0;
   isMuted: boolean = false;
   isCameraOff: boolean = false;
+  toastMessage: string | null = null;
 
   // Streams locale pentru a seta srcObject pe elementele video
   private localStream: MediaStream | null = null;
@@ -53,7 +54,8 @@ export class VideoCallComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.videoCallService.remoteStream$.subscribe(stream => {
         this.remoteStream = stream;
         this.remoteStreamSet = false; // forțează re-setarea
-      })
+      }),
+      this.videoCallService.toastMessage$.subscribe(msg => this.toastMessage = msg)
     );
   }
 

@@ -95,3 +95,11 @@
 
   </div>
 </div>
+
+<!-- Toast notification (apare și când overlay-ul e ascuns) -->
+<div *ngIf="toastMessage" class="vc-toast" role="alert">
+  <div class="vc-toast-content">
+    <i class="bi bi-camera-video-off-fill"></i>
+    <span>{{ toastMessage }}</span>
+  </div>
+</div>

@@ -22,6 +22,7 @@ export class VideoCallService implements OnDestroy {
   localStream$       = new BehaviorSubject<MediaStream | null>(null);
   remoteStream$      = new BehaviorSubject<MediaStream | null>(null);
   callDuration$      = new BehaviorSubject<number>(0);
+  toastMessage$      = new BehaviorSubject<string | null>(null);
 
   // ── Internal state ─────────────────────────────────────────────────────────
   private currentUserId: string | null = null;
@@ -143,17 +144,15 @@ export class VideoCallService implements OnDestroy {
   private onCallRejected(signal: any): void {
     const name = this.remoteParticipant$.value?.name || 'Utilizatorul';
     console.log('📹 Apel respins de:', name);
-    // Salvează apel respins în istoricul expeditorului
+    // Doar apelantul salvează record-ul (eu sunt apelantul dacă primesc "rejected")
     this.saveCallRecord('respins', 0);
-    alert(`${name} a respins apelul.`);
+    this.showToast(`${name} nu a putut răspunde la apel`);
     this.resetState();
   }
 
   private onCallEnded(): void {
     console.log('📹 Apel încheiat de cealaltă parte');
-    // Dacă apelul era conectat, durata e în callDuration$
-    // Dacă nu era conectat (calling), e apel pierdut pentru cealaltă parte
-    // Nu salvăm nimic aici — endCall() se ocupă
+    // Nu salvăm nimic — cel care a apăsat "end" salvează din endCall()
     this.resetState();
   }
 
@@ -251,8 +250,7 @@ export class VideoCallService implements OnDestroy {
         fromUserId: this.currentUserId,
         toUserId: caller.id
       });
-      // Destinatarul respinge → apel pierdut pentru apelant, respins pentru destinatar
-      this.saveCallRecord('respins', 0);
+      // NU salvăm aici — apelantul salvează când primește "call-rejected"
     }
     this.resetState();
   }
@@ -411,6 +409,11 @@ export class VideoCallService implements OnDestroy {
     const m = Math.floor(secunde / 60);
     const s = secunde % 60;
     return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  }
+
+  private showToast(message: string): void {
+    this.toastMessage$.next(message);
+    setTimeout(() => this.toastMessage$.next(null), 4000);
   }
 
   // ── Destroy ────────────────────────────────────────────────────────────────
