@@ -28,6 +28,48 @@ export interface DicomMetadata {
   [key: string]: any; // Pentru alte metadate custom
 }
 
+// ── Segmentare tumoră ────────────────────────────────────────────────────────
+
+export interface TumorDimensions {
+  widthPixels: number;
+  heightPixels: number;
+  widthMm: number;
+  heightMm: number;
+  areaPixels: number;
+  areaMm2: number;
+  tumorPercentage: number;
+  pixelSpacingMm: number;
+}
+
+export interface BoundingBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface SegmentationResult {
+  overlayImageBase64: string;
+  contourImageBase64: string;
+  dimensions: TumorDimensions;
+  boundingBox: BoundingBox;
+  tumorAreaPixels: number;
+  tumorPercentage: number;
+}
+
+export interface PredictionResponse {
+  success: boolean;
+  prediction: string;
+  hasTumor: boolean;
+  confidence: number;
+  tumorType?: string;
+  tumorTypeConfidence?: number;
+  tumorTypeProbabilities?: { [key: string]: number };
+  segmentation?: SegmentationResult;
+}
+
+// ── Imagine ──────────────────────────────────────────────────────────────────
+
 export interface Imagine {
   id: string;
   pacientId: string; // Reference to Pacient ID

@@ -208,6 +208,65 @@
               <span class="result-value">{{ (image && image.dataAnalizei) ? (image.dataAnalizei | date:'dd/MM/yyyy HH:mm') : 'N/A' }}</span>
             </div>
           </div>
+
+          <!-- Buton analiză cu segmentare -->
+          <div class="mt-3" *ngIf="image?.areTumoare">
+            <button
+              class="btn btn-outline-danger w-100"
+              (click)="analyzeWithSegmentation()"
+              [disabled]="isAnalyzing">
+              <i class="bi" [ngClass]="isAnalyzing ? 'bi-hourglass-split' : 'bi-bounding-box'"></i>
+              {{ isAnalyzing ? 'Se segmentează...' : 'Vizualizează segmentare tumoră' }}
+            </button>
+            <small class="text-muted d-block mt-1 text-center">
+              Generează heatmap al zonei suspecte
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card segmentare tumoră -->
+      <div class="card shadow-sm mt-3 segmentation-card" *ngIf="segmentationResult">
+        <div class="card-header bg-dark text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-bounding-box"></i> Segmentare Tumoră
+          </h5>
+        </div>
+        <div class="card-body p-0">
+          <!-- Imaginea heatmap -->
+          <div class="seg-image-container">
+            <img
+              [src]="'data:image/png;base64,' + segmentationResult.overlayImageBase64"
+              alt="Tumor heatmap overlay"
+              class="seg-image" />
+          </div>
+
+          <!-- Dimensiuni tumoră -->
+          <div class="seg-dimensions" *ngIf="segmentationResult.dimensions">
+            <h6><i class="bi bi-rulers"></i> Dimensiuni aproximative tumoră</h6>
+            <table class="seg-table">
+              <tr>
+                <td>Lățime:</td>
+                <td>{{ segmentationResult.dimensions.widthMm }} mm ({{ segmentationResult.dimensions.widthPixels }} px)</td>
+              </tr>
+              <tr>
+                <td>Înălțime:</td>
+                <td>{{ segmentationResult.dimensions.heightMm }} mm ({{ segmentationResult.dimensions.heightPixels }} px)</td>
+              </tr>
+              <tr>
+                <td>Arie:</td>
+                <td>{{ segmentationResult.dimensions.areaMm2 }} mm²</td>
+              </tr>
+              <tr>
+                <td>Procent din imagine:</td>
+                <td>{{ segmentationResult.dimensions.tumorPercentage }}%</td>
+              </tr>
+            </table>
+            <p class="seg-disclaimer">
+              * Dimensiunile sunt estimative, bazate pe un FOV standard de 240mm.
+              Pentru dimensiuni exacte, sunt necesare metadatele DICOM.
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -2090,3 +2090,106 @@ textarea.form-control {
 
 
 
+
+
+/* ==================== SEGMENTARE TUMORĂ ==================== */
+.segmentation-card {
+  border: 2px solid #343a40;
+  overflow: hidden;
+}
+
+.seg-toggle {
+  display: flex;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.seg-toggle-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: #f8f9fa;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  color: #6c757d;
+}
+
+.seg-toggle-btn:first-child {
+  border-right: 1px solid #e2e8f0;
+}
+
+.seg-toggle-btn.active {
+  background: #343a40;
+  color: white;
+}
+
+.seg-toggle-btn:hover:not(.active) {
+  background: #e9ecef;
+}
+
+.seg-image-container {
+  width: 100%;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.seg-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.seg-dimensions {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.seg-dimensions h6 {
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.seg-dimensions h6 i {
+  color: #667eea;
+}
+
+.seg-table {
+  width: 100%;
+  font-size: 0.9rem;
+  border-collapse: collapse;
+}
+
+.seg-table td {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.seg-table td:first-child {
+  font-weight: 600;
+  color: #4a5568;
+  width: 40%;
+}
+
+.seg-table td:last-child {
+  color: #2d3748;
+}
+
+.seg-disclaimer {
+  margin: 0.75rem 0 0 0;
+  font-size: 0.78rem;
+  color: #a0aec0;
+  font-style: italic;
+  line-height: 1.4;
+}
