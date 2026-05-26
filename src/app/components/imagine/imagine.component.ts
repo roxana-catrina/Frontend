@@ -188,6 +188,7 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
             this.isEditingObservatii = false;
             this.isZoomed = false;
             this.isAnalyzing = false;  // Reset analyzing flag când schimbăm imaginea
+            this.segmentationResult = null; // Reset segmentare la schimbarea imaginii
             this.resetZoom();
             
             console.log('Image and patient loaded:', this.image, this.pacient);
@@ -639,7 +640,7 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
 
   analyzeImage(): void {
     if (!this.image || !this.pacient) {
-      alert('Nu există imagine de analizat');
+      this.showToastMessage('Nu există imagine de analizat', 'error');
       return;
     }
 
@@ -648,7 +649,7 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
 
     // Verificăm dacă avem URL-ul imaginii
     if (!this.image.imageUrl) {
-      alert('Nu există URL pentru imagine');
+      this.showToastMessage('Nu există URL pentru imagine', 'error');
       return;
     }
 
@@ -699,12 +700,17 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
                 this.isAnalyzing = false;
                 
                 // Notifică utilizatorul
-                alert(`Analiza s-a finalizat!\n\n${result.hasTumor ? '⚠️ Tumoare detectată' : '✅ Fără tumoare'}\nÎncredere: ${Math.round(result.confidence * 100)}%`);
+                this.showToastMessage(
+                  result.hasTumor
+                    ? `⚠️ Tumoare detectată — Încredere: ${Math.round(result.confidence * 100)}%`
+                    : `✅ Fără tumoare — Încredere: ${Math.round(result.confidence * 100)}%`,
+                  result.hasTumor ? 'error' : 'success'
+                );
               },
               error: (error: any) => {
                 console.error('❌ Eroare la salvarea rezultatului:', error);
                 this.isAnalyzing = false;
-                alert('Rezultatul analizei este disponibil, dar nu a putut fi salvat pe server.');
+                this.showToastMessage('Rezultatul analizei este disponibil, dar nu a putut fi salvat.', 'info');
               }
             });
           }
@@ -717,7 +723,7 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
             this.image.statusAnaliza = 'neanalizata';
           }
           
-          alert('Nu s-a putut finaliza analiza imaginii.\nVă rugăm să încercați din nou.');
+          this.showToastMessage('Nu s-a putut finaliza analiza imaginii. Încearcă din nou.', 'error');
         }
       },
       error: (error) => {
@@ -728,7 +734,7 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
           this.image.statusAnaliza = 'neanalizata';
         }
         
-        alert('Nu s-a putut comunica cu serviciul de analiză.\nVă rugăm să verificați dacă backend-ul rulează.');
+        this.showToastMessage('Serviciul de analiză nu este disponibil. Verifică dacă backend-ul rulează.', 'error');
       }
     });
   }
