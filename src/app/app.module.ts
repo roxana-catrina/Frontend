@@ -24,6 +24,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MesagerieComponent } from './components/mesagerie/mesagerie.component';
 import { ForgotPasswordComponent } from './components/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './components/reset-password/reset-password.component';
+import { VideoCallComponent } from './components/video-call/video-call.component';
 
 @NgModule({
   declarations: [
@@ -36,7 +37,8 @@ import { ResetPasswordComponent } from './components/reset-password/reset-passwo
     HomeComponent,
     MesagerieComponent,
     ForgotPasswordComponent,
-    ResetPasswordComponent
+    ResetPasswordComponent,
+    VideoCallComponent
   ],
   imports: [
     BrowserModule,

@@ -1,0 +1,105 @@
+<div *ngIf="isVisible" class="vc-overlay">
+  <div class="vc-modal">
+
+    <!-- ══════════════ INCOMING CALL ══════════════ -->
+    <div *ngIf="callStatus === 'incoming'" class="vc-incoming">
+      <div class="vc-ring-anim">
+        <div class="vc-ring-circle ring1"></div>
+        <div class="vc-ring-circle ring2"></div>
+        <div class="vc-ring-circle ring3"></div>
+        <div class="vc-avatar-icon">
+          <i class="bi bi-person-circle"></i>
+        </div>
+      </div>
+      <h3 class="vc-caller-name">{{ remoteParticipant?.name }}</h3>
+      <p class="vc-incoming-label">
+        <i class="bi bi-camera-video-fill"></i> Apel video incoming...
+      </p>
+      <div class="vc-incoming-actions">
+        <div class="vc-action-group">
+          <button class="vc-btn vc-btn-reject" (click)="rejectCall()">
+            <i class="bi bi-telephone-x-fill"></i>
+          </button>
+          <span class="vc-btn-label">Respinge</span>
+        </div>
+        <div class="vc-action-group">
+          <button class="vc-btn vc-btn-accept" (click)="acceptCall()">
+            <i class="bi bi-camera-video-fill"></i>
+          </button>
+          <span class="vc-btn-label">Acceptă</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ CALLING / CONNECTED ══════════════ -->
+    <div *ngIf="callStatus === 'calling' || callStatus === 'connected'" class="vc-call-screen">
+
+      <!-- Video remote (fundal) -->
+      <video #remoteVideo
+             class="vc-remote-video"
+             autoplay
+             playsinline
+             [class.vc-hidden]="callStatus !== 'connected'">
+      </video>
+
+      <!-- Placeholder "Se apelează" -->
+      <div *ngIf="callStatus === 'calling'" class="vc-calling-placeholder">
+        <div class="vc-calling-avatar">
+          <i class="bi bi-person-circle"></i>
+        </div>
+        <h3>{{ remoteParticipant?.name }}</h3>
+        <p class="vc-calling-dots">Se apelează<span class="dots"></span></p>
+      </div>
+
+      <!-- Video local (colț) -->
+      <video #localVideo
+             class="vc-local-video"
+             autoplay
+             playsinline
+             muted>
+      </video>
+
+      <!-- Header -->
+      <div class="vc-call-header">
+        <span class="vc-call-title">
+          <i class="bi bi-camera-video-fill"></i>
+          {{ callStatus === 'connected' ? remoteParticipant?.name : 'Se apelează...' }}
+        </span>
+        <span *ngIf="callStatus === 'connected'" class="vc-timer">
+          {{ getCallDurationFormatted() }}
+        </span>
+      </div>
+
+      <!-- Controale -->
+      <div class="vc-controls">
+        <button class="vc-ctrl-btn"
+                [class.vc-ctrl-active]="isMuted"
+                (click)="toggleMute()"
+                [title]="isMuted ? 'Activează microfonul' : 'Dezactivează microfonul'">
+          <i class="bi" [ngClass]="isMuted ? 'bi-mic-mute-fill' : 'bi-mic-fill'"></i>
+        </button>
+
+        <button class="vc-ctrl-btn vc-ctrl-end" (click)="endCall()" title="Închide apelul">
+          <i class="bi bi-telephone-x-fill"></i>
+        </button>
+
+        <button class="vc-ctrl-btn"
+                [class.vc-ctrl-active]="isCameraOff"
+                (click)="toggleCamera()"
+                [title]="isCameraOff ? 'Activează camera' : 'Dezactivează camera'">
+          <i class="bi" [ngClass]="isCameraOff ? 'bi-camera-video-off-fill' : 'bi-camera-video-fill'"></i>
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast notification (apare și când overlay-ul e ascuns) -->
+<div *ngIf="toastMessage" class="vc-toast" role="alert">
+  <div class="vc-toast-content">
+    <i class="bi bi-camera-video-off-fill"></i>
+    <span>{{ toastMessage }}</span>
+  </div>
+</div>

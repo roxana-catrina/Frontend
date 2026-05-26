@@ -12,7 +12,7 @@ export interface Mesaj {
   dataCitire?: Date;
   
   // Câmpuri pentru mesaje speciale
-  tip?: string; // "text", "pacient_partajat", "imagine_partajata"
+  tip?: string; // "text", "pacient_partajat", "imagine_partajata", "apel_video"
   pacientId?: string;
   pacientNume?: string;
   pacientPrenume?: string;
@@ -32,6 +32,10 @@ export interface Mesaj {
   imagineTip?: string;
   imagineDataIncarcare?: string;
   imagineMetadata?: string; // JSON string cu metadate DICOM
+
+  // Câmpuri pentru apel video
+  apelStatus?: 'primit' | 'pierdut' | 'respins';  // statusul apelului
+  apelDurata?: number;                              // durata în secunde (0 = neconectat)
 }
 
 export interface MesajRequest {
@@ -60,6 +64,10 @@ export interface MesajRequest {
   imagineTip?: string;
   imagineDataIncarcare?: string;
   imagineMetadata?: string; // JSON string cu metadate DICOM
+
+  // Câmpuri pentru apel video
+  apelStatus?: 'primit' | 'pierdut' | 'respins';
+  apelDurata?: number;
 }
 
 // Interface pentru informații imagine partajată

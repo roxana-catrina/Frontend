@@ -180,9 +180,14 @@
           <p class="online-status"><i class="bi bi-circle-fill"></i> Online</p>
         </div>
       </div>
-      <button class="btn-close-chat" (click)="closeChat()">
-        <i class="bi bi-x-lg"></i>
-      </button>
+      <div class="chat-header-actions">
+        <button class="btn-video-call" (click)="startVideoCall()" title="Apel video">
+          <i class="bi bi-camera-video-fill"></i>
+        </button>
+        <button class="btn-close-chat" (click)="closeChat()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
     </div>
 
     <!-- Chat Messages -->
@@ -206,7 +211,37 @@
         <!-- Mesaj normal de text -->
         <div class="message-bubble" *ngIf="!message.tip || message.tip === 'text'">
           <p class="message-text">{{ message.continut }}</p>
-          <span class="message-time">{{ message.dataTrimitere | date:'HH:mm' }}</span>
+          <span class="message-time">{{ message.dataTrimitere | date:'dd MMM, HH:mm' }}</span>
+        </div>
+
+        <!-- Apel video -->
+        <div class="message-bubble call-bubble"
+             *ngIf="message.tip === 'apel_video'"
+             [ngClass]="{
+               'call-received': message.apelStatus === 'primit',
+               'call-missed':   message.apelStatus === 'pierdut',
+               'call-rejected': message.apelStatus === 'respins'
+             }">
+          <div class="call-record">
+            <div class="call-record-icon">
+              <i class="bi"
+                 [ngClass]="{
+                   'bi-camera-video-fill':     message.apelStatus === 'primit',
+                   'bi-camera-video-off-fill': message.apelStatus === 'pierdut' || message.apelStatus === 'respins'
+                 }"></i>
+            </div>
+            <div class="call-record-info">
+              <span class="call-record-label">
+                <ng-container *ngIf="message.apelStatus === 'primit'">Apel video</ng-container>
+                <ng-container *ngIf="message.apelStatus === 'pierdut'">Apel video pierdut</ng-container>
+                <ng-container *ngIf="message.apelStatus === 'respins'">Apel video respins</ng-container>
+              </span>
+              <span class="call-record-duration" *ngIf="message.apelStatus === 'primit' && message.apelDurata">
+                {{ formatCallDuration(message.apelDurata) }}
+              </span>
+            </div>
+          </div>
+          <span class="message-time">{{ message.dataTrimitere | date:'dd MMM, HH:mm' }}</span>
         </div>
 
         <!-- Mesaj cu pacient partajat -->
@@ -289,7 +324,7 @@
               </small>
             </div>
           </div>
-          <span class="message-time">{{ message.dataTrimitere | date:'HH:mm' }}</span>
+          <span class="message-time">{{ message.dataTrimitere | date:'dd MMM, HH:mm' }}</span>
         </div>
         
         <!-- Mesaj cu imagine partajată -->
@@ -339,7 +374,7 @@
               </div>
             </div>
           </div>
-          <span class="message-time">{{ message.dataTrimitere | date:'HH:mm' }}</span>
+          <span class="message-time">{{ message.dataTrimitere | date:'dd MMM, HH:mm' }}</span>
         </div>
       </div>
     </div>
