@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewChecked, PLATFORM_ID, Inject, ViewChild, ElementRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Imagine, DicomMetadata } from '../../models/imagine';
+import { Imagine, DicomMetadata, SegmentationResult, PredictionResponse } from '../../models/imagine';
 import { Pacient } from '../../models/pacient';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -83,6 +83,10 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
   searchDoctor: string = '';
   selectedDoctor: any = null;
   isSharingPatient: boolean = false;
+
+  // Segmentare tumoră
+  segmentationResult: SegmentationResult | null = null;
+  showOverlay: boolean = true; // toggle între overlay și contour
   
   // ViewChild pentru canvas DICOM
   @ViewChild('dicomCanvas', { static: false }) dicomCanvas?: ElementRef<HTMLDivElement>;
@@ -728,6 +732,87 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
       }
     });
   }
+
+  // ===================== ANALIZĂ CU SEGMENTARE =====================
+
+  analyzeWithSegmentation(): void {
+    if (!this.image || !this.pacient) {
+      this.showToastMessage('Nu există imagine de analizat', 'error');
+      return;
+    }
+
+    if (!this.image.imageUrl) {
+      this.showToastMessage('Nu există URL pentru imagine', 'error');
+      return;
+    }
+
+    this.isAnalyzing = true;
+    this.segmentationResult = null;
+    this.image.statusAnaliza = 'in_procesare';
+
+    console.log('🔬 Analiză cu segmentare pentru:', this.image.imageUrl);
+
+    this.brainTumorService.predictFromUrlWithSegmentation(this.image.imageUrl, 0.4).subscribe({
+      next: (response: PredictionResponse) => {
+        console.log('✅ Rezultat segmentare:', response);
+
+        if (response.success && this.image && this.pacient) {
+          this.image.statusAnaliza = 'finalizata';
+          this.image.areTumoare = response.hasTumor;
+          this.image.confidenta = Math.round(response.confidence * 100);
+          this.image.tipTumoare = response.tumorType || undefined;
+          this.image.dataAnalizei = new Date();
+
+          // Afișează segmentarea dacă există (indiferent de hasTumor)
+          if (response.segmentation) {
+            this.segmentationResult = response.segmentation;
+            console.log('🎨 Segmentare disponibilă - overlay + contour');
+          } else {
+            console.log('ℹ️ Nicio segmentare returnată de backend');
+          }
+
+          // Salvează rezultatul în backend
+          const userId = localStorage.getItem('id');
+          if (userId) {
+            this.imageService.updateImage(this.image.id, this.pacient.id, userId, this.image).subscribe({
+              next: (updated: Imagine) => {
+                this.image = updated;
+                if (this.pacient?.imagini) {
+                  const idx = this.pacient.imagini.findIndex(i => i.id === updated.id);
+                  if (idx !== -1) this.pacient.imagini[idx] = updated;
+                }
+                this.isAnalyzing = false;
+                this.showToastMessage(
+                  response.hasTumor
+                    ? `⚠️ Tumoare detectată (${Math.round(response.confidence * 100)}% încredere)`
+                    : `✅ Fără tumoare (${Math.round(response.confidence * 100)}% încredere)`,
+                  response.hasTumor ? 'error' : 'success'
+                );
+              },
+              error: () => {
+                this.isAnalyzing = false;
+                this.showToastMessage('Rezultatul e disponibil dar nu s-a putut salva.', 'info');
+              }
+            });
+          } else {
+            this.isAnalyzing = false;
+          }
+        } else {
+          this.isAnalyzing = false;
+          if (this.image) this.image.statusAnaliza = 'neanalizata';
+          this.showToastMessage('Analiza nu a putut fi finalizată.', 'error');
+        }
+      },
+      error: (error) => {
+        console.error('❌ Eroare segmentare:', error);
+        this.isAnalyzing = false;
+        if (this.image) this.image.statusAnaliza = 'neanalizata';
+        this.showToastMessage('Serviciul de segmentare nu este disponibil.', 'error');
+      }
+    });
+  }
+
+  // ===================== SFÂRŞIT SEGMENTARE =====================
 
   // Metode pentru adăugare imagine nouă
   openAddImageModal(): void {
