@@ -25,6 +25,9 @@ export interface DicomMetadata {
   windowWidth?: string;
   rescaleIntercept?: string;
   rescaleSlope?: string;
+  sliceLocation?: string;
+  seriesInstanceUID?: string;
+  instanceNumber?: number;
   [key: string]: any; // Pentru alte metadate custom
 }
 

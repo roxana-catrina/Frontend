@@ -42,8 +42,11 @@
               </div>
               
               <!-- Canvas DICOM -->
-              <div class="dicom-canvas-wrapper">
+              <div class="dicom-canvas-wrapper" (click)="openDicomZoom()">
                 <div #dicomCanvas class="dicom-canvas-dashboard"></div>
+              </div>
+              <div class="zoom-hint">
+                <i class="bi bi-zoom-in"></i> Click pentru zoom și adnotare
               </div>
               
               <!-- Buton download -->
@@ -267,6 +270,30 @@
               Pentru dimensiuni exacte, sunt necesare metadatele DICOM.
             </p>
           </div>
+        </div>
+      </div>
+
+      <!-- Buton Reconstrucție 3D (apare doar dacă sunt suficiente slice-uri DICOM) -->
+      <div class="card shadow-sm mt-3" *ngIf="canReconstruct3D">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">
+            <i class="bi bi-badge-3d-fill"></i> Reconstrucție 3D
+          </h5>
+        </div>
+        <div class="card-body text-center">
+          <p class="text-muted mb-2">
+            {{ dicomSeriesSlices.length }} slice-uri DICOM disponibile pentru reconstrucție MPR
+          </p>
+          <button
+            class="btn btn-info text-white w-100"
+            (click)="open3DReconstruction()"
+            [disabled]="is3DLoading">
+            <i class="bi" [ngClass]="is3DLoading ? 'bi-hourglass-split' : 'bi-box'"></i>
+            {{ is3DLoading ? 'Se încarcă volumul...' : 'Vizualizare 3D (MPR)' }}
+          </button>
+          <small class="text-muted d-block mt-2">
+            Vizualizare Multi-Planar: Axial, Sagital, Coronal
+          </small>
         </div>
       </div>
     </div>
@@ -577,7 +604,7 @@
     <div class="image-annotation-wrapper"
          [style.transform]="getImageTransform()">
       <img #baseImage
-           [src]="image?.imageUrl"
+           [src]="image?.isDicom ? dicomImageDataUrl : image?.imageUrl"
            [alt]="'Imagine ' + image?.id"
            class="zoomed-image"
            draggable="false"
@@ -1007,6 +1034,78 @@
       <button class="btn btn-secondary" (click)="closeDicomMetadataModal()">
         <i class="bi bi-x-lg"></i> Închide
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Reconstrucție 3D MPR -->
+<div class="mpr-overlay" *ngIf="show3DModal" (click)="close3DModal()">
+  <div class="mpr-modal" (click)="$event.stopPropagation()">
+    <div class="mpr-header">
+      <div class="mpr-title">
+        <i class="bi bi-badge-3d-fill"></i>
+        <h5>Reconstrucție 3D — Multi-Planar (MPR)</h5>
+      </div>
+      <button class="mpr-close-btn" (click)="close3DModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="is3DLoading" class="mpr-loading">
+      <div class="spinner-border text-info" role="status"></div>
+      <p>Se încarcă volumul 3D ({{ dicomSeriesSlices.length }} slice-uri)...</p>
+    </div>
+
+    <!-- Conținut MPR -->
+    <div *ngIf="!is3DLoading" class="mpr-content">
+      <!-- Toggle planuri -->
+      <div class="mpr-view-toggle">
+        <button
+          class="mpr-view-btn"
+          [class.active]="mprView === 'axial'"
+          (click)="setMprView('axial')">
+          Axial
+        </button>
+        <button
+          class="mpr-view-btn"
+          [class.active]="mprView === 'sagittal'"
+          (click)="setMprView('sagittal')">
+          Sagital
+        </button>
+        <button
+          class="mpr-view-btn"
+          [class.active]="mprView === 'coronal'"
+          (click)="setMprView('coronal')">
+          Coronal
+        </button>
+      </div>
+
+      <!-- Canvas -->
+      <div class="mpr-canvas-container">
+        <canvas #mprCanvas class="mpr-canvas"></canvas>
+      </div>
+
+      <!-- Slider -->
+      <div class="mpr-slider-container">
+        <span class="mpr-slice-label">Slice: {{ mprSliceIndex + 1 }} / {{ mprMaxSlice + 1 }}</span>
+        <input
+          type="range"
+          class="mpr-slider"
+          [min]="0"
+          [max]="mprMaxSlice"
+          [(ngModel)]="mprSliceIndex"
+          (input)="onMprSliderChange()" />
+      </div>
+
+      <!-- Info -->
+      <div class="mpr-info">
+        <small>
+          <i class="bi bi-info-circle"></i>
+          Volum: {{ volumeCols }}×{{ volumeRows }}×{{ volumeSlices }} voxeli
+          • Plan: {{ mprView === 'axial' ? 'Axial' : mprView === 'sagittal' ? 'Sagital' : 'Coronal' }}
+        </small>
+      </div>
     </div>
   </div>
 </div>

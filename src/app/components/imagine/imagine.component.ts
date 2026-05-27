@@ -63,6 +63,7 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
   isDicomFile: boolean = false;
   dicomMetadata: DicomMetadata | null = null;
   showDicomMetadataModal: boolean = false;
+  dicomImageDataUrl: string = ''; // Data URL generat din canvas DICOM pentru zoom/adnotare
 
   // Toast notifications
   showToast: boolean = false;
@@ -87,6 +88,20 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
   // Segmentare tumoră
   segmentationResult: SegmentationResult | null = null;
   showOverlay: boolean = true; // toggle între overlay și contour
+
+  // Reconstrucție 3D MPR
+  canReconstruct3D: boolean = false;
+  dicomSeriesSlices: Imagine[] = [];
+  show3DModal: boolean = false;
+  is3DLoading: boolean = false;
+  mprView: 'axial' | 'sagittal' | 'coronal' = 'axial';
+  mprSliceIndex: number = 0;
+  mprMaxSlice: number = 0;
+  private volumeData: Int16Array | null = null;
+  volumeRows: number = 0;
+  volumeCols: number = 0;
+  volumeSlices: number = 0;
+  @ViewChild('mprCanvas', { static: false }) mprCanvas?: ElementRef<HTMLCanvasElement>;
   
   // ViewChild pentru canvas DICOM
   @ViewChild('dicomCanvas', { static: false }) dicomCanvas?: ElementRef<HTMLDivElement>;
@@ -191,6 +206,9 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
             this.segmentationResult = null; // Reset segmentare la schimbarea imaginii
             this.resetZoom();
             
+            // Verifică dacă pacientul are suficiente slice-uri DICOM pentru reconstrucție 3D
+            this.check3DReconstructionAvailability();
+            
             console.log('Image and patient loaded:', this.image, this.pacient);
             
             // Dacă este DICOM, încarcă-l în canvas
@@ -232,6 +250,49 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
     } else {
       this.resetZoom();
     }
+  }
+
+  /**
+   * Deschide zoom-ul pentru imagini DICOM.
+   * Convertește canvas-ul DICOM curent într-un data URL PNG
+   * și deschide același modal de zoom + adnotare.
+   */
+  openDicomZoom(): void {
+    if (!this.dicomCanvas?.nativeElement) return;
+
+    const container = this.dicomCanvas.nativeElement;
+    const sourceCanvas = container.querySelector('canvas') as HTMLCanvasElement;
+
+    if (sourceCanvas && sourceCanvas.width > 0 && sourceCanvas.height > 0) {
+      // Cornerstone poate avea restricții pe toDataURL.
+      // Creăm un canvas nou și copiem pixelii manual.
+      try {
+        // Încercăm toDataURL direct
+        const dataUrl = sourceCanvas.toDataURL('image/png');
+        if (dataUrl && dataUrl.length > 100) {
+          this.dicomImageDataUrl = dataUrl;
+        } else {
+          throw new Error('toDataURL returned empty');
+        }
+      } catch (e) {
+        // Fallback: copiem pixelii pe un canvas nou
+        console.warn('⚠️ toDataURL eșuat, copiez pixelii manual');
+        const copyCanvas = document.createElement('canvas');
+        copyCanvas.width = sourceCanvas.width;
+        copyCanvas.height = sourceCanvas.height;
+        const copyCtx = copyCanvas.getContext('2d')!;
+        copyCtx.drawImage(sourceCanvas, 0, 0);
+        this.dicomImageDataUrl = copyCanvas.toDataURL('image/png');
+      }
+    } else {
+      // Fallback: dacă nu găsim canvas-ul cornerstone, folosim URL-ul direct
+      console.warn('⚠️ Canvas DICOM nu e disponibil');
+      this.dicomImageDataUrl = this.image?.imageUrl || '';
+    }
+
+    console.log('📸 DICOM data URL generat, lungime:', this.dicomImageDataUrl.length);
+    this.isZoomed = true;
+    this.zoomLevel = 1;
   }
 
   closeZoom() {
@@ -434,39 +495,64 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
     const imgEl = this.baseImage.nativeElement;
     const annotCanvas = this.annotationCanvas.nativeElement;
 
-    // Canvas final = dimensiunile naturale ale imaginii
-    const finalCanvas = document.createElement('canvas');
-    finalCanvas.width = imgEl.naturalWidth;
-    finalCanvas.height = imgEl.naturalHeight;
-    const finalCtx = finalCanvas.getContext('2d')!;
-
     const img = new Image();
-    img.crossOrigin = 'anonymous';
 
     img.onload = () => {
-      // Imaginea originală
-      finalCtx.drawImage(img, 0, 0, imgEl.naturalWidth, imgEl.naturalHeight);
-      // Adnotările — canvas-ul are deja dimensiunile naturale, deci 1:1
-      finalCtx.drawImage(annotCanvas, 0, 0);
+      // Canvas final = dimensiunile naturale ale imaginii încărcate
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
 
-      const base64 = finalCanvas.toDataURL('image/jpeg', 0.92);
+      if (w === 0 || h === 0) {
+        this.isSavingAnnotation = false;
+        this.showToastMessage('Eroare: imaginea nu are dimensiuni valide.', 'error');
+        return;
+      }
+
+      const finalCanvas = document.createElement('canvas');
+      finalCanvas.width = w;
+      finalCanvas.height = h;
+      const finalCtx = finalCanvas.getContext('2d')!;
+
+      // Imaginea originală
+      finalCtx.drawImage(img, 0, 0, w, h);
+      // Adnotările suprapuse
+      finalCtx.drawImage(annotCanvas, 0, 0, w, h);
+
+      const base64 = finalCanvas.toDataURL('image/png');
       this.uploadAnnotatedImage(base64);
     };
 
-    img.onerror = () => {
+    img.onerror = (err) => {
+      console.error('❌ Eroare la încărcarea imaginii pentru salvare:', err);
       this.isSavingAnnotation = false;
-      this.showToastMessage('Eroare la procesarea imaginii. Verificați CORS-ul pe Cloudinary.', 'error');
+      this.showToastMessage('Eroare la procesarea imaginii.', 'error');
     };
 
-    img.src = this.image.imageUrl;
+    // Pentru DICOM, folosim data URL-ul PNG generat din canvas-ul Cornerstone
+    if (this.image.isDicom && this.dicomImageDataUrl) {
+      // Data URL — nu setăm crossOrigin
+      img.src = this.dicomImageDataUrl;
+    } else {
+      // URL extern (Cloudinary) — necesită crossOrigin
+      img.crossOrigin = 'anonymous';
+      img.src = this.image.imageUrl;
+    }
   }
 
   private uploadAnnotatedImage(base64: string): void {
     const userId = localStorage.getItem('id');
     if (!userId || !this.image || !this.pacient) return;
 
+    const wasDicom = this.image.isDicom;
+
     this.imageService.saveAnnotatedImage(userId, this.pacient.id, this.image.id, base64).subscribe({
       next: (updated: Imagine) => {
+        // Dacă era DICOM, acum e PNG pe Cloudinary — marcăm ca non-DICOM
+        if (wasDicom) {
+          updated.isDicom = false;
+          this.dicomImageDataUrl = '';
+        }
+
         this.image = updated;
         if (this.pacient?.imagini) {
           const idx = this.pacient.imagini.findIndex(i => i.id === updated.id);
@@ -819,6 +905,266 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
   }
 
   // ===================== SFÂRŞIT SEGMENTARE =====================
+
+  // ===================== RECONSTRUCȚIE 3D MPR =====================
+
+  /**
+   * Verifică dacă pacientul are suficiente slice-uri DICOM din aceeași serie
+   * pentru a permite reconstrucția 3D.
+   * Criterii: minim 5 imagini DICOM cu aceeași dimensiune (rows x cols).
+   */
+  check3DReconstructionAvailability(): void {
+    if (!this.pacient?.imagini) {
+      this.canReconstruct3D = false;
+      return;
+    }
+
+    // Filtrează doar imaginile DICOM
+    const dicomImages = this.pacient.imagini.filter(img => img.isDicom);
+
+    if (dicomImages.length < 5) {
+      this.canReconstruct3D = false;
+      return;
+    }
+
+    // Grupează după dimensiuni (rows x cols) — slice-urile din aceeași serie au aceleași dimensiuni
+    const sizeGroups = new Map<string, Imagine[]>();
+    for (const img of dicomImages) {
+      const rows = img.dicomMetadata?.rows || 0;
+      const cols = img.dicomMetadata?.columns || 0;
+      if (rows > 0 && cols > 0) {
+        const key = `${rows}x${cols}`;
+        if (!sizeGroups.has(key)) sizeGroups.set(key, []);
+        sizeGroups.get(key)!.push(img);
+      }
+    }
+
+    // Găsește cel mai mare grup cu minim 5 slice-uri
+    let bestGroup: Imagine[] = [];
+    for (const group of sizeGroups.values()) {
+      if (group.length > bestGroup.length) {
+        bestGroup = group;
+      }
+    }
+
+    if (bestGroup.length >= 5) {
+      this.canReconstruct3D = true;
+      this.dicomSeriesSlices = bestGroup;
+      console.log(`✅ Reconstrucție 3D disponibilă: ${bestGroup.length} slice-uri DICOM`);
+    } else {
+      this.canReconstruct3D = false;
+      this.dicomSeriesSlices = [];
+    }
+  }
+
+  /**
+   * Deschide modalul de reconstrucție 3D și încarcă volumul.
+   */
+  open3DReconstruction(): void {
+    if (!this.canReconstruct3D || this.dicomSeriesSlices.length < 5) return;
+
+    this.show3DModal = true;
+    this.is3DLoading = true;
+    this.mprView = 'axial';
+    this.mprSliceIndex = 0;
+
+    this.loadVolumeData();
+  }
+
+  close3DModal(): void {
+    this.show3DModal = false;
+    this.volumeData = null;
+    this.is3DLoading = false;
+  }
+
+  /**
+   * Încarcă toate slice-urile DICOM și construiește volumul 3D.
+   */
+  private async loadVolumeData(): Promise<void> {
+    try {
+      const dicomParser = await import('dicom-parser');
+
+      // Sortează slice-urile după imagePosition (Z) sau instanceNumber
+      const sortedSlices = [...this.dicomSeriesSlices].sort((a, b) => {
+        const posA = this.getSliceZ(a);
+        const posB = this.getSliceZ(b);
+        return posA - posB;
+      });
+
+      const firstMeta = sortedSlices[0].dicomMetadata;
+      this.volumeRows = firstMeta?.rows || 256;
+      this.volumeCols = firstMeta?.columns || 256;
+      this.volumeSlices = sortedSlices.length;
+
+      // Alocă volumul
+      const totalVoxels = this.volumeRows * this.volumeCols * this.volumeSlices;
+      this.volumeData = new Int16Array(totalVoxels);
+
+      // Încarcă fiecare slice
+      for (let i = 0; i < sortedSlices.length; i++) {
+        const slice = sortedSlices[i];
+        try {
+          const response = await fetch(slice.imageUrl);
+          const buffer = await response.arrayBuffer();
+          const byteArray = new Uint8Array(buffer);
+          const dataSet = dicomParser.parseDicom(byteArray);
+
+          const pixelDataElement = dataSet.elements['x7fe00010'];
+          if (pixelDataElement) {
+            const bitsAllocated = dataSet.uint16('x00280100') || 16;
+            const pixelRepresentation = dataSet.uint16('x00280103') || 0;
+            const sliceSize = this.volumeRows * this.volumeCols;
+
+            let pixelData: Int16Array | Uint16Array | Uint8Array;
+            if (bitsAllocated === 8) {
+              const raw = new Uint8Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length);
+              // Copiază în volumul Int16
+              for (let j = 0; j < Math.min(raw.length, sliceSize); j++) {
+                this.volumeData[i * sliceSize + j] = raw[j];
+              }
+            } else {
+              if (pixelRepresentation === 0) {
+                pixelData = new Uint16Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length / 2);
+              } else {
+                pixelData = new Int16Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length / 2);
+              }
+              for (let j = 0; j < Math.min(pixelData.length, sliceSize); j++) {
+                this.volumeData[i * sliceSize + j] = pixelData[j];
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`⚠️ Nu s-a putut încărca slice-ul ${i}:`, err);
+        }
+      }
+
+      this.is3DLoading = false;
+      this.updateMprMaxSlice();
+      this.mprSliceIndex = Math.floor(this.mprMaxSlice / 2);
+
+      // Randează prima imagine
+      setTimeout(() => this.renderMprSlice(), 100);
+      console.log(`✅ Volum 3D încărcat: ${this.volumeCols}x${this.volumeRows}x${this.volumeSlices}`);
+
+    } catch (err) {
+      console.error('❌ Eroare la încărcarea volumului 3D:', err);
+      this.is3DLoading = false;
+      this.showToastMessage('Eroare la încărcarea volumului 3D.', 'error');
+    }
+  }
+
+  private getSliceZ(img: Imagine): number {
+    // Încearcă imagePosition (al treilea element = Z)
+    if (img.dicomMetadata?.imagePosition) {
+      const parts = img.dicomMetadata.imagePosition.split('\\');
+      if (parts.length >= 3) return parseFloat(parts[2]) || 0;
+    }
+    // Fallback pe sliceLocation
+    if (img.dicomMetadata?.sliceLocation) {
+      return parseFloat(img.dicomMetadata.sliceLocation) || 0;
+    }
+    // Fallback pe instanceNumber
+    return img.dicomMetadata?.instanceNumber || 0;
+  }
+
+  setMprView(view: 'axial' | 'sagittal' | 'coronal'): void {
+    this.mprView = view;
+    this.updateMprMaxSlice();
+    this.mprSliceIndex = Math.floor(this.mprMaxSlice / 2);
+    this.renderMprSlice();
+  }
+
+  onMprSliderChange(): void {
+    this.renderMprSlice();
+  }
+
+  private updateMprMaxSlice(): void {
+    switch (this.mprView) {
+      case 'axial':
+        this.mprMaxSlice = this.volumeSlices - 1;
+        break;
+      case 'sagittal':
+        this.mprMaxSlice = this.volumeCols - 1;
+        break;
+      case 'coronal':
+        this.mprMaxSlice = this.volumeRows - 1;
+        break;
+    }
+  }
+
+  /**
+   * Randează un slice din volum pe canvas în funcție de planul selectat.
+   */
+  renderMprSlice(): void {
+    if (!this.volumeData || !this.mprCanvas?.nativeElement) return;
+
+    const canvas = this.mprCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let width: number, height: number;
+
+    switch (this.mprView) {
+      case 'axial':
+        width = this.volumeCols;
+        height = this.volumeRows;
+        break;
+      case 'sagittal':
+        width = this.volumeSlices;
+        height = this.volumeRows;
+        break;
+      case 'coronal':
+        width = this.volumeCols;
+        height = this.volumeSlices;
+        break;
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const imageData = ctx.createImageData(width, height);
+    const sliceSize = this.volumeRows * this.volumeCols;
+
+    // Calculează min/max pentru windowing
+    let min = 32767, max = -32768;
+    for (let i = 0; i < this.volumeData.length; i += 100) {
+      if (this.volumeData[i] < min) min = this.volumeData[i];
+      if (this.volumeData[i] > max) max = this.volumeData[i];
+    }
+    const range = max - min || 1;
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        let voxelValue: number;
+
+        switch (this.mprView) {
+          case 'axial':
+            voxelValue = this.volumeData[this.mprSliceIndex * sliceSize + y * this.volumeCols + x];
+            break;
+          case 'sagittal':
+            // x = slice index, y = row
+            voxelValue = this.volumeData[x * sliceSize + y * this.volumeCols + this.mprSliceIndex];
+            break;
+          case 'coronal':
+            // x = col, y = slice index
+            voxelValue = this.volumeData[y * sliceSize + this.mprSliceIndex * this.volumeCols + x];
+            break;
+        }
+
+        // Normalizează la 0-255
+        const normalized = Math.max(0, Math.min(255, Math.round(((voxelValue - min) / range) * 255)));
+        const idx = (y * width + x) * 4;
+        imageData.data[idx] = normalized;
+        imageData.data[idx + 1] = normalized;
+        imageData.data[idx + 2] = normalized;
+        imageData.data[idx + 3] = 255;
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+  }
+
+  // ===================== SFÂRŞIT RECONSTRUCȚIE 3D =====================
 
   // Metode pentru adăugare imagine nouă
   openAddImageModal(): void {
@@ -1609,16 +1955,58 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
           // Display imaginea
           cornerstone.displayImage(element, image);
           
+          // Generează data URL din pixel data direct (nu din canvas Cornerstone)
+          this.generateDicomDataUrl(pixelData, rows, columns, minPixelValue, maxPixelValue);
+          
           console.log('✅ DICOM încărcat și afișat cu succes în dashboard');
         })
         .catch(error => {
           console.error('❌ Eroare la încărcarea DICOM:', error);
+          // Fallback: dacă fișierul nu e DICOM valid (a fost convertit la PNG),
+          // tratează-l ca imagine normală
+          if (this.image) {
+            console.log('🔄 Fallback: tratez ca imagine normală (nu DICOM valid)');
+            this.image.isDicom = false;
+            this.dicomImageDataUrl = '';
+          }
         });
     }).catch(error => {
       console.error('❌ Eroare la importul librăriilor DICOM:', error);
     });
   }
   
+  /**
+   * Generează un data URL PNG din pixel data DICOM (independent de Cornerstone canvas).
+   * Asta garantează că avem o imagine validă pentru zoom/adnotare/salvare.
+   */
+  private generateDicomDataUrl(
+    pixelData: Int16Array | Uint16Array | Uint8Array,
+    rows: number,
+    cols: number,
+    minVal: number,
+    maxVal: number
+  ): void {
+    const canvas = document.createElement('canvas');
+    canvas.width = cols;
+    canvas.height = rows;
+    const ctx = canvas.getContext('2d')!;
+    const imageData = ctx.createImageData(cols, rows);
+    const range = maxVal - minVal || 1;
+
+    for (let i = 0; i < rows * cols; i++) {
+      const normalized = Math.max(0, Math.min(255, Math.round(((pixelData[i] - minVal) / range) * 255)));
+      const idx = i * 4;
+      imageData.data[idx] = normalized;
+      imageData.data[idx + 1] = normalized;
+      imageData.data[idx + 2] = normalized;
+      imageData.data[idx + 3] = 255;
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    this.dicomImageDataUrl = canvas.toDataURL('image/png');
+    console.log('📸 DICOM data URL generat din pixel data, lungime:', this.dicomImageDataUrl.length);
+  }
+
   /**
    * Extrage metadatele DICOM dintr-un dataSet
    */
