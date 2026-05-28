@@ -85,6 +85,9 @@ export interface Imagine {
   isDicom?: boolean;
   dicomMetadata?: DicomMetadata;
   
+  // Serie DICOM — dacă face parte dintr-o serie, are seriesId
+  seriesId?: string;
+  
   // Informații despre analiză
   areTumoare?: boolean;
   tipTumoare?: string; // ex: 'glioma', 'meningioma', 'pituitary', etc.
@@ -96,4 +99,15 @@ export interface Imagine {
   observatii?: string;
   dataIncarcare?: Date;
   dataModificare?: Date;
+}
+
+// ── Serie DICOM (grupare de slice-uri) ───────────────────────────────────────
+
+export interface DicomSeries {
+  id: string;           // ID unic generat la upload
+  name: string;         // Nume serie (ex: "Serie RMN Craniu")
+  modality: string;     // CT, MR, etc.
+  sliceCount: number;   // Număr de slice-uri
+  sliceIds: string[];   // ID-urile imaginilor din serie
+  createdAt: Date;
 }

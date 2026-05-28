@@ -75,7 +75,28 @@
           <div *ngIf="!image" class="no-image-placeholder">
             <i class="bi bi-inbox"></i>
             <p>Acest pacient nu are încă imagini medicale</p>
-            <small class="text-muted">Folosește butonul de mai jos pentru a adăuga prima imagine</small>
+            <small class="text-muted">Folosește butoanele de mai jos pentru a adăuga imagini</small>
+            <div class="mt-3 d-flex flex-column gap-2" style="max-width: 320px; margin: 0 auto;">
+              <button class="btn btn-success" (click)="openAddImageModal()">
+                <i class="bi bi-cloud-upload"></i> Încarcă Imagine
+              </button>
+              <button class="btn btn-outline-info" (click)="dicomSeriesInput2.click()">
+                <i class="bi bi-stack"></i> Încarcă Serie DICOM (multiple)
+              </button>
+              <input
+                type="file"
+                #dicomSeriesInput2
+                accept=".dcm,.dicom,application/dicom"
+                multiple
+                (change)="onDicomSeriesSelected($event)"
+                style="display: none;">
+            </div>
+            <div *ngIf="isUploadingSeries" class="mt-3" style="max-width: 320px; margin: 0 auto;">
+              <small class="text-muted">Se încarcă {{ seriesUploadProgress }} / {{ seriesUploadTotal }}...</small>
+              <div class="progress mt-1">
+                <div class="progress-bar bg-info" [style.width.%]="(seriesUploadProgress / seriesUploadTotal) * 100"></div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="card-footer bg-light" *ngIf="image">
@@ -308,22 +329,39 @@
           <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Adaugă Imagine Medicală</h5>
         </div>
         <div class="card-body text-center">
-          <button class="btn btn-lg btn-success w-100" (click)="openAddImageModal()">
+          <button class="btn btn-lg btn-success w-100 mb-2" (click)="openAddImageModal()">
             <i class="bi bi-cloud-upload"></i> Încarcă Imagine Nouă
           </button>
-          <small class="text-muted d-block mt-2">
-            <i class="bi bi-info-circle"></i> Adaugă imagini RMN, CT, etc.
+          <button class="btn btn-outline-info w-100" (click)="dicomSeriesInput.click()">
+            <i class="bi bi-stack"></i> Încarcă Serie DICOM (multiple)
+          </button>
+          <input
+            type="file"
+            #dicomSeriesInput
+            accept=".dcm,.dicom,application/dicom"
+            multiple
+            (change)="onDicomSeriesSelected($event)"
+            style="display: none;">
+          <small class="text-muted d-block mt-2" *ngIf="isUploadingSeries">
+            Se încarcă {{ seriesUploadProgress }} / {{ seriesUploadTotal }} fișiere...
           </small>
+          <div class="progress mt-2" *ngIf="isUploadingSeries">
+            <div class="progress-bar bg-info"
+                 [style.width.%]="(seriesUploadProgress / seriesUploadTotal) * 100">
+            </div>
+          </div>
         </div>
+      </div>
       
       <!-- Alte imagini ale pacientului -->
-      <div class="card shadow-sm mb-3" *ngIf="pacient && pacient.imagini && pacient.imagini.length > 1">
+      <div class="card shadow-sm mb-3" *ngIf="pacient && pacient.imagini && getVisibleImages().length > 1">
         <div class="card-header bg-secondary text-white">
-          <h5 class="mb-0"><i class="bi bi-images"></i> Toate Imaginile Pacientului ({{ pacient.imagini.length }})</h5>
+          <h5 class="mb-0"><i class="bi bi-images"></i> Imaginile Pacientului ({{ getVisibleImages().length }})</h5>
         </div>
         <div class="card-body">
           <div class="patient-images-grid">
-            <div *ngFor="let img of pacient.imagini" 
+            <!-- Imagini individuale (fără serie) -->
+            <div *ngFor="let img of getVisibleImages()" 
                  class="patient-image-item"
                  [class.active-image]="img.id === image?.id"
                  (click)="selectImage(img)">
@@ -338,6 +376,23 @@
                 <i class="bi bi-check-circle-fill"></i>
               </div>
               <small class="image-date">{{ img.dataIncarcare ? (img.dataIncarcare | date:'dd/MM/yyyy') : 'N/A' }}</small>
+            </div>
+          </div>
+
+          <!-- Serii DICOM grupate -->
+          <div *ngIf="getDicomSeriesGroups().length > 0" class="mt-3">
+            <h6 class="text-muted mb-2"><i class="bi bi-stack"></i> Serii DICOM</h6>
+            <div *ngFor="let series of getDicomSeriesGroups()" 
+                 class="dicom-series-card"
+                 (click)="openSeriesFor3D(series.seriesId)">
+              <div class="series-icon">
+                <i class="bi bi-badge-3d-fill"></i>
+              </div>
+              <div class="series-info">
+                <strong>Serie DICOM</strong>
+                <small>{{ series.count }} slice-uri</small>
+              </div>
+              <i class="bi bi-chevron-right"></i>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { Imagine } from './imagine';
+import { Imagine, DicomSeries } from './imagine';
 
 export enum Sex {
   MASCULIN = 'MASCULIN',
@@ -18,4 +18,5 @@ export interface Pacient {
   istoricMedical?: string;
   profilePictureUrl?: string; // Poza de profil pacient
   imagini: Imagine[]; // List of images
+  dicomSeries?: DicomSeries[]; // Serii DICOM grupate
 }
