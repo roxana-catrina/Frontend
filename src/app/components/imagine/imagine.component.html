@@ -1123,12 +1123,14 @@
           Axial
         </button>
         <button
+          *ngIf="volumeSlices >= 30"
           class="mpr-view-btn"
           [class.active]="mprView === 'sagittal'"
           (click)="setMprView('sagittal')">
           Sagital
         </button>
         <button
+          *ngIf="volumeSlices >= 30"
           class="mpr-view-btn"
           [class.active]="mprView === 'coronal'"
           (click)="setMprView('coronal')">
