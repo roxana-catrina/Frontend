@@ -924,28 +924,62 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
   /**
    * Returnează seriile DICOM grupate (pentru afișare ca un singur card).
    */
-  getDicomSeriesGroups(): { seriesId: string; count: number }[] {
+  getDicomSeriesGroups(): { seriesId: string; count: number; date: Date | null }[] {
     if (!this.pacient?.imagini) return [];
-    const groups = new Map<string, number>();
+    const groups = new Map<string, { count: number; date: Date | null }>();
     for (const img of this.pacient.imagini) {
       if (img.seriesId) {
-        groups.set(img.seriesId, (groups.get(img.seriesId) || 0) + 1);
+        const existing = groups.get(img.seriesId);
+        if (existing) {
+          existing.count++;
+        } else {
+          groups.set(img.seriesId, { count: 1, date: img.dataIncarcare || null });
+        }
       }
     }
-    return Array.from(groups.entries()).map(([seriesId, count]) => ({ seriesId, count }));
+
+    // Fallback: dacă nu există seriesId persistat, grupează DICOM-urile
+    if (groups.size === 0) {
+      const dicomImages = this.pacient.imagini.filter(img => 
+        img.isDicom || img.imageUrl?.includes('/raw/upload/')
+      );
+      if (dicomImages.length >= 1) {
+        groups.set('auto_series', { count: dicomImages.length, date: dicomImages[0].dataIncarcare || null });
+      }
+    }
+
+    return Array.from(groups.entries()).map(([seriesId, data]) => ({ seriesId, count: data.count, date: data.date }));
   }
 
   /**
    * Deschide reconstrucția 3D pentru o serie specifică.
    */
   openSeriesFor3D(seriesId: string): void {
-    if (!this.pacient?.imagini) return;
+    console.log('🔍 openSeriesFor3D apelat cu:', seriesId);
+    if (!this.pacient?.imagini) {
+      console.log('❌ pacient sau imagini lipsă');
+      return;
+    }
+    
+    // Încearcă cu seriesId
     this.dicomSeriesSlices = this.pacient.imagini.filter(img => img.seriesId === seriesId);
-    if (this.dicomSeriesSlices.length >= 3) {
+    console.log('📋 Cu seriesId:', this.dicomSeriesSlices.length);
+    
+    // Fallback: ia toate DICOM-urile
+    if (this.dicomSeriesSlices.length === 0) {
+      this.dicomSeriesSlices = this.pacient.imagini.filter(img => 
+        img.isDicom || img.imageUrl?.includes('/raw/upload/')
+      );
+      console.log('📋 Fallback DICOM:', this.dicomSeriesSlices.length);
+    }
+
+    if (this.dicomSeriesSlices.length >= 1) {
       this.canReconstruct3D = true;
+      console.log('✅ Deschid 3D cu', this.dicomSeriesSlices.length, 'slice-uri');
       this.open3DReconstruction();
     } else {
-      this.showToastMessage('Seria are prea puține slice-uri pentru reconstrucție 3D.', 'info');
+      console.log('❌ 0 slice-uri găsite');
+      this.showToastMessage('Nu s-au găsit slice-uri DICOM.', 'info');
     }
   }
 
