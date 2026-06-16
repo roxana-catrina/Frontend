@@ -429,13 +429,11 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
     if (!this.isDrawingOnCanvas || !this.ctx) return;
     event.preventDefault();
     event.stopPropagation();
-
     const pos = this.getCanvasPos(event);
 
     if (this.annotationTool === 'pen') {
       this.ctx.globalCompositeOperation = 'source-over';
       this.ctx.strokeStyle = this.annotationColor;
-      // lineWidth în spațiul natural — arată constant indiferent de zoom
       this.ctx.lineWidth = 3 / this.zoomLevel;
       this.ctx.lineCap = 'round';
       this.ctx.lineJoin = 'round';
@@ -834,12 +832,12 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
 
   analyzeWithSegmentation(): void {
     if (!this.image || !this.pacient) {
-      this.showToastMessage('Nu există imagine de analizat', 'error');
+      this.showToastMessage('Nu exista imagine de analizat', 'error');
       return;
     }
 
     if (!this.image.imageUrl) {
-      this.showToastMessage('Nu există URL pentru imagine', 'error');
+      this.showToastMessage('Nu exista URL pentru imagine', 'error');
       return;
     }
 
@@ -847,28 +845,21 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
     this.segmentationResult = null;
     this.image.statusAnaliza = 'in_procesare';
 
-    console.log('🔬 Analiză cu segmentare pentru:', this.image.imageUrl);
-
     this.brainTumorService.predictFromUrlWithSegmentation(this.image.imageUrl, 0.4).subscribe({
       next: (response: PredictionResponse) => {
-        console.log('✅ Rezultat segmentare:', response);
-
         if (response.success && this.image && this.pacient) {
           this.image.statusAnaliza = 'finalizata';
           this.image.areTumoare = response.hasTumor;
           this.image.confidenta = Math.round(response.confidence * 100);
           this.image.tipTumoare = response.tumorType || undefined;
           this.image.dataAnalizei = new Date();
-
-          // Afișează segmentarea dacă există (indiferent de hasTumor)
           if (response.segmentation) {
             this.segmentationResult = response.segmentation;
-            console.log('🎨 Segmentare disponibilă - overlay + contour');
+            console.log('Segmentare disponibilă - overlay + contour');
           } else {
-            console.log('ℹ️ Nicio segmentare returnată de backend');
+            console.log('Nicio segmentare returnată de backend');
           }
 
-          // Salvează rezultatul în backend
           const userId = localStorage.getItem('id');
           if (userId) {
             this.imageService.updateImage(this.image.id, this.pacient.id, userId, this.image).subscribe({
@@ -881,8 +872,8 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
                 this.isAnalyzing = false;
                 this.showToastMessage(
                   response.hasTumor
-                    ? `⚠️ Tumoare detectată (${Math.round(response.confidence * 100)}% încredere)`
-                    : `✅ Fără tumoare (${Math.round(response.confidence * 100)}% încredere)`,
+                    ? `Tumoare detectată (${Math.round(response.confidence * 100)}% încredere)`
+                    : `Fără tumoare (${Math.round(response.confidence * 100)}% încredere)`,
                   response.hasTumor ? 'error' : 'success'
                 );
               },
@@ -901,7 +892,6 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
         }
       },
       error: (error) => {
-        console.error('❌ Eroare segmentare:', error);
         this.isAnalyzing = false;
         if (this.image) this.image.statusAnaliza = 'neanalizata';
         this.showToastMessage('Serviciul de segmentare nu este disponibil.', 'error');
@@ -926,6 +916,7 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
    */
   getDicomSeriesGroups(): { seriesId: string; count: number; date: Date | null }[] {
     if (!this.pacient?.imagini) return [];
+    
     const groups = new Map<string, { count: number; date: Date | null }>();
     for (const img of this.pacient.imagini) {
       if (img.seriesId) {
@@ -955,32 +946,69 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
    * Deschide reconstrucția 3D pentru o serie specifică.
    */
   openSeriesFor3D(seriesId: string): void {
-    console.log('🔍 openSeriesFor3D apelat cu:', seriesId);
+    console.log('🔍 openSeriesFor3D APELAT!');
+    console.log('   - seriesId primit:', seriesId);
+    console.log('   - this.pacient există?', !!this.pacient);
+    console.log('   - this.pacient?.imagini există?', !!this.pacient?.imagini);
+    console.log('   - Număr total imagini:', this.pacient?.imagini?.length || 0);
+    
     if (!this.pacient?.imagini) {
-      console.log('❌ pacient sau imagini lipsă');
+      console.error('❌ openSeriesFor3D - Nu există pacient sau imagini!');
       return;
     }
-    
-    // Încearcă cu seriesId
-    this.dicomSeriesSlices = this.pacient.imagini.filter(img => img.seriesId === seriesId);
-    console.log('📋 Cu seriesId:', this.dicomSeriesSlices.length);
-    
-    // Fallback: ia toate DICOM-urile
-    if (this.dicomSeriesSlices.length === 0) {
-      this.dicomSeriesSlices = this.pacient.imagini.filter(img => 
+
+    if (seriesId.startsWith('auto_')) {
+      // Serie detectată automat — ia toate DICOM-urile raw
+      console.log('📋 Detectat seriesId auto - filtrare după isDicom sau /raw/upload/');
+      this.dicomSeriesSlices = this.pacient.imagini.filter(img =>
         img.isDicom || img.imageUrl?.includes('/raw/upload/')
       );
-      console.log('📋 Fallback DICOM:', this.dicomSeriesSlices.length);
+    } else {
+      // Serie cu seriesId explicit
+      console.log('📋 Filtrare după seriesId explicit:', seriesId);
+      this.dicomSeriesSlices = this.pacient.imagini.filter(img => img.seriesId === seriesId);
     }
 
+    console.log('📋 Slice-uri găsite:', this.dicomSeriesSlices.length);
+    console.log('📋 Detalii slice-uri:', this.dicomSeriesSlices.map(s => ({
+      id: s.id,
+      nume: s.nume,
+      isDicom: s.isDicom,
+      seriesId: s.seriesId,
+      url: s.imageUrl?.substring(0, 50)
+    })));
+
     if (this.dicomSeriesSlices.length >= 1) {
+      console.log('✅ Suficiente slice-uri - setare canReconstruct3D = true');
       this.canReconstruct3D = true;
-      console.log('✅ Deschid 3D cu', this.dicomSeriesSlices.length, 'slice-uri');
+      console.log('🚀 Apelare open3DReconstruction()...');
       this.open3DReconstruction();
     } else {
-      console.log('❌ 0 slice-uri găsite');
+      console.error('❌ Nu s-au găsit slice-uri DICOM pentru seria', seriesId);
       this.showToastMessage('Nu s-au găsit slice-uri DICOM.', 'info');
     }
+  }
+
+  /**
+   * Wrapper pentru debug - testeaza daca click-ul ajunge in TypeScript
+   */
+  debugClickOnSeries(seriesId: string, event: Event): void {
+    console.log('🖱️ DEBUG CLICK - Event primit!', event);
+    console.log('🖱️ DEBUG CLICK - seriesId:', seriesId);
+    event.stopPropagation();
+    event.preventDefault();
+    this.openSeriesFor3D(seriesId);
+  }
+
+  // Test pentru console.log in template
+  console = console;
+
+  testMouseEnter(index: number): void {
+    console.log('🖱️ MOUSEENTER pe card', index);
+  }
+
+  testMouseDown(index: number, seriesId: string): void {
+    console.log('🖱️ MOUSEDOWN pe card', index, seriesId);
   }
 
   /**
@@ -1036,13 +1064,24 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
    * Deschide modalul de reconstrucție 3D și încarcă volumul.
    */
   open3DReconstruction(): void {
-    if (!this.canReconstruct3D || this.dicomSeriesSlices.length < 5) return;
+    console.log('🚀 open3DReconstruction - START');
+    console.log('   - canReconstruct3D:', this.canReconstruct3D);
+    console.log('   - dicomSeriesSlices.length:', this.dicomSeriesSlices.length);
+    
+    if (!this.canReconstruct3D || this.dicomSeriesSlices.length < 1) {
+      console.error('❌ open3DReconstruction - Condiții nerespecate, STOP');
+      return;
+    }
 
+    console.log('✅ Setare variabile modal...');
     this.show3DModal = true;
+    console.log('   - show3DModal:', this.show3DModal);
     this.is3DLoading = true;
+    console.log('   - is3DLoading:', this.is3DLoading);
     this.mprView = 'axial';
     this.mprSliceIndex = 0;
 
+    console.log('🔄 Apelare loadVolumeData()...');
     this.loadVolumeData();
   }
 
@@ -1056,6 +1095,9 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
    * Încarcă toate slice-urile DICOM și construiește volumul 3D.
    */
   private async loadVolumeData(): Promise<void> {
+    console.log('🎬 loadVolumeData - START');
+    console.log('   - dicomSeriesSlices:', this.dicomSeriesSlices.length);
+    
     try {
       // Sortează slice-urile după imagePosition (Z) sau instanceNumber
       const sortedSlices = [...this.dicomSeriesSlices].sort((a, b) => {
@@ -1063,6 +1105,8 @@ export class ImagineComponent implements OnInit, AfterViewChecked {
         const posB = this.getSliceZ(b);
         return posA - posB;
       });
+
+      console.log('✅ Slice-uri sortate:', sortedSlices.length);
 
       // Determinăm dimensiunile din metadate sau din prima imagine încărcată
       const firstMeta = sortedSlices[0].dicomMetadata;

@@ -44,10 +44,8 @@ describe('User Management', () => {
  
   it('31. Should validate birth date', () => {
     cy.visit('/user');
-
     const formatDate = (date: Date) => date.toISOString().split('T')[0];
     const futureOffsets = [1, 3, 7];
-
     futureOffsets.forEach((offset) => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + offset);

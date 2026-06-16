@@ -156,30 +156,23 @@ export class VideoCallService implements OnDestroy {
     this.resetState();
   }
 
-  // ── Public API ─────────────────────────────────────────────────────────────
+  
 
   startCall(toUser: CallParticipant): Promise<void> {
     if (!this.currentUserId) {
-      console.error('❌ startCall: currentUserId este null - VideoCallService nu e inițializat!');
       return Promise.reject('Nu ești autentificat');
     }
-
-    console.log('📹 startCall: inițiez apel către', toUser.name, '(', toUser.id, ')');
-    console.log('📹 WebSocket conectat:', this.websocketService.isCurrentlyConnected());
-
     this.remoteParticipant$.next(toUser);
     this.callStatus$.next('calling');
 
     return navigator.mediaDevices
       .getUserMedia({ video: true, audio: true })
       .then(stream => {
-        console.log('✅ Camera/microfon accesate');
         this.localStream$.next(stream);
         this.createPeerConnection();
         return this.peerConnection!.createOffer();
       })
       .then(offer => {
-        console.log('✅ Offer creat, setez local description...');
         return this.peerConnection!.setLocalDescription(offer).then(() => offer);
       })
       .then(offer => {
@@ -190,11 +183,9 @@ export class VideoCallService implements OnDestroy {
           fromUserName: this.currentUserName,
           sdp: offer
         };
-        console.log('📤 Trimit call-offer către:', toUser.id);
         this.websocketService.sendVideoCallSignal(signal);
       })
       .catch(err => {
-        console.error('❌ Eroare la pornirea apelului:', err);
         this.resetState();
         throw err;
       });
